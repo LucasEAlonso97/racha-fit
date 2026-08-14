@@ -6,6 +6,7 @@ export type ActivityType =
   | 'Otra'
 
 export type Activity = {
+  id?: string
   type: ActivityType
   duration: number
 }
@@ -20,7 +21,7 @@ export type User = {
 
 export type ActivitiesByDate = Record<
   string,
-  Record<string, Activity>
+  Record<string, Activity[]>
 >
 
 export type View =

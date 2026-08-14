@@ -35,8 +35,34 @@ function Rachas({
   currentUserId,
   today,
 }: Props) {
+  /*
+   * ========================================
+   * SEMANA ACTUAL
+   * ========================================
+   */
+
   const weekDates =
     getWeekDates(today)
+
+  /*
+   * ========================================
+   * RANKING
+   * ========================================
+   *
+   * El ranking sigue usando
+   * DÍAS ACTIVOS.
+   *
+   * No cantidad de actividades.
+   *
+   * Ejemplo:
+   *
+   * Lucas:
+   * lunes = 3 actividades
+   * martes = 2 actividades
+   *
+   * Resultado:
+   * 2 días activos
+   */
 
   const ranking =
     users
@@ -64,6 +90,11 @@ function Rachas({
           ),
       }))
       .sort((a, b) => {
+        /*
+         * Primero:
+         * días activos esta semana.
+         */
+
         if (
           b.weekDays !==
           a.weekDays
@@ -74,11 +105,32 @@ function Rachas({
           )
         }
 
+        /*
+         * Desempate:
+         * racha actual.
+         */
+
         return (
           b.currentStreak -
           a.currentStreak
         )
       })
+
+  /*
+   * ========================================
+   * TOTAL DE ACTIVIDADES DE LA SEMANA
+   * ========================================
+   *
+   * Acá sí contamos TODAS.
+   *
+   * Si Lucas hizo:
+   *
+   * Gym
+   * Caminata
+   * Bicicleta
+   *
+   * suma 3 actividades.
+   */
 
   const totalActivities =
     weekDates.reduce(
@@ -91,17 +143,98 @@ function Rachas({
             date,
           )
 
+        const dayActivities =
+          activities[
+            key
+          ] ?? {}
+
+        const dayTotal =
+          Object.values(
+            dayActivities,
+          ).reduce(
+            (
+              subtotal,
+              userActivities,
+            ) =>
+              subtotal +
+              userActivities.length,
+            0,
+          )
+
         return (
           total +
-          Object.keys(
-            activities[
-              key
-            ] ?? {},
-          ).length
+          dayTotal
         )
       },
       0,
     )
+
+  /*
+   * ========================================
+   * MINUTOS TOTALES DEL GRUPO
+   * ========================================
+   */
+
+  const totalMinutes =
+    weekDates.reduce(
+      (
+        total,
+        date,
+      ) => {
+        const key =
+          formatDateKey(
+            date,
+          )
+
+        const dayActivities =
+          activities[
+            key
+          ] ?? {}
+
+        const dayMinutes =
+          Object.values(
+            dayActivities,
+          ).reduce(
+            (
+              userTotal,
+              userActivities,
+            ) => {
+              const minutes =
+                userActivities.reduce(
+                  (
+                    subtotal,
+                    activity,
+                  ) =>
+                    subtotal +
+                    activity.duration,
+                  0,
+                )
+
+              return (
+                userTotal +
+                minutes
+              )
+            },
+            0,
+          )
+
+        return (
+          total +
+          dayMinutes
+        )
+      },
+      0,
+    )
+
+  /*
+   * ========================================
+   * DÍAS PERFECTOS
+   * ========================================
+   *
+   * Día perfecto =
+   * todos los integrantes hicieron
+   * al menos UNA actividad.
+   */
 
   const perfectDays =
     weekDates.filter(
@@ -111,24 +244,40 @@ function Rachas({
             date,
           )
 
-        return (
-          users.length > 0 &&
-          users.every(
-            (user) =>
-              Boolean(
-                activities[
-                  key
-                ]?.[
-                  user.id
-                ],
-              ),
-          )
+        if (
+          users.length ===
+          0
+        ) {
+          return false
+        }
+
+        return users.every(
+          (user) =>
+            (
+              activities[
+                key
+              ]?.[
+                user.id
+              ] ?? []
+            ).length > 0,
         )
       },
     ).length
 
+  /*
+   * ========================================
+   * LÍDER
+   * ========================================
+   */
+
   const leader =
     ranking[0]
+
+  /*
+   * ========================================
+   * ESTADÍSTICAS DEL USUARIO ACTUAL
+   * ========================================
+   */
 
   const currentUserStats =
     ranking.find(
@@ -144,6 +293,12 @@ function Rachas({
         currentUserStats.weekDays
       : 0
 
+  /*
+   * ========================================
+   * MEDALLAS
+   * ========================================
+   */
+
   const medals = [
     '🥇',
     '🥈',
@@ -152,6 +307,10 @@ function Rachas({
 
   return (
     <div className="mx-auto w-full max-w-md px-5 pt-8">
+      {/* ================================= */}
+      {/* HEADER */}
+      {/* ================================= */}
+
       <header className="mb-7">
         <p className="text-sm font-bold text-violet-500">
           Tu grupo
@@ -168,6 +327,10 @@ function Rachas({
         </p>
       </header>
 
+      {/* ================================= */}
+      {/* LÍDER SEMANAL */}
+      {/* ================================= */}
+
       {leader && (
         <section className="mb-5 rounded-[30px] bg-gradient-to-br from-violet-100 to-pink-100 p-5">
           <p className="text-xs font-black tracking-wider text-violet-500">
@@ -182,7 +345,7 @@ function Rachas({
               size="lg"
             />
 
-            <div>
+            <div className="min-w-0">
               <p className="text-xl font-black text-zinc-800">
                 {leader.user.id ===
                 currentUserId
@@ -194,7 +357,10 @@ function Rachas({
                 {
                   leader.weekDays
                 }{' '}
-                días activos
+                {leader.weekDays ===
+                1
+                  ? 'día activo'
+                  : 'días activos'}
               </p>
             </div>
           </div>
@@ -204,15 +370,33 @@ function Rachas({
             difference > 0 && (
               <p className="mt-4 rounded-2xl bg-white/70 px-4 py-3 text-sm font-bold text-violet-600">
                 Te lleva{' '}
-                {difference}{' '}
-                {difference === 1
+                {
+                  difference
+                }{' '}
+                {difference ===
+                1
                   ? 'día'
                   : 'días'}{' '}
                 👀
               </p>
             )}
+
+          {leader.user.id !==
+            currentUserId &&
+            difference ===
+              0 && (
+              <p className="mt-4 rounded-2xl bg-white/70 px-4 py-3 text-sm font-bold text-violet-600">
+                Están empatados.
+                Esto se puso
+                interesante 👀
+              </p>
+            )}
         </section>
       )}
+
+      {/* ================================= */}
+      {/* RANKING SEMANAL */}
+      {/* ================================= */}
 
       <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
         <div className="mb-5 flex items-center gap-2">
@@ -228,7 +412,10 @@ function Rachas({
 
         <div className="space-y-3">
           {ranking.map(
-            (item, index) => (
+            (
+              item,
+              index,
+            ) => (
               <div
                 key={
                   item.user.id
@@ -240,10 +427,16 @@ function Rachas({
                     : 'bg-zinc-50'
                 }`}
               >
+                {/* POSICIÓN */}
+
                 <div className="w-8 text-center text-xl">
-                  {medals[index] ??
+                  {medals[
+                    index
+                  ] ??
                     `${index + 1}.`}
                 </div>
+
+                {/* AVATAR */}
 
                 <UserAvatar
                   user={
@@ -252,8 +445,10 @@ function Rachas({
                   size="md"
                 />
 
+                {/* INFO */}
+
                 <div className="min-w-0 flex-1">
-                  <p className="font-black text-zinc-800">
+                  <p className="truncate font-black text-zinc-800">
                     {item.user.id ===
                     currentUserId
                       ? 'Vos'
@@ -265,9 +460,15 @@ function Rachas({
                     {
                       item.weekDays
                     }{' '}
-                    días esta semana
+                    {item.weekDays ===
+                    1
+                      ? 'día activo'
+                      : 'días activos'}{' '}
+                    esta semana
                   </p>
                 </div>
+
+                {/* RACHA */}
 
                 <div className="flex items-center gap-1 font-black text-orange-500">
                   <Flame
@@ -284,6 +485,10 @@ function Rachas({
           )}
         </div>
       </section>
+
+      {/* ================================= */}
+      {/* RACHAS ACTUALES */}
+      {/* ================================= */}
 
       <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
         <h2 className="mb-5 text-lg font-black text-zinc-800">
@@ -307,7 +512,7 @@ function Rachas({
                 />
 
                 <div className="min-w-0 flex-1">
-                  <p className="font-black text-zinc-800">
+                  <p className="truncate font-black text-zinc-800">
                     {item.user.id ===
                     currentUserId
                       ? 'Vos'
@@ -320,7 +525,10 @@ function Rachas({
                     {
                       item.bestStreak
                     }{' '}
-                    días
+                    {item.bestStreak ===
+                    1
+                      ? 'día'
+                      : 'días'}
                   </p>
                 </div>
 
@@ -333,7 +541,10 @@ function Rachas({
                     {
                       item.currentStreak
                     }{' '}
-                    días
+                    {item.currentStreak ===
+                    1
+                      ? 'día'
+                      : 'días'}
                   </p>
                 </div>
               </div>
@@ -341,6 +552,10 @@ function Rachas({
           )}
         </div>
       </section>
+
+      {/* ================================= */}
+      {/* ESTADÍSTICAS DEL GRUPO */}
+      {/* ================================= */}
 
       <section className="rounded-[28px] bg-violet-100 p-5">
         <div className="mb-4 flex items-center gap-2">
@@ -355,6 +570,8 @@ function Rachas({
         </div>
 
         <div className="grid grid-cols-2 gap-3">
+          {/* ACTIVIDADES */}
+
           <div className="rounded-2xl bg-white/70 p-4">
             <p className="text-2xl font-black text-zinc-800">
               {
@@ -368,18 +585,56 @@ function Rachas({
             </p>
           </div>
 
+          {/* MINUTOS */}
+
           <div className="rounded-2xl bg-white/70 p-4">
             <p className="text-2xl font-black text-zinc-800">
               {
-                perfectDays
+                totalMinutes
               }
             </p>
 
             <p className="mt-1 text-xs font-semibold text-zinc-500">
-              días donde se
-              movieron todos
+              minutos acumulados
             </p>
           </div>
+
+          {/* DÍAS PERFECTOS */}
+
+          <div className="col-span-2 rounded-2xl bg-white/70 p-4">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-2xl font-black text-zinc-800">
+                  {
+                    perfectDays
+                  }
+                </p>
+
+                <p className="mt-1 text-xs font-semibold text-zinc-500">
+                  {perfectDays ===
+                  1
+                    ? 'día donde se movió todo el grupo'
+                    : 'días donde se movió todo el grupo'}
+                </p>
+              </div>
+
+              <span className="text-3xl">
+                🤝
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* ACLARACIÓN */}
+
+        <div className="mt-4 rounded-2xl bg-violet-200/50 px-4 py-3">
+          <p className="text-xs font-bold leading-relaxed text-violet-700">
+            🏋️ Podés registrar
+            varias actividades por
+            día, pero para la racha
+            ese día cuenta una sola
+            vez.
+          </p>
         </div>
       </section>
     </div>

@@ -56,6 +56,7 @@ type MemberRow = {
 }
 
 type ActivityRow = {
+  id: string
   user_id: string
   activity_date: string
   type: string
@@ -74,33 +75,32 @@ function RachaApp({
   session,
 }: Props) {
   /*
-   * =========================
-   * FECHA
-   * =========================
+   * ========================================
+   * FECHA ACTUAL
+   * ========================================
    */
 
-  const today =
-    useMemo(
-      () => new Date(),
-      [],
-    )
+  const today = useMemo(
+    () => new Date(),
+    [],
+  )
 
   const todayKey =
     formatDateKey(today)
 
   /*
-   * =========================
+   * ========================================
    * USUARIO AUTENTICADO
-   * =========================
+   * ========================================
    */
 
   const currentUserId =
     session.user.id
 
   /*
-   * =========================
+   * ========================================
    * PERFIL
-   * =========================
+   * ========================================
    */
 
   const [
@@ -112,9 +112,9 @@ function RachaApp({
     )
 
   /*
-   * =========================
+   * ========================================
    * GRUPO ACTIVO
-   * =========================
+   * ========================================
    */
 
   const [
@@ -126,27 +126,29 @@ function RachaApp({
     )
 
   /*
-   * =========================
-   * ESTADO DE CUENTA
-   * =========================
+   * ========================================
+   * ESTADO DE LA CUENTA
+   * ========================================
    */
 
   const [
     accountLoading,
     setAccountLoading,
-  ] = useState(true)
+  ] =
+    useState(true)
 
   const [
     accountError,
     setAccountError,
-  ] = useState<
-    string | null
-  >(null)
+  ] =
+    useState<string | null>(
+      null,
+    )
 
   /*
-   * =========================
-   * MIEMBROS DEL GRUPO
-   * =========================
+   * ========================================
+   * USUARIOS DEL GRUPO
+   * ========================================
    */
 
   const [
@@ -156,9 +158,18 @@ function RachaApp({
     useState<User[]>([])
 
   /*
-   * =========================
+   * ========================================
    * ACTIVIDADES
-   * =========================
+   * ========================================
+   *
+   * Ahora soportamos múltiples
+   * actividades por usuario y día:
+   *
+   * activities[fecha][usuario] = [
+   *   actividad1,
+   *   actividad2,
+   *   actividad3
+   * ]
    */
 
   const [
@@ -170,27 +181,29 @@ function RachaApp({
     )
 
   /*
-   * =========================
-   * ESTADO DEL GRUPO
-   * =========================
+   * ========================================
+   * ESTADO DE CARGA DEL GRUPO
+   * ========================================
    */
 
   const [
     groupLoading,
     setGroupLoading,
-  ] = useState(false)
+  ] =
+    useState(false)
 
   const [
     groupError,
     setGroupError,
-  ] = useState<
-    string | null
-  >(null)
+  ] =
+    useState<string | null>(
+      null,
+    )
 
   /*
-   * =========================
+   * ========================================
    * NAVEGACIÓN
-   * =========================
+   * ========================================
    */
 
   const [
@@ -200,22 +213,23 @@ function RachaApp({
     useState<View>('home')
 
   /*
-   * =========================
-   * FECHA SELECCIONADA
-   * =========================
+   * ========================================
+   * DÍA SELECCIONADO
+   * ========================================
    */
 
   const [
     selectedDate,
     setSelectedDate,
-  ] = useState<
-    string | null
-  >(null)
+  ] =
+    useState<string | null>(
+      null,
+    )
 
   /*
-   * =========================
-   * MODAL DE ACTIVIDAD
-   * =========================
+   * ========================================
+   * FECHA DE ACTIVIDAD EN EDICIÓN
+   * ========================================
    */
 
   const [
@@ -223,6 +237,32 @@ function RachaApp({
     setEditingDate,
   ] =
     useState(todayKey)
+
+  /*
+   * ========================================
+   * ID DE ACTIVIDAD EN EDICIÓN
+   * ========================================
+   *
+   * null:
+   * estamos creando una actividad nueva.
+   *
+   * UUID:
+   * estamos editando una actividad existente.
+   */
+
+  const [
+    editingActivityId,
+    setEditingActivityId,
+  ] =
+    useState<string | null>(
+      null,
+    )
+
+  /*
+   * ========================================
+   * MODAL DE ACTIVIDAD
+   * ========================================
+   */
 
   const [
     activityModalOpen,
@@ -252,10 +292,12 @@ function RachaApp({
           groupsResult,
         ] =
           await Promise.all([
+            /*
+             * PERFIL
+             */
+
             supabase
-              .from(
-                'profiles',
-              )
+              .from('profiles')
               .select(
                 'id, name, avatar_url',
               )
@@ -265,10 +307,12 @@ function RachaApp({
               )
               .single(),
 
+            /*
+             * GRUPOS
+             */
+
             supabase
-              .from(
-                'groups',
-              )
+              .from('groups')
               .select(
                 'id, name, invite_code, created_by',
               )
@@ -282,7 +326,7 @@ function RachaApp({
           ])
 
         /*
-         * PROFILE
+         * ERROR PERFIL
          */
 
         if (
@@ -290,7 +334,7 @@ function RachaApp({
           !profileResult.data
         ) {
           console.error(
-            'Error cargando profile:',
+            'Error cargando perfil:',
             profileResult.error,
           )
 
@@ -306,7 +350,7 @@ function RachaApp({
         }
 
         /*
-         * GRUPOS
+         * ERROR GRUPOS
          */
 
         if (
@@ -328,19 +372,23 @@ function RachaApp({
           return
         }
 
+        /*
+         * GUARDAR PERFIL
+         */
+
         setProfile(
           profileResult.data as Profile,
         )
 
         /*
-         * Por ahora utilizamos
-         * el primer grupo.
+         * POR AHORA:
+         * usamos el primer grupo
+         * disponible del usuario.
          */
 
         const firstGroup =
-          groupsResult.data?.[
-            0
-          ] ?? null
+          groupsResult.data?.[0] ??
+          null
 
         setActiveGroup(
           firstGroup
@@ -358,7 +406,7 @@ function RachaApp({
 
   /*
    * ========================================
-   * CARGAR MIEMBROS + ACTIVIDADES
+   * CARGAR MIEMBROS + ACTIVIDADES DEL GRUPO
    * ========================================
    */
 
@@ -386,7 +434,7 @@ function RachaApp({
         ] =
           await Promise.all([
             /*
-             * MIEMBROS
+             * MIEMBROS DEL GRUPO
              */
 
             supabase
@@ -407,7 +455,7 @@ function RachaApp({
               ),
 
             /*
-             * ACTIVIDADES
+             * ACTIVIDADES DEL GRUPO
              */
 
             supabase
@@ -415,6 +463,7 @@ function RachaApp({
                 'activities',
               )
               .select(`
+                id,
                 user_id,
                 activity_date,
                 type,
@@ -423,6 +472,13 @@ function RachaApp({
               .eq(
                 'group_id',
                 activeGroup.id,
+              )
+              .order(
+                'created_at',
+                {
+                  ascending:
+                    true,
+                },
               ),
           ])
 
@@ -474,7 +530,8 @@ function RachaApp({
 
         /*
          * ========================================
-         * PROFILES → USERS
+         * CONVERTIR MIEMBROS DE SUPABASE
+         * A USERS DE LA UI
          * ========================================
          */
 
@@ -487,9 +544,7 @@ function RachaApp({
         const loadedUsers =
           memberRows
             .filter(
-              (
-                member,
-              ) =>
+              (member) =>
                 Boolean(
                   member.profile,
                 ),
@@ -509,11 +564,6 @@ function RachaApp({
                   name:
                     memberProfile.name,
 
-                  /*
-                   * AHORA EL AVATAR
-                   * VIENE DE SUPABASE.
-                   */
-
                   avatar:
                     memberProfile.avatar_url,
 
@@ -532,13 +582,13 @@ function RachaApp({
                 }
               },
             )
-
-            /*
-             * Usuario actual primero.
-             */
-
             .sort(
               (a, b) => {
+                /*
+                 * El usuario actual
+                 * aparece primero.
+                 */
+
                 if (
                   a.id ===
                   currentUserId
@@ -565,8 +615,48 @@ function RachaApp({
 
         /*
          * ========================================
-         * ACTIVIDADES → MAPA
+         * CONVERTIR ACTIVIDADES
          * ========================================
+         *
+         * Supabase devuelve filas:
+         *
+         * [
+         *   {
+         *     id,
+         *     user_id,
+         *     activity_date,
+         *     type,
+         *     duration
+         *   }
+         * ]
+         *
+         * Nosotros necesitamos:
+         *
+         * {
+         *   "2026-08-14": {
+         *
+         *     "uuid-lucas": [
+         *       {
+         *         id: "...",
+         *         type: "Gym",
+         *         duration: 60
+         *       },
+         *       {
+         *         id: "...",
+         *         type: "Caminata",
+         *         duration: 40
+         *       }
+         *     ],
+         *
+         *     "uuid-edith": [
+         *       {
+         *         id: "...",
+         *         type: "Gym",
+         *         duration: 45
+         *       }
+         *     ]
+         *   }
+         * }
          */
 
         const activityRows =
@@ -581,6 +671,11 @@ function RachaApp({
 
         activityRows.forEach(
           (row) => {
+            /*
+             * Si todavía no existe
+             * el día, lo creamos.
+             */
+
             if (
               !activityMap[
                 row.activity_date
@@ -591,17 +686,44 @@ function RachaApp({
               ] = {}
             }
 
+            /*
+             * Si todavía no existe
+             * el array del usuario,
+             * lo creamos.
+             */
+
+            if (
+              !activityMap[
+                row.activity_date
+              ][
+                row.user_id
+              ]
+            ) {
+              activityMap[
+                row.activity_date
+              ][
+                row.user_id
+              ] = []
+            }
+
+            /*
+             * Agregamos la actividad.
+             */
+
             activityMap[
               row.activity_date
             ][
               row.user_id
-            ] = {
+            ].push({
+              id:
+                row.id,
+
               type:
                 row.type as ActivityType,
 
               duration:
                 row.duration,
-            }
+            })
           },
         )
 
@@ -637,10 +759,23 @@ function RachaApp({
    * ========================================
    * ABRIR MODAL DE ACTIVIDAD
    * ========================================
+   *
+   * Ejemplo nueva:
+   *
+   * openActivityModal("2026-08-14")
+   *
+   * Ejemplo editar:
+   *
+   * openActivityModal(
+   *   "2026-08-14",
+   *   "uuid-actividad"
+   * )
    */
 
   const openActivityModal = (
     dateKey = todayKey,
+    activityId:
+      string | null = null,
   ) => {
     setSelectedDate(
       null,
@@ -650,6 +785,10 @@ function RachaApp({
       dateKey,
     )
 
+    setEditingActivityId(
+      activityId,
+    )
+
     setActivityModalOpen(
       true,
     )
@@ -657,7 +796,7 @@ function RachaApp({
 
   /*
    * ========================================
-   * CERRAR MODAL
+   * CERRAR MODAL DE ACTIVIDAD
    * ========================================
    */
 
@@ -666,12 +805,43 @@ function RachaApp({
       setActivityModalOpen(
         false,
       )
+
+      setEditingActivityId(
+        null,
+      )
     }
+
+  /*
+   * ========================================
+   * ACTIVIDAD ACTUAL EN EDICIÓN
+   * ========================================
+   */
+
+  const currentEditingActivity =
+    editingActivityId
+      ? (
+          activities[
+            editingDate
+          ]?.[
+            currentUserId
+          ] ?? []
+        ).find(
+          (activity) =>
+            activity.id ===
+            editingActivityId,
+        )
+      : undefined
 
   /*
    * ========================================
    * GUARDAR ACTIVIDAD
    * ========================================
+   *
+   * Si editingActivityId existe:
+   * hacemos UPDATE.
+   *
+   * Si no:
+   * hacemos INSERT.
    */
 
   const saveActivity =
@@ -682,37 +852,158 @@ function RachaApp({
         return
       }
 
+      /*
+       * ========================================
+       * EDITAR ACTIVIDAD EXISTENTE
+       * ========================================
+       */
+
+      if (
+        editingActivityId
+      ) {
+        const {
+          data,
+          error,
+        } =
+          await supabase
+            .from(
+              'activities',
+            )
+            .update({
+              type:
+                activity.type,
+
+              duration:
+                activity.duration,
+            })
+            .eq(
+              'id',
+              editingActivityId,
+            )
+            .eq(
+              'user_id',
+              currentUserId,
+            )
+            .eq(
+              'group_id',
+              activeGroup.id,
+            )
+            .select(
+              'id, type, duration',
+            )
+            .single()
+
+        if (
+          error ||
+          !data
+        ) {
+          console.error(
+            'Error editando actividad:',
+            error,
+          )
+
+          window.alert(
+            'No pudimos editar la actividad.',
+          )
+
+          return
+        }
+
+        /*
+         * Actualizar estado local.
+         */
+
+        setActivities(
+          (
+            currentActivities,
+          ) => {
+            const currentDay =
+              currentActivities[
+                editingDate
+              ] ?? {}
+
+            const userActivities =
+              currentDay[
+                currentUserId
+              ] ?? []
+
+            const updatedActivities =
+              userActivities.map(
+                (
+                  currentActivity,
+                ) =>
+                  currentActivity.id ===
+                  editingActivityId
+                    ? {
+                        id:
+                          data.id,
+
+                        type:
+                          data.type as ActivityType,
+
+                        duration:
+                          data.duration,
+                      }
+                    : currentActivity,
+              )
+
+            return {
+              ...currentActivities,
+
+              [editingDate]: {
+                ...currentDay,
+
+                [currentUserId]:
+                  updatedActivities,
+              },
+            }
+          },
+        )
+
+        closeActivityModal()
+
+        return
+      }
+
+      /*
+       * ========================================
+       * CREAR ACTIVIDAD NUEVA
+       * ========================================
+       */
+
       const {
+        data,
         error,
       } =
         await supabase
           .from(
             'activities',
           )
-          .upsert(
-            {
-              user_id:
-                currentUserId,
+          .insert({
+            user_id:
+              currentUserId,
 
-              group_id:
-                activeGroup.id,
+            group_id:
+              activeGroup.id,
 
-              activity_date:
-                editingDate,
+            activity_date:
+              editingDate,
 
-              type:
-                activity.type,
+            type:
+              activity.type,
 
-              duration:
-                activity.duration,
-            },
-            {
-              onConflict:
-                'user_id,group_id,activity_date',
-            },
+            duration:
+              activity.duration,
+          })
+          .select(
+            'id, type, duration',
           )
+          .single()
 
-      if (error) {
+      if (
+        error ||
+        !data
+      ) {
         console.error(
           'Error guardando actividad:',
           error,
@@ -726,24 +1017,54 @@ function RachaApp({
       }
 
       /*
-       * Actualización inmediata de UI.
+       * Convertir fila nueva
+       * a nuestro Activity.
+       */
+
+      const newActivity:
+        Activity = {
+          id:
+            data.id,
+
+          type:
+            data.type as ActivityType,
+
+          duration:
+            data.duration,
+        }
+
+      /*
+       * Agregar actividad
+       * al estado local.
        */
 
       setActivities(
         (
           currentActivities,
-        ) => ({
-          ...currentActivities,
-
-          [editingDate]: {
-            ...(currentActivities[
+        ) => {
+          const currentDay =
+            currentActivities[
               editingDate
-            ] ?? {}),
+            ] ?? {}
 
-            [currentUserId]:
-              activity,
-          },
-        }),
+          const userActivities =
+            currentDay[
+              currentUserId
+            ] ?? []
+
+          return {
+            ...currentActivities,
+
+            [editingDate]: {
+              ...currentDay,
+
+              [currentUserId]: [
+                ...userActivities,
+                newActivity,
+              ],
+            },
+          }
+        },
       )
 
       closeActivityModal()
@@ -753,13 +1074,25 @@ function RachaApp({
    * ========================================
    * ELIMINAR ACTIVIDAD
    * ========================================
+   *
+   * Ahora eliminamos UNA actividad
+   * mediante su ID.
+   *
+   * Ya no eliminamos todo
+   * el día del usuario.
    */
 
   const deleteActivity =
     async () => {
-      if (!activeGroup) {
+      if (
+        !activeGroup ||
+        !editingActivityId
+      ) {
         return
       }
+
+      const activityIdToDelete =
+        editingActivityId
 
       const {
         error,
@@ -770,16 +1103,16 @@ function RachaApp({
           )
           .delete()
           .eq(
+            'id',
+            activityIdToDelete,
+          )
+          .eq(
             'user_id',
             currentUserId,
           )
           .eq(
             'group_id',
             activeGroup.id,
-          )
-          .eq(
-            'activity_date',
-            editingDate,
           )
 
       if (error) {
@@ -795,6 +1128,10 @@ function RachaApp({
         return
       }
 
+      /*
+       * Actualizar estado local.
+       */
+
       setActivities(
         (
           currentActivities,
@@ -803,19 +1140,57 @@ function RachaApp({
             ...currentActivities,
           }
 
-          const day = {
+          const currentDay = {
             ...(copy[
               editingDate
             ] ?? {}),
           }
 
-          delete day[
-            currentUserId
-          ]
+          const userActivities =
+            currentDay[
+              currentUserId
+            ] ?? []
+
+          const remainingActivities =
+            userActivities.filter(
+              (activity) =>
+                activity.id !==
+                activityIdToDelete,
+            )
+
+          /*
+           * Si todavía tiene actividades
+           * ese día, mantenemos al usuario.
+           */
+
+          if (
+            remainingActivities.length >
+            0
+          ) {
+            currentDay[
+              currentUserId
+            ] =
+              remainingActivities
+          } else {
+            /*
+             * Si eliminó su última actividad,
+             * eliminamos al usuario de ese día.
+             */
+
+            delete currentDay[
+              currentUserId
+            ]
+          }
+
+          /*
+           * Si ya no queda ningún usuario
+           * con actividades ese día,
+           * eliminamos el día completo.
+           */
 
           if (
             Object.keys(
-              day,
+              currentDay,
             ).length === 0
           ) {
             delete copy[
@@ -824,7 +1199,8 @@ function RachaApp({
           } else {
             copy[
               editingDate
-            ] = day
+            ] =
+              currentDay
           }
 
           return copy
@@ -836,186 +1212,182 @@ function RachaApp({
 
   /*
    * ========================================
-   * ACTIVIDAD ACTUAL EN EDICIÓN
-   * ========================================
-   */
-
-  const currentEditingActivity =
-    activities[
-      editingDate
-    ]?.[
-      currentUserId
-    ]
-
-  /*
-   * ========================================
    * GUARDAR PERFIL
    * ========================================
    */
 
-const saveProfile =
-  async (
-    name: string,
-    avatarUrl: string | null,
-    avatarFile: File | null,
-  ) => {
-    let finalAvatarUrl =
-      avatarUrl
+  const saveProfile =
+    async (
+      name: string,
+      avatarUrl: string | null,
+      avatarFile: File | null,
+    ) => {
+      let finalAvatarUrl =
+        avatarUrl
 
-    /*
-     * =========================
-     * SUBIR AVATAR
-     * =========================
-     */
+      /*
+       * ========================================
+       * SUBIR AVATAR PERSONALIZADO
+       * ========================================
+       */
 
-    if (avatarFile) {
-      const avatarPath =
-        `${currentUserId}/avatar`
+      if (avatarFile) {
+        const avatarPath =
+          `${currentUserId}/avatar`
 
-      const {
-        error:
-          uploadError,
-      } =
-        await supabase.storage
-          .from('avatars')
-          .upload(
-            avatarPath,
-            avatarFile,
-            {
-              upsert: true,
+        const {
+          error:
+            uploadError,
+        } =
+          await supabase.storage
+            .from('avatars')
+            .upload(
+              avatarPath,
+              avatarFile,
+              {
+                upsert: true,
 
-              contentType:
-                avatarFile.type,
+                contentType:
+                  avatarFile.type,
 
-              cacheControl:
-                '3600',
-            },
+                cacheControl:
+                  '3600',
+              },
+            )
+
+        if (
+          uploadError
+        ) {
+          console.error(
+            'Error subiendo avatar:',
+            uploadError,
           )
 
-      if (uploadError) {
+          window.alert(
+            'No pudimos subir tu dibu.',
+          )
+
+          return false
+        }
+
+        /*
+         * Obtener URL pública.
+         */
+
+        const {
+          data:
+            publicUrlData,
+        } =
+          supabase.storage
+            .from('avatars')
+            .getPublicUrl(
+              avatarPath,
+            )
+
+        /*
+         * Agregamos versión
+         * para evitar caché.
+         */
+
+        finalAvatarUrl =
+          `${
+            publicUrlData.publicUrl
+          }?v=${Date.now()}`
+      }
+
+      /*
+       * ========================================
+       * ACTUALIZAR PROFILE EN SUPABASE
+       * ========================================
+       */
+
+      const {
+        data,
+        error,
+      } =
+        await supabase
+          .from('profiles')
+          .update({
+            name,
+
+            avatar_url:
+              finalAvatarUrl,
+          })
+          .eq(
+            'id',
+            currentUserId,
+          )
+          .select(
+            'id, name, avatar_url',
+          )
+          .single()
+
+      if (
+        error ||
+        !data
+      ) {
         console.error(
-          'Error subiendo avatar:',
-          uploadError,
+          'Error actualizando perfil:',
+          error,
         )
 
         window.alert(
-          'No pudimos subir tu dibu.',
+          'No pudimos guardar tu perfil.',
         )
 
         return false
       }
 
-      /*
-       * Como avatars es público,
-       * obtenemos una URL pública.
-       */
-
-      const {
-        data:
-          publicUrlData,
-      } =
-        supabase.storage
-          .from('avatars')
-          .getPublicUrl(
-            avatarPath,
-          )
+      const updatedProfile =
+        data as Profile
 
       /*
-       * Agregamos ?v= para evitar
-       * que el navegador nos muestre
-       * la foto anterior por caché.
+       * Actualizamos profile.
        */
 
-      finalAvatarUrl =
-        `${
-          publicUrlData.publicUrl
-        }?v=${Date.now()}`
-    }
-
-    /*
-     * =========================
-     * ACTUALIZAR PROFILE
-     * =========================
-     */
-
-    const {
-      data,
-      error,
-    } =
-      await supabase
-        .from(
-          'profiles',
-        )
-        .update({
-          name,
-          avatar_url:
-            finalAvatarUrl,
-        })
-        .eq(
-          'id',
-          currentUserId,
-        )
-        .select(
-          'id, name, avatar_url',
-        )
-        .single()
-
-    if (
-      error ||
-      !data
-    ) {
-      console.error(
-        'Error actualizando perfil:',
-        error,
+      setProfile(
+        updatedProfile,
       )
 
-      window.alert(
-        'No pudimos guardar tu perfil.',
+      /*
+       * Actualizamos usuario
+       * dentro de la UI.
+       */
+
+      setUsers(
+        (
+          currentUsers,
+        ) =>
+          currentUsers.map(
+            (user) =>
+              user.id ===
+              currentUserId
+                ? {
+                    ...user,
+
+                    name:
+                      updatedProfile.name,
+
+                    avatar:
+                      updatedProfile.avatar_url,
+
+                    fallback:
+                      updatedProfile.name
+                        .trim()
+                        .charAt(0)
+                        .toUpperCase() ||
+                      '?',
+                  }
+                : user,
+          ),
       )
 
-      return false
+      return true
     }
 
-    const updatedProfile =
-      data as Profile
-
-    setProfile(
-      updatedProfile,
-    )
-
-    setUsers(
-      (
-        currentUsers,
-      ) =>
-        currentUsers.map(
-          (user) =>
-            user.id ===
-            currentUserId
-              ? {
-                  ...user,
-
-                  name:
-                    updatedProfile.name,
-
-                  avatar:
-                    updatedProfile.avatar_url,
-
-                  fallback:
-                    updatedProfile.name
-                      .trim()
-                      .charAt(0)
-                      .toUpperCase() ||
-                    '?',
-                }
-              : user,
-        ),
-    )
-
-    return true
-  }
   /*
    * ========================================
-   * LOGOUT
+   * CERRAR SESIÓN
    * ========================================
    */
 
@@ -1036,7 +1408,7 @@ const saveProfile =
 
   /*
    * ========================================
-   * COPIAR CÓDIGO
+   * COPIAR CÓDIGO DE INVITACIÓN
    * ========================================
    */
 
@@ -1060,7 +1432,7 @@ const saveProfile =
 
   /*
    * ========================================
-   * CARGANDO CUENTA
+   * PANTALLA DE CARGA DE CUENTA
    * ========================================
    */
 
@@ -1082,7 +1454,7 @@ const saveProfile =
 
   /*
    * ========================================
-   * ERROR CUENTA
+   * ERROR DE CUENTA
    * ========================================
    */
 
@@ -1102,7 +1474,8 @@ const saveProfile =
           </h1>
 
           <p className="mt-2 text-sm text-zinc-500">
-            {accountError}
+            {accountError ??
+              'No pudimos cargar tu cuenta.'}
           </p>
 
           <button
@@ -1120,7 +1493,7 @@ const saveProfile =
 
   /*
    * ========================================
-   * SIN GRUPO
+   * USUARIO SIN GRUPO
    * ========================================
    */
 
@@ -1154,7 +1527,7 @@ const saveProfile =
       <main className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="text-4xl">
-            🐰🔥
+            🔥
           </div>
 
           <p className="mt-3 font-bold text-violet-500">
@@ -1167,7 +1540,7 @@ const saveProfile =
 
   /*
    * ========================================
-   * ERROR GRUPO
+   * ERROR CARGANDO GRUPO
    * ========================================
    */
 
@@ -1202,15 +1575,15 @@ const saveProfile =
 
   /*
    * ========================================
-   * APP
+   * APLICACIÓN PRINCIPAL
    * ========================================
    */
 
   return (
     <main className="min-h-screen pb-28">
-      {/* ========================= */}
+      {/* ================================= */}
       {/* HEADER DEL GRUPO */}
-      {/* ========================= */}
+      {/* ================================= */}
 
       <div className="mx-auto w-full max-w-md px-5 pt-4">
         <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
@@ -1220,10 +1593,7 @@ const saveProfile =
             </p>
 
             <p className="truncate font-black text-zinc-800">
-              🔥{' '}
-              {
-                activeGroup.name
-              }
+              🔥 {activeGroup.name}
             </p>
           </div>
 
@@ -1260,12 +1630,11 @@ const saveProfile =
         </div>
       </div>
 
-      {/* ========================= */}
-      {/* HOME */}
-      {/* ========================= */}
+      {/* ================================= */}
+      {/* INICIO */}
+      {/* ================================= */}
 
-      {view ===
-        'home' && (
+      {view === 'home' && (
         <Home
           activities={
             activities
@@ -1283,14 +1652,16 @@ const saveProfile =
             setSelectedDate
           }
           onAddActivity={() =>
-            openActivityModal()
+            openActivityModal(
+              todayKey,
+            )
           }
         />
       )}
 
-      {/* ========================= */}
+      {/* ================================= */}
       {/* CALENDARIO */}
-      {/* ========================= */}
+      {/* ================================= */}
 
       {view ===
         'calendar' && (
@@ -1311,16 +1682,14 @@ const saveProfile =
             setSelectedDate
           }
           onBack={() =>
-            setView(
-              'home',
-            )
+            setView('home')
           }
         />
       )}
 
-      {/* ========================= */}
+      {/* ================================= */}
       {/* RACHAS */}
-      {/* ========================= */}
+      {/* ================================= */}
 
       {view ===
         'rachas' && (
@@ -1340,9 +1709,9 @@ const saveProfile =
         />
       )}
 
-      {/* ========================= */}
+      {/* ================================= */}
       {/* PERFIL */}
-      {/* ========================= */}
+      {/* ================================= */}
 
       {view ===
         'profile' &&
@@ -1355,8 +1724,8 @@ const saveProfile =
               profile
             }
             email={
-              session.user
-                .email ?? ''
+              session.user.email ??
+              ''
             }
             group={
               activeGroup
@@ -1373,9 +1742,9 @@ const saveProfile =
           />
         )}
 
-      {/* ========================= */}
-      {/* NAVEGACIÓN */}
-      {/* ========================= */}
+      {/* ================================= */}
+      {/* BARRA INFERIOR */}
+      {/* ================================= */}
 
       <BottomNavigation
         view={
@@ -1385,13 +1754,15 @@ const saveProfile =
           setView
         }
         onAddActivity={() =>
-          openActivityModal()
+          openActivityModal(
+            todayKey,
+          )
         }
       />
 
-      {/* ========================= */}
-      {/* DETALLE DE DÍA */}
-      {/* ========================= */}
+      {/* ================================= */}
+      {/* DETALLE DEL DÍA */}
+      {/* ================================= */}
 
       <DayDetailModal
         dateKey={
@@ -1419,9 +1790,9 @@ const saveProfile =
         }
       />
 
-      {/* ========================= */}
-      {/* ACTIVIDAD */}
-      {/* ========================= */}
+      {/* ================================= */}
+      {/* MODAL DE ACTIVIDAD */}
+      {/* ================================= */}
 
       <ActivityModal
         open={

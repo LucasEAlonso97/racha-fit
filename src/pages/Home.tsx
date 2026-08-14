@@ -32,9 +32,11 @@ type Props = {
   users: User[]
   currentUserId: string
   today: Date
+
   onSelectDate: (
     dateKey: string,
   ) => void
+
   onAddActivity: () => void
 }
 
@@ -46,8 +48,20 @@ function Home({
   onSelectDate,
   onAddActivity,
 }: Props) {
+  /*
+   * ========================================
+   * FECHA
+   * ========================================
+   */
+
   const todayKey =
     formatDateKey(today)
+
+  /*
+   * ========================================
+   * USUARIO ACTUAL
+   * ========================================
+   */
 
   const currentUser =
     users.find(
@@ -59,6 +73,12 @@ function Home({
   if (!currentUser) {
     return null
   }
+
+  /*
+   * ========================================
+   * SEMANA
+   * ========================================
+   */
 
   const weekDates =
     getWeekDates(today)
@@ -80,6 +100,12 @@ function Home({
       100,
     )
 
+  /*
+   * ========================================
+   * RACHAS
+   * ========================================
+   */
+
   const currentStreak =
     getCurrentStreak(
       activities,
@@ -93,36 +119,79 @@ function Home({
       currentUserId,
     )
 
+  /*
+   * ========================================
+   * ACTIVIDADES DE HOY
+   * ========================================
+   */
+
   const todayActivities =
     activities[todayKey] ?? {}
 
-  const myActivity =
+  /*
+   * Ahora esto es un ARRAY.
+   */
+
+  const myActivities =
     todayActivities[
       currentUserId
-    ]
+    ] ?? []
+
+  /*
+   * Total de minutos propios.
+   */
+
+  const myTotalMinutes =
+    myActivities.reduce(
+      (
+        total,
+        activity,
+      ) =>
+        total +
+        activity.duration,
+      0,
+    )
+
+  /*
+   * Usuarios del grupo
+   * que hicieron algo hoy.
+   */
 
   const todayOtherUsers =
     users.filter(
       (user) =>
         user.id !==
           currentUserId &&
-        todayActivities[
-          user.id
-        ],
+        (
+          todayActivities[
+            user.id
+          ] ?? []
+        ).length > 0,
     )
+
+  /*
+   * ========================================
+   * UI
+   * ========================================
+   */
 
   return (
     <div className="mx-auto w-full max-w-md px-5 pt-8">
+      {/* ================================= */}
+      {/* HEADER */}
+      {/* ================================= */}
+
       <header className="mb-7">
         <div className="mb-2 flex items-center justify-between">
           <div>
-            <p className="text-sm font-bold text-violet-500">
+            <p className="text-sm font-bold capitalize text-violet-500">
               {
                 weekDayNames[
                   today.getDay()
                 ]
               }
-              , {today.getDate()}{' '}
+              ,{' '}
+              {today.getDate()}{' '}
               de{' '}
               {
                 monthNames[
@@ -141,7 +210,9 @@ function Home({
           </div>
 
           <UserAvatar
-            user={currentUser}
+            user={
+              currentUser
+            }
             size="lg"
           />
         </div>
@@ -151,7 +222,9 @@ function Home({
         </p>
       </header>
 
+      {/* ================================= */}
       {/* RACHA */}
+      {/* ================================= */}
 
       <section className="mb-5 overflow-hidden rounded-[30px] bg-gradient-to-br from-violet-100 to-pink-50 p-5 shadow-sm">
         <div className="mb-5 flex items-start justify-between">
@@ -167,7 +240,9 @@ function Home({
               />
 
               <span className="text-4xl font-black text-zinc-800">
-                {currentStreak}
+                {
+                  currentStreak
+                }
               </span>
 
               <span className="mt-2 font-semibold text-zinc-600">
@@ -182,12 +257,17 @@ function Home({
             </p>
 
             <p className="font-black text-violet-600">
-              {bestStreak} días
+              {
+                bestStreak
+              }{' '}
+              días
             </p>
           </div>
         </div>
 
-        {/* SEMANA */}
+        {/* ================================= */}
+        {/* MINI CALENDARIO SEMANAL */}
+        {/* ================================= */}
 
         <div className="grid grid-cols-7 gap-1">
           {weekDates.map(
@@ -202,14 +282,21 @@ function Home({
                   dateKey
                 ] ?? {}
 
+              /*
+               * Un usuario aparece
+               * una sola vez aunque
+               * haya hecho 5 actividades.
+               */
+
               const activeUsers =
                 users.filter(
                   (user) =>
-                    Boolean(
+                    (
                       dayActivities[
                         user.id
-                      ],
-                    ),
+                      ] ?? []
+                    ).length >
+                    0,
                 )
 
               const isToday =
@@ -218,7 +305,9 @@ function Home({
 
               return (
                 <button
-                  key={dateKey}
+                  key={
+                    dateKey
+                  }
                   onClick={() =>
                     onSelectDate(
                       dateKey,
@@ -249,13 +338,17 @@ function Home({
                         : 'text-zinc-600'
                     }`}
                   >
-                    {date.getDate()}
+                    {
+                      date.getDate()
+                    }
                   </div>
 
                   <div className="mt-2 flex min-h-10 justify-center">
                     <div className="flex -space-x-3">
                       {activeUsers.map(
-                        (user) => (
+                        (
+                          user,
+                        ) => (
                           <UserAvatar
                             key={
                               user.id
@@ -275,17 +368,23 @@ function Home({
           )}
         </div>
 
+        {/* ================================= */}
         {/* LEYENDA */}
+        {/* ================================= */}
 
         <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3 border-t border-violet-200/70 pt-4">
           {users.map(
             (user) => (
               <div
-                key={user.id}
+                key={
+                  user.id
+                }
                 className="flex items-center gap-2"
               >
                 <UserAvatar
-                  user={user}
+                  user={
+                    user
+                  }
                   size="sm"
                 />
 
@@ -301,7 +400,9 @@ function Home({
         </div>
       </section>
 
-      {/* META */}
+      {/* ================================= */}
+      {/* META SEMANAL */}
+      {/* ================================= */}
 
       <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
@@ -311,8 +412,14 @@ function Home({
             </p>
 
             <h2 className="mt-1 text-xl font-black text-zinc-800">
-              {weekActivityCount}{' '}
-              de {weeklyGoal} días
+              {
+                weekActivityCount
+              }{' '}
+              de{' '}
+              {
+                weeklyGoal
+              }{' '}
+              días
             </h2>
           </div>
 
@@ -344,7 +451,9 @@ function Home({
         </p>
       </section>
 
-      {/* GRUPO HOY */}
+      {/* ================================= */}
+      {/* ACTIVIDAD DEL GRUPO HOY */}
+      {/* ================================= */}
 
       <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
@@ -357,53 +466,100 @@ function Home({
           </p>
         </div>
 
+        {/* ================================= */}
+        {/* OTROS USUARIOS */}
+        {/* ================================= */}
+
         {todayOtherUsers.length >
         0 ? (
           <div className="space-y-4">
             {todayOtherUsers.map(
               (user) => {
-                const activity =
+                const userActivities =
                   todayActivities[
                     user.id
+                  ] ?? []
+
+                const totalMinutes =
+                  userActivities.reduce(
+                    (
+                      total,
+                      activity,
+                    ) =>
+                      total +
+                      activity.duration,
+                    0,
+                  )
+
+                const firstActivity =
+                  userActivities[
+                    0
                   ]
 
-                if (!activity) {
-                  return null
-                }
-
                 return (
-                  <div
-                    key={user.id}
-                    className="flex items-center gap-4"
+                  <button
+                    key={
+                      user.id
+                    }
+                    onClick={() =>
+                      onSelectDate(
+                        todayKey,
+                      )
+                    }
+                    className="flex w-full items-center gap-4 rounded-2xl p-1 text-left transition active:scale-[0.99]"
                   >
                     <UserAvatar
-                      user={user}
+                      user={
+                        user
+                      }
                       size="lg"
                     />
 
                     <div className="min-w-0 flex-1">
                       <p className="font-black text-zinc-800">
-                        {user.name}{' '}
+                        {
+                          user.name
+                        }{' '}
                         ya sumó su día
                       </p>
 
                       <p className="mt-1 text-sm text-zinc-500">
-                        {getActivityEmoji(
-                          activity.type,
-                        )}{' '}
-                        {activity.type}{' '}
-                        ·{' '}
-                        {
-                          activity.duration
-                        }{' '}
-                        min
+                        {userActivities.length ===
+                        1 ? (
+                          <>
+                            {firstActivity &&
+                              getActivityEmoji(
+                                firstActivity.type,
+                              )}{' '}
+                            {
+                              firstActivity?.type
+                            }{' '}
+                            ·{' '}
+                            {
+                              firstActivity?.duration
+                            }{' '}
+                            min
+                          </>
+                        ) : (
+                          <>
+                            🔥{' '}
+                            {
+                              userActivities.length
+                            }{' '}
+                            actividades ·{' '}
+                            {
+                              totalMinutes
+                            }{' '}
+                            min
+                          </>
+                        )}
                       </p>
                     </div>
 
                     <span className="text-xl">
                       🔥
                     </span>
-                  </div>
+                  </button>
                 )
               },
             )}
@@ -416,31 +572,83 @@ function Home({
           </div>
         )}
 
-        {myActivity ? (
-          <div className="mt-5">
-            <div className="rounded-2xl bg-green-50 p-4">
-              <p className="font-bold text-green-700">
-                ✓ Vos también
-                sumaste hoy
-              </p>
+        {/* ================================= */}
+        {/* MIS ACTIVIDADES */}
+        {/* ================================= */}
 
-              <p className="mt-1 text-sm text-green-600">
-                {getActivityEmoji(
-                  myActivity.type,
-                )}{' '}
-                {myActivity.type} ·{' '}
-                {myActivity.duration}{' '}
-                min
-              </p>
-            </div>
+        {myActivities.length >
+        0 ? (
+          <div className="mt-5">
+            <button
+              onClick={() =>
+                onSelectDate(
+                  todayKey,
+                )
+              }
+              className="w-full rounded-2xl bg-green-50 p-4 text-left transition active:scale-[0.99]"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-bold text-green-700">
+                    ✓ Vos también
+                    sumaste hoy
+                  </p>
+
+                  <p className="mt-1 text-sm text-green-600">
+                    {
+                      myActivities.length
+                    }{' '}
+                    {myActivities.length ===
+                    1
+                      ? 'actividad'
+                      : 'actividades'}
+                    {' · '}
+                    {
+                      myTotalMinutes
+                    }{' '}
+                    min
+                  </p>
+                </div>
+
+                <span className="text-xl">
+                  🔥
+                </span>
+              </div>
+
+              {/* RESUMEN */}
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                {myActivities.map(
+                  (
+                    activity,
+                    index,
+                  ) => (
+                    <span
+                      key={
+                        activity.id ??
+                        `${activity.type}-${index}`
+                      }
+                      className="rounded-full bg-white/80 px-3 py-1 text-xs font-bold text-green-700"
+                    >
+                      {getActivityEmoji(
+                        activity.type,
+                      )}{' '}
+                      {
+                        activity.type
+                      }
+                    </span>
+                  ),
+                )}
+              </div>
+            </button>
 
             <button
               onClick={
                 onAddActivity
               }
-              className="mt-3 w-full rounded-2xl bg-zinc-100 py-3 font-bold text-zinc-600 transition active:scale-[0.98]"
+              className="mt-3 w-full rounded-2xl bg-violet-100 py-3 font-bold text-violet-600 transition active:scale-[0.98]"
             >
-              Editar actividad
+              + Agregar otra actividad
             </button>
           </div>
         ) : (
@@ -455,16 +663,26 @@ function Home({
         )}
       </section>
 
+      {/* ================================= */}
+      {/* MENSAJE */}
+      {/* ================================= */}
+
       <section className="rounded-[28px] bg-pink-100 px-5 py-4">
         <p className="font-black text-pink-600">
           🔥 No cortes la cadena.
         </p>
 
         <p className="mt-1 text-sm text-pink-500">
-          {todayOtherUsers.length >
+          {myActivities.length >
           0
-            ? 'Ellos ya se movieron. ¿Vos qué onda?'
-            : 'Hoy la racha puede arrancar con vos.'}
+            ? myActivities.length >
+              1
+              ? `Hoy ya metiste ${myActivities.length} actividades. Banco una locura jajaj.`
+              : 'Ya sumaste tu día. Si pinta, podés meter otra.'
+            : todayOtherUsers.length >
+                0
+              ? 'Ellos ya se movieron. ¿Vos qué onda?'
+              : 'Hoy la racha puede arrancar con vos.'}
         </p>
       </section>
     </div>

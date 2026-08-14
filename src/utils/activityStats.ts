@@ -9,6 +9,22 @@ import {
   parseDateKey,
 } from './date'
 
+function hasActivity(
+  activities: ActivitiesByDate,
+  dateKey: string,
+  userId: string,
+) {
+  return (
+    (
+      activities[
+        dateKey
+      ]?.[
+        userId
+      ] ?? []
+    ).length > 0
+  )
+}
+
 export function getWeekActivityCount(
   activities: ActivitiesByDate,
   userId: string,
@@ -16,16 +32,20 @@ export function getWeekActivityCount(
 ) {
   return getWeekDates(
     today,
-  ).filter((date) => {
-    const key =
-      formatDateKey(date)
+  ).filter(
+    (date) => {
+      const key =
+        formatDateKey(
+          date,
+        )
 
-    return Boolean(
-      activities[key]?.[
-        userId
-      ],
-    )
-  }).length
+      return hasActivity(
+        activities,
+        key,
+        userId,
+      )
+    },
+  ).length
 }
 
 export function getCurrentStreak(
@@ -37,20 +57,20 @@ export function getCurrentStreak(
     new Date(today)
 
   const todayKey =
-    formatDateKey(today)
-
-  const hasActivityToday =
-    Boolean(
-      activities[
-        todayKey
-      ]?.[userId],
+    formatDateKey(
+      today,
     )
 
-  /*
-   * Si hoy todavía no entrenó,
-   * calculamos desde ayer.
-   */
-  if (!hasActivityToday) {
+  const hasActivityToday =
+    hasActivity(
+      activities,
+      todayKey,
+      userId,
+    )
+
+  if (
+    !hasActivityToday
+  ) {
     cursor =
       addDays(
         cursor,
@@ -66,14 +86,13 @@ export function getCurrentStreak(
         cursor,
       )
 
-    const hasActivity =
-      Boolean(
-        activities[
-          key
-        ]?.[userId],
+    if (
+      !hasActivity(
+        activities,
+        key,
+        userId,
       )
-
-    if (!hasActivity) {
+    ) {
       break
     }
 
@@ -97,12 +116,13 @@ export function getBestStreak(
     Object.keys(
       activities,
     )
-      .filter((dateKey) =>
-        Boolean(
-          activities[
-            dateKey
-          ]?.[userId],
-        ),
+      .filter(
+        (dateKey) =>
+          hasActivity(
+            activities,
+            dateKey,
+            userId,
+          ),
       )
       .sort()
 
@@ -138,12 +158,16 @@ export function getBestStreak(
 
     const difference =
       Math.round(
-        (currentDate.getTime() -
-          previousDate.getTime()) /
+        (
+          currentDate.getTime() -
+          previousDate.getTime()
+        ) /
           86400000,
       )
 
-    if (difference === 1) {
+    if (
+      difference === 1
+    ) {
       current += 1
     } else {
       current = 1
