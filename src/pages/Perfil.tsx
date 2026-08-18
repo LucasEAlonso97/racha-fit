@@ -3,6 +3,8 @@ import {
   useState,
 } from 'react'
 
+import NotificationSettings from '../components/NotificationSettings'
+
 import {
   Camera,
   Check,
@@ -703,6 +705,10 @@ function Perfil({
         <p className="mb-4 text-xs font-black tracking-wider text-zinc-400">
           CUENTA
         </p>
+
+        <NotificationSettings
+  userId={currentUser.id}
+/>
 
         <button
           onClick={
