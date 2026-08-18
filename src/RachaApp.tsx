@@ -34,9 +34,11 @@ import {
 import type {
   ActivitiesByDate,
   Activity,
+  ActivityReaction,
   ActivityType,
   Group,
   Profile,
+  ReactionEmoji,
   User,
   View,
 } from './types'
@@ -55,12 +57,18 @@ type MemberRow = {
   } | null
 }
 
+type ReactionRow = {
+  user_id: string
+  emoji: string
+}
+
 type ActivityRow = {
   id: string
   user_id: string
   activity_date: string
   type: string
   duration: number
+  reactions: ReactionRow[] | null
 }
 
 const avatarColors = [
@@ -75,32 +83,33 @@ function RachaApp({
   session,
 }: Props) {
   /*
-   * ========================================
-   * FECHA ACTUAL
-   * ========================================
+   * =========================
+   * FECHA
+   * =========================
    */
 
-  const today = useMemo(
-    () => new Date(),
-    [],
-  )
+  const today =
+    useMemo(
+      () => new Date(),
+      [],
+    )
 
   const todayKey =
     formatDateKey(today)
 
   /*
-   * ========================================
-   * USUARIO AUTENTICADO
-   * ========================================
+   * =========================
+   * USUARIO
+   * =========================
    */
 
   const currentUserId =
     session.user.id
 
   /*
-   * ========================================
+   * =========================
    * PERFIL
-   * ========================================
+   * =========================
    */
 
   const [
@@ -112,9 +121,9 @@ function RachaApp({
     )
 
   /*
-   * ========================================
-   * GRUPO ACTIVO
-   * ========================================
+   * =========================
+   * GRUPO
+   * =========================
    */
 
   const [
@@ -126,9 +135,9 @@ function RachaApp({
     )
 
   /*
-   * ========================================
-   * ESTADO DE LA CUENTA
-   * ========================================
+   * =========================
+   * CUENTA
+   * =========================
    */
 
   const [
@@ -146,9 +155,9 @@ function RachaApp({
     )
 
   /*
-   * ========================================
-   * USUARIOS DEL GRUPO
-   * ========================================
+   * =========================
+   * USUARIOS
+   * =========================
    */
 
   const [
@@ -158,18 +167,9 @@ function RachaApp({
     useState<User[]>([])
 
   /*
-   * ========================================
+   * =========================
    * ACTIVIDADES
-   * ========================================
-   *
-   * Ahora soportamos múltiples
-   * actividades por usuario y día:
-   *
-   * activities[fecha][usuario] = [
-   *   actividad1,
-   *   actividad2,
-   *   actividad3
-   * ]
+   * =========================
    */
 
   const [
@@ -181,9 +181,9 @@ function RachaApp({
     )
 
   /*
-   * ========================================
-   * ESTADO DE CARGA DEL GRUPO
-   * ========================================
+   * =========================
+   * ESTADO GRUPO
+   * =========================
    */
 
   const [
@@ -201,9 +201,9 @@ function RachaApp({
     )
 
   /*
-   * ========================================
+   * =========================
    * NAVEGACIÓN
-   * ========================================
+   * =========================
    */
 
   const [
@@ -213,9 +213,9 @@ function RachaApp({
     useState<View>('home')
 
   /*
-   * ========================================
+   * =========================
    * DÍA SELECCIONADO
-   * ========================================
+   * =========================
    */
 
   const [
@@ -227,9 +227,9 @@ function RachaApp({
     )
 
   /*
-   * ========================================
-   * FECHA DE ACTIVIDAD EN EDICIÓN
-   * ========================================
+   * =========================
+   * ACTIVIDAD EN EDICIÓN
+   * =========================
    */
 
   const [
@@ -237,18 +237,6 @@ function RachaApp({
     setEditingDate,
   ] =
     useState(todayKey)
-
-  /*
-   * ========================================
-   * ID DE ACTIVIDAD EN EDICIÓN
-   * ========================================
-   *
-   * null:
-   * estamos creando una actividad nueva.
-   *
-   * UUID:
-   * estamos editando una actividad existente.
-   */
 
   const [
     editingActivityId,
@@ -258,12 +246,6 @@ function RachaApp({
       null,
     )
 
-  /*
-   * ========================================
-   * MODAL DE ACTIVIDAD
-   * ========================================
-   */
-
   const [
     activityModalOpen,
     setActivityModalOpen,
@@ -272,7 +254,7 @@ function RachaApp({
 
   /*
    * ========================================
-   * CARGAR PERFIL + GRUPOS
+   * PERFIL + GRUPOS
    * ========================================
    */
 
@@ -292,10 +274,6 @@ function RachaApp({
           groupsResult,
         ] =
           await Promise.all([
-            /*
-             * PERFIL
-             */
-
             supabase
               .from('profiles')
               .select(
@@ -306,10 +284,6 @@ function RachaApp({
                 currentUserId,
               )
               .single(),
-
-            /*
-             * GRUPOS
-             */
 
             supabase
               .from('groups')
@@ -324,10 +298,6 @@ function RachaApp({
                 },
               ),
           ])
-
-        /*
-         * ERROR PERFIL
-         */
 
         if (
           profileResult.error ||
@@ -349,10 +319,6 @@ function RachaApp({
           return
         }
 
-        /*
-         * ERROR GRUPOS
-         */
-
         if (
           groupsResult.error
         ) {
@@ -372,19 +338,9 @@ function RachaApp({
           return
         }
 
-        /*
-         * GUARDAR PERFIL
-         */
-
         setProfile(
           profileResult.data as Profile,
         )
-
-        /*
-         * POR AHORA:
-         * usamos el primer grupo
-         * disponible del usuario.
-         */
 
         const firstGroup =
           groupsResult.data?.[0] ??
@@ -406,7 +362,7 @@ function RachaApp({
 
   /*
    * ========================================
-   * CARGAR MIEMBROS + ACTIVIDADES DEL GRUPO
+   * MIEMBROS + ACTIVIDADES + REACCIONES
    * ========================================
    */
 
@@ -433,10 +389,6 @@ function RachaApp({
           activitiesResult,
         ] =
           await Promise.all([
-            /*
-             * MIEMBROS DEL GRUPO
-             */
-
             supabase
               .from(
                 'group_members',
@@ -454,10 +406,6 @@ function RachaApp({
                 activeGroup.id,
               ),
 
-            /*
-             * ACTIVIDADES DEL GRUPO
-             */
-
             supabase
               .from(
                 'activities',
@@ -467,7 +415,11 @@ function RachaApp({
                 user_id,
                 activity_date,
                 type,
-                duration
+                duration,
+                reactions:activity_reactions (
+                  user_id,
+                  emoji
+                )
               `)
               .eq(
                 'group_id',
@@ -481,10 +433,6 @@ function RachaApp({
                 },
               ),
           ])
-
-        /*
-         * ERROR MIEMBROS
-         */
 
         if (
           membersResult.error
@@ -504,10 +452,6 @@ function RachaApp({
 
           return
         }
-
-        /*
-         * ERROR ACTIVIDADES
-         */
 
         if (
           activitiesResult.error
@@ -529,10 +473,9 @@ function RachaApp({
         }
 
         /*
-         * ========================================
-         * CONVERTIR MIEMBROS DE SUPABASE
-         * A USERS DE LA UI
-         * ========================================
+         * =========================
+         * USERS
+         * =========================
          */
 
         const memberRows =
@@ -584,11 +527,6 @@ function RachaApp({
             )
             .sort(
               (a, b) => {
-                /*
-                 * El usuario actual
-                 * aparece primero.
-                 */
-
                 if (
                   a.id ===
                   currentUserId
@@ -614,56 +552,16 @@ function RachaApp({
         )
 
         /*
-         * ========================================
-         * CONVERTIR ACTIVIDADES
-         * ========================================
-         *
-         * Supabase devuelve filas:
-         *
-         * [
-         *   {
-         *     id,
-         *     user_id,
-         *     activity_date,
-         *     type,
-         *     duration
-         *   }
-         * ]
-         *
-         * Nosotros necesitamos:
-         *
-         * {
-         *   "2026-08-14": {
-         *
-         *     "uuid-lucas": [
-         *       {
-         *         id: "...",
-         *         type: "Gym",
-         *         duration: 60
-         *       },
-         *       {
-         *         id: "...",
-         *         type: "Caminata",
-         *         duration: 40
-         *       }
-         *     ],
-         *
-         *     "uuid-edith": [
-         *       {
-         *         id: "...",
-         *         type: "Gym",
-         *         duration: 45
-         *       }
-         *     ]
-         *   }
-         * }
+         * =========================
+         * ACTIVITIES
+         * =========================
          */
 
         const activityRows =
           (
             activitiesResult.data ??
             []
-          ) as ActivityRow[]
+          ) as unknown as ActivityRow[]
 
         const activityMap:
           ActivitiesByDate =
@@ -671,11 +569,6 @@ function RachaApp({
 
         activityRows.forEach(
           (row) => {
-            /*
-             * Si todavía no existe
-             * el día, lo creamos.
-             */
-
             if (
               !activityMap[
                 row.activity_date
@@ -685,12 +578,6 @@ function RachaApp({
                 row.activity_date
               ] = {}
             }
-
-            /*
-             * Si todavía no existe
-             * el array del usuario,
-             * lo creamos.
-             */
 
             if (
               !activityMap[
@@ -706,9 +593,20 @@ function RachaApp({
               ] = []
             }
 
-            /*
-             * Agregamos la actividad.
-             */
+            const reactions:
+              ActivityReaction[] =
+                (
+                  row.reactions ??
+                  []
+                ).map(
+                  (reaction) => ({
+                    user_id:
+                      reaction.user_id,
+
+                    emoji:
+                      reaction.emoji as ReactionEmoji,
+                  }),
+                )
 
             activityMap[
               row.activity_date
@@ -723,6 +621,8 @@ function RachaApp({
 
               duration:
                 row.duration,
+
+              reactions,
             })
           },
         )
@@ -744,7 +644,7 @@ function RachaApp({
 
   /*
    * ========================================
-   * USUARIO ACTUAL
+   * CURRENT USER
    * ========================================
    */
 
@@ -757,19 +657,8 @@ function RachaApp({
 
   /*
    * ========================================
-   * ABRIR MODAL DE ACTIVIDAD
+   * MODAL
    * ========================================
-   *
-   * Ejemplo nueva:
-   *
-   * openActivityModal("2026-08-14")
-   *
-   * Ejemplo editar:
-   *
-   * openActivityModal(
-   *   "2026-08-14",
-   *   "uuid-actividad"
-   * )
    */
 
   const openActivityModal = (
@@ -794,12 +683,6 @@ function RachaApp({
     )
   }
 
-  /*
-   * ========================================
-   * CERRAR MODAL DE ACTIVIDAD
-   * ========================================
-   */
-
   const closeActivityModal =
     () => {
       setActivityModalOpen(
@@ -810,12 +693,6 @@ function RachaApp({
         null,
       )
     }
-
-  /*
-   * ========================================
-   * ACTIVIDAD ACTUAL EN EDICIÓN
-   * ========================================
-   */
 
   const currentEditingActivity =
     editingActivityId
@@ -836,12 +713,6 @@ function RachaApp({
    * ========================================
    * GUARDAR ACTIVIDAD
    * ========================================
-   *
-   * Si editingActivityId existe:
-   * hacemos UPDATE.
-   *
-   * Si no:
-   * hacemos INSERT.
    */
 
   const saveActivity =
@@ -853,9 +724,7 @@ function RachaApp({
       }
 
       /*
-       * ========================================
-       * EDITAR ACTIVIDAD EXISTENTE
-       * ========================================
+       * EDITAR
        */
 
       if (
@@ -909,10 +778,6 @@ function RachaApp({
           return
         }
 
-        /*
-         * Actualizar estado local.
-         */
-
         setActivities(
           (
             currentActivities,
@@ -927,26 +792,6 @@ function RachaApp({
                 currentUserId
               ] ?? []
 
-            const updatedActivities =
-              userActivities.map(
-                (
-                  currentActivity,
-                ) =>
-                  currentActivity.id ===
-                  editingActivityId
-                    ? {
-                        id:
-                          data.id,
-
-                        type:
-                          data.type as ActivityType,
-
-                        duration:
-                          data.duration,
-                      }
-                    : currentActivity,
-              )
-
             return {
               ...currentActivities,
 
@@ -954,7 +799,26 @@ function RachaApp({
                 ...currentDay,
 
                 [currentUserId]:
-                  updatedActivities,
+                  userActivities.map(
+                    (
+                      currentActivity,
+                    ) =>
+                      currentActivity.id ===
+                      editingActivityId
+                        ? {
+                            ...currentActivity,
+
+                            id:
+                              data.id,
+
+                            type:
+                              data.type as ActivityType,
+
+                            duration:
+                              data.duration,
+                          }
+                        : currentActivity,
+                  ),
               },
             }
           },
@@ -966,9 +830,7 @@ function RachaApp({
       }
 
       /*
-       * ========================================
-       * CREAR ACTIVIDAD NUEVA
-       * ========================================
+       * NUEVA
        */
 
       const {
@@ -1016,11 +878,6 @@ function RachaApp({
         return
       }
 
-      /*
-       * Convertir fila nueva
-       * a nuestro Activity.
-       */
-
       const newActivity:
         Activity = {
           id:
@@ -1031,12 +888,9 @@ function RachaApp({
 
           duration:
             data.duration,
-        }
 
-      /*
-       * Agregar actividad
-       * al estado local.
-       */
+          reactions: [],
+        }
 
       setActivities(
         (
@@ -1074,12 +928,6 @@ function RachaApp({
    * ========================================
    * ELIMINAR ACTIVIDAD
    * ========================================
-   *
-   * Ahora eliminamos UNA actividad
-   * mediante su ID.
-   *
-   * Ya no eliminamos todo
-   * el día del usuario.
    */
 
   const deleteActivity =
@@ -1128,10 +976,6 @@ function RachaApp({
         return
       }
 
-      /*
-       * Actualizar estado local.
-       */
-
       setActivities(
         (
           currentActivities,
@@ -1158,11 +1002,6 @@ function RachaApp({
                 activityIdToDelete,
             )
 
-          /*
-           * Si todavía tiene actividades
-           * ese día, mantenemos al usuario.
-           */
-
           if (
             remainingActivities.length >
             0
@@ -1172,21 +1011,10 @@ function RachaApp({
             ] =
               remainingActivities
           } else {
-            /*
-             * Si eliminó su última actividad,
-             * eliminamos al usuario de ese día.
-             */
-
             delete currentDay[
               currentUserId
             ]
           }
-
-          /*
-           * Si ya no queda ningún usuario
-           * con actividades ese día,
-           * eliminamos el día completo.
-           */
 
           if (
             Object.keys(
@@ -1212,7 +1040,270 @@ function RachaApp({
 
   /*
    * ========================================
-   * GUARDAR PERFIL
+   * REACCIONES
+   * ========================================
+   */
+
+  const updateReactionInState = (
+    activityId: string,
+    reactions:
+      ActivityReaction[],
+  ) => {
+    setActivities(
+      (
+        currentActivities,
+      ) => {
+        const nextActivities:
+          ActivitiesByDate =
+            {}
+
+        Object.entries(
+          currentActivities,
+        ).forEach(
+          ([
+            dateKey,
+            day,
+          ]) => {
+            nextActivities[
+              dateKey
+            ] = {}
+
+            Object.entries(
+              day,
+            ).forEach(
+              ([
+                userId,
+                userActivities,
+              ]) => {
+                nextActivities[
+                  dateKey
+                ][
+                  userId
+                ] =
+                  userActivities.map(
+                    (
+                      activity,
+                    ) =>
+                      activity.id ===
+                      activityId
+                        ? {
+                            ...activity,
+                            reactions,
+                          }
+                        : activity,
+                  )
+              },
+            )
+          },
+        )
+
+        return nextActivities
+      },
+    )
+  }
+
+  const reactToActivity =
+    async (
+      activityId: string,
+      emoji: ReactionEmoji,
+    ) => {
+      /*
+       * Buscar actividad actual
+       * dentro del estado.
+       */
+
+      let targetActivity:
+        Activity | null =
+          null
+
+      for (
+        const day of Object.values(
+          activities,
+        )
+      ) {
+        for (
+          const userActivities of Object.values(
+            day,
+          )
+        ) {
+          const found =
+            userActivities.find(
+              (activity) =>
+                activity.id ===
+                activityId,
+            )
+
+          if (found) {
+            targetActivity =
+              found
+
+            break
+          }
+        }
+
+        if (
+          targetActivity
+        ) {
+          break
+        }
+      }
+
+      if (
+        !targetActivity
+      ) {
+        return
+      }
+
+      const currentReactions =
+        targetActivity.reactions ??
+        []
+
+      const myReaction =
+        currentReactions.find(
+          (reaction) =>
+            reaction.user_id ===
+            currentUserId,
+        )
+
+      /*
+       * ========================================
+       * TOCÓ LA MISMA:
+       * ELIMINAMOS REACCIÓN
+       * ========================================
+       */
+
+      if (
+        myReaction?.emoji ===
+        emoji
+      ) {
+        const {
+          error,
+        } =
+          await supabase
+            .from(
+              'activity_reactions',
+            )
+            .delete()
+            .eq(
+              'activity_id',
+              activityId,
+            )
+            .eq(
+              'user_id',
+              currentUserId,
+            )
+
+        if (error) {
+          console.error(
+            'Error eliminando reacción:',
+            error,
+          )
+
+          window.alert(
+            'No pudimos sacar la reacción.',
+          )
+
+          return
+        }
+
+        const newReactions =
+          currentReactions.filter(
+            (reaction) =>
+              reaction.user_id !==
+              currentUserId,
+          )
+
+        updateReactionInState(
+          activityId,
+          newReactions,
+        )
+
+        return
+      }
+
+      /*
+       * ========================================
+       * NUEVA O CAMBIO DE REACCIÓN
+       * ========================================
+       */
+
+      const {
+        data,
+        error,
+      } =
+        await supabase
+          .from(
+            'activity_reactions',
+          )
+          .upsert(
+            {
+              activity_id:
+                activityId,
+
+              user_id:
+                currentUserId,
+
+              emoji,
+            },
+            {
+              onConflict:
+                'activity_id,user_id',
+            },
+          )
+          .select(
+            'user_id, emoji',
+          )
+          .single()
+
+      if (
+        error ||
+        !data
+      ) {
+        console.error(
+          'Error guardando reacción:',
+          error,
+        )
+
+        window.alert(
+          'No pudimos guardar la reacción.',
+        )
+
+        return
+      }
+
+      const newReaction:
+        ActivityReaction = {
+          user_id:
+            data.user_id,
+
+          emoji:
+            data.emoji as ReactionEmoji,
+        }
+
+      /*
+       * Sacamos la reacción anterior
+       * del usuario y agregamos la nueva.
+       */
+
+      const newReactions = [
+        ...currentReactions.filter(
+          (reaction) =>
+            reaction.user_id !==
+            currentUserId,
+        ),
+
+        newReaction,
+      ]
+
+      updateReactionInState(
+        activityId,
+        newReactions,
+      )
+    }
+
+  /*
+   * ========================================
+   * PERFIL
    * ========================================
    */
 
@@ -1224,12 +1315,6 @@ function RachaApp({
     ) => {
       let finalAvatarUrl =
         avatarUrl
-
-      /*
-       * ========================================
-       * SUBIR AVATAR PERSONALIZADO
-       * ========================================
-       */
 
       if (avatarFile) {
         const avatarPath =
@@ -1270,10 +1355,6 @@ function RachaApp({
           return false
         }
 
-        /*
-         * Obtener URL pública.
-         */
-
         const {
           data:
             publicUrlData,
@@ -1284,22 +1365,11 @@ function RachaApp({
               avatarPath,
             )
 
-        /*
-         * Agregamos versión
-         * para evitar caché.
-         */
-
         finalAvatarUrl =
           `${
             publicUrlData.publicUrl
           }?v=${Date.now()}`
       }
-
-      /*
-       * ========================================
-       * ACTUALIZAR PROFILE EN SUPABASE
-       * ========================================
-       */
 
       const {
         data,
@@ -1341,18 +1411,9 @@ function RachaApp({
       const updatedProfile =
         data as Profile
 
-      /*
-       * Actualizamos profile.
-       */
-
       setProfile(
         updatedProfile,
       )
-
-      /*
-       * Actualizamos usuario
-       * dentro de la UI.
-       */
 
       setUsers(
         (
@@ -1387,7 +1448,7 @@ function RachaApp({
 
   /*
    * ========================================
-   * CERRAR SESIÓN
+   * LOGOUT
    * ========================================
    */
 
@@ -1408,7 +1469,7 @@ function RachaApp({
 
   /*
    * ========================================
-   * COPIAR CÓDIGO DE INVITACIÓN
+   * COPIAR CÓDIGO
    * ========================================
    */
 
@@ -1424,7 +1485,7 @@ function RachaApp({
         )
       } catch (error) {
         console.error(
-          'No se pudo copiar el código:',
+          'No se pudo copiar:',
           error,
         )
       }
@@ -1432,7 +1493,7 @@ function RachaApp({
 
   /*
    * ========================================
-   * PANTALLA DE CARGA DE CUENTA
+   * LOADING
    * ========================================
    */
 
@@ -1454,7 +1515,7 @@ function RachaApp({
 
   /*
    * ========================================
-   * ERROR DE CUENTA
+   * ERROR CUENTA
    * ========================================
    */
 
@@ -1493,7 +1554,7 @@ function RachaApp({
 
   /*
    * ========================================
-   * USUARIO SIN GRUPO
+   * SIN GRUPO
    * ========================================
    */
 
@@ -1540,7 +1601,7 @@ function RachaApp({
 
   /*
    * ========================================
-   * ERROR CARGANDO GRUPO
+   * ERROR GRUPO
    * ========================================
    */
 
@@ -1575,15 +1636,13 @@ function RachaApp({
 
   /*
    * ========================================
-   * APLICACIÓN PRINCIPAL
+   * APP
    * ========================================
    */
 
   return (
     <main className="min-h-screen pb-28">
-      {/* ================================= */}
-      {/* HEADER DEL GRUPO */}
-      {/* ================================= */}
+      {/* HEADER */}
 
       <div className="mx-auto w-full max-w-md px-5 pt-4">
         <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
@@ -1593,7 +1652,10 @@ function RachaApp({
             </p>
 
             <p className="truncate font-black text-zinc-800">
-              🔥 {activeGroup.name}
+              🔥{' '}
+              {
+                activeGroup.name
+              }
             </p>
           </div>
 
@@ -1630,11 +1692,10 @@ function RachaApp({
         </div>
       </div>
 
-      {/* ================================= */}
-      {/* INICIO */}
-      {/* ================================= */}
+      {/* HOME */}
 
-      {view === 'home' && (
+      {view ===
+        'home' && (
         <Home
           activities={
             activities
@@ -1659,9 +1720,7 @@ function RachaApp({
         />
       )}
 
-      {/* ================================= */}
-      {/* CALENDARIO */}
-      {/* ================================= */}
+      {/* CALENDAR */}
 
       {view ===
         'calendar' && (
@@ -1682,14 +1741,14 @@ function RachaApp({
             setSelectedDate
           }
           onBack={() =>
-            setView('home')
+            setView(
+              'home',
+            )
           }
         />
       )}
 
-      {/* ================================= */}
       {/* RACHAS */}
-      {/* ================================= */}
 
       {view ===
         'rachas' && (
@@ -1709,9 +1768,7 @@ function RachaApp({
         />
       )}
 
-      {/* ================================= */}
       {/* PERFIL */}
-      {/* ================================= */}
 
       {view ===
         'profile' &&
@@ -1724,8 +1781,8 @@ function RachaApp({
               profile
             }
             email={
-              session.user.email ??
-              ''
+              session.user
+                .email ?? ''
             }
             group={
               activeGroup
@@ -1742,9 +1799,7 @@ function RachaApp({
           />
         )}
 
-      {/* ================================= */}
-      {/* BARRA INFERIOR */}
-      {/* ================================= */}
+      {/* NAV */}
 
       <BottomNavigation
         view={
@@ -1760,9 +1815,7 @@ function RachaApp({
         }
       />
 
-      {/* ================================= */}
-      {/* DETALLE DEL DÍA */}
-      {/* ================================= */}
+      {/* DETALLE */}
 
       <DayDetailModal
         dateKey={
@@ -1788,11 +1841,12 @@ function RachaApp({
         onEditActivity={
           openActivityModal
         }
+        onReactActivity={
+          reactToActivity
+        }
       />
 
-      {/* ================================= */}
-      {/* MODAL DE ACTIVIDAD */}
-      {/* ================================= */}
+      {/* ACTIVIDAD */}
 
       <ActivityModal
         open={

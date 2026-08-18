@@ -5,10 +5,23 @@ export type ActivityType =
   | 'Bicicleta'
   | 'Otra'
 
+export type ReactionEmoji =
+  | '🔥'
+  | '💪'
+  | '👏'
+  | '😂'
+  | '❤️'
+
+export type ActivityReaction = {
+  user_id: string
+  emoji: ReactionEmoji
+}
+
 export type Activity = {
   id?: string
   type: ActivityType
   duration: number
+  reactions?: ActivityReaction[]
 }
 
 export type User = {
