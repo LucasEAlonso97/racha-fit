@@ -1,0 +1,11 @@
+{
+  "id": "/",
+  "name": "Racha",
+  "short_name": "Racha",
+  "description": "Un día más cuenta.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#8b5cf6"
+}
