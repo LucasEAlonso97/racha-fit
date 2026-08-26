@@ -79,6 +79,213 @@ const avatarColors = [
   'bg-orange-500',
 ]
 
+/*
+ * ========================================
+ * RETRY JWT
+ * ========================================
+ *
+ * A veces Supabase Auth acaba de emitir
+ * el JWT, pero PostgREST lo rechaza
+ * durante unos segundos con:
+ *
+ * PGRST303
+ * JWT issued at future
+ *
+ * En ese caso esperamos y volvemos
+ * a consultar automáticamente.
+ */
+
+const sleep = (
+  milliseconds: number,
+) =>
+  new Promise<void>(
+    (resolve) => {
+      window.setTimeout(
+        resolve,
+        milliseconds,
+      )
+    },
+  )
+
+function isJwtIssuedAtFuture(
+  error:
+    | {
+        code?: string
+        message?: string
+      }
+    | null
+    | undefined,
+) {
+  if (!error) {
+    return false
+  }
+
+  return (
+    error.code ===
+      'PGRST303' ||
+    error.message
+      ?.toLowerCase()
+      .includes(
+        'jwt issued at future',
+      ) === true
+  )
+}
+
+async function loadAccountWithRetry(
+  userId: string,
+) {
+  /*
+   * Intento inmediato.
+   * Después 1.5 segundos.
+   * Después 3 segundos.
+   *
+   * En total damos tiempo de sobra
+   * para que desaparezca el pequeño
+   * desfase del JWT.
+   */
+
+  const delays = [
+    0,
+    1500,
+    3000,
+  ]
+
+  for (
+    let attempt = 0;
+    attempt <
+    delays.length;
+    attempt += 1
+  ) {
+    const delay =
+      delays[attempt]
+
+    if (delay > 0) {
+      console.warn(
+        `Supabase JWT todavía no válido. Reintentando en ${delay}ms...`,
+      )
+
+      await sleep(delay)
+    }
+
+    const [
+      profileResult,
+      groupsResult,
+    ] =
+      await Promise.all([
+        supabase
+          .from('profiles')
+          .select(
+            'id, name, avatar_url',
+          )
+          .eq(
+            'id',
+            userId,
+          )
+          .single(),
+
+        supabase
+          .from('groups')
+          .select(
+            'id, name, invite_code, created_by',
+          )
+          .order(
+            'created_at',
+            {
+              ascending:
+                true,
+            },
+          ),
+      ])
+
+    const profileJwtError =
+      isJwtIssuedAtFuture(
+        profileResult.error,
+      )
+
+    const groupsJwtError =
+      isJwtIssuedAtFuture(
+        groupsResult.error,
+      )
+
+    /*
+     * Si ninguno de los dos
+     * tiene el problema temporal
+     * del JWT, devolvemos el resultado.
+     *
+     * Aunque exista otro error real,
+     * RachaApp lo va a manejar abajo.
+     */
+
+    if (
+      !profileJwtError &&
+      !groupsJwtError
+    ) {
+      return {
+        profileResult,
+        groupsResult,
+      }
+    }
+
+    /*
+     * Si era el último intento,
+     * devolvemos igualmente el resultado
+     * para que aparezca el error normal.
+     */
+
+    if (
+      attempt ===
+      delays.length - 1
+    ) {
+      return {
+        profileResult,
+        groupsResult,
+      }
+    }
+  }
+
+  /*
+   * TypeScript necesita saber
+   * que siempre existe un retorno.
+   * Este bloque en la práctica
+   * nunca debería alcanzarse.
+   */
+
+  const [
+    profileResult,
+    groupsResult,
+  ] =
+    await Promise.all([
+      supabase
+        .from('profiles')
+        .select(
+          'id, name, avatar_url',
+        )
+        .eq(
+          'id',
+          userId,
+        )
+        .single(),
+
+      supabase
+        .from('groups')
+        .select(
+          'id, name, invite_code, created_by',
+        )
+        .order(
+          'created_at',
+          {
+            ascending:
+              true,
+          },
+        ),
+    ])
+
+  return {
+    profileResult,
+    groupsResult,
+  }
+}
+
 function RachaApp({
   session,
 }: Props) {
@@ -210,7 +417,9 @@ function RachaApp({
     view,
     setView,
   ] =
-    useState<View>('home')
+    useState<View>(
+      'home',
+    )
 
   /*
    * =========================
@@ -259,6 +468,9 @@ function RachaApp({
    */
 
   useEffect(() => {
+    let cancelled =
+      false
+
     const loadAccount =
       async () => {
         setAccountLoading(
@@ -269,35 +481,34 @@ function RachaApp({
           null,
         )
 
-        const [
+        /*
+         * Acá está el fix.
+         *
+         * Ya no consultamos profiles
+         * una sola vez.
+         *
+         * Si aparece PGRST303:
+         * JWT issued at future,
+         * reintentamos automáticamente.
+         */
+
+        const {
           profileResult,
           groupsResult,
-        ] =
-          await Promise.all([
-            supabase
-              .from('profiles')
-              .select(
-                'id, name, avatar_url',
-              )
-              .eq(
-                'id',
-                currentUserId,
-              )
-              .single(),
+        } =
+          await loadAccountWithRetry(
+            currentUserId,
+          )
 
-            supabase
-              .from('groups')
-              .select(
-                'id, name, invite_code, created_by',
-              )
-              .order(
-                'created_at',
-                {
-                  ascending:
-                    true,
-                },
-              ),
-          ])
+        /*
+         * Evitamos actualizar estado
+         * si el componente se desmontó
+         * mientras esperábamos un retry.
+         */
+
+        if (cancelled) {
+          return
+        }
 
         if (
           profileResult.error ||
@@ -343,7 +554,8 @@ function RachaApp({
         )
 
         const firstGroup =
-          groupsResult.data?.[0] ??
+          groupsResult
+            .data?.[0] ??
           null
 
         setActiveGroup(
@@ -358,6 +570,11 @@ function RachaApp({
       }
 
     void loadAccount()
+
+    return () => {
+      cancelled =
+        true
+    }
   }, [currentUserId])
 
   /*
@@ -1107,11 +1324,6 @@ function RachaApp({
       activityId: string,
       emoji: ReactionEmoji,
     ) => {
-      /*
-       * Buscar actividad actual
-       * dentro del estado.
-       */
-
       let targetActivity:
         Activity | null =
           null
@@ -1166,10 +1378,8 @@ function RachaApp({
         )
 
       /*
-       * ========================================
        * TOCÓ LA MISMA:
        * ELIMINAMOS REACCIÓN
-       * ========================================
        */
 
       if (
@@ -1222,9 +1432,7 @@ function RachaApp({
       }
 
       /*
-       * ========================================
        * NUEVA O CAMBIO DE REACCIÓN
-       * ========================================
        */
 
       const {
@@ -1279,11 +1487,6 @@ function RachaApp({
           emoji:
             data.emoji as ReactionEmoji,
         }
-
-      /*
-       * Sacamos la reacción anterior
-       * del usuario y agregamos la nueva.
-       */
 
       const newReactions = [
         ...currentReactions.filter(

@@ -7,16 +7,14 @@ import {
   Bell,
   BellRing,
   LoaderCircle,
+  Smartphone,
 } from 'lucide-react'
 
 import {
   enablePushNotifications,
+  getCurrentDevicePushStatus,
   supportsPushNotifications,
 } from '../lib/pushNotifications'
-
-import {
-  supabase,
-} from '../lib/supabase'
 
 type Props = {
   userId: string
@@ -51,44 +49,44 @@ function NotificationSettings({
     supportsPushNotifications()
 
   useEffect(() => {
-    const loadPreferences =
+    let cancelled = false
+
+    const checkDevice =
       async () => {
-        const {
-          data,
-          error:
-            preferencesError,
-        } =
-          await supabase
-            .from(
-              'notification_preferences',
-            )
-            .select(
-              'enabled',
-            )
-            .eq(
-              'user_id',
+        setLoading(true)
+
+        try {
+          const deviceEnabled =
+            await getCurrentDevicePushStatus(
               userId,
             )
-            .maybeSingle()
 
-        if (
-          preferencesError
-        ) {
+          if (!cancelled) {
+            setEnabled(
+              deviceEnabled,
+            )
+          }
+        } catch (caughtError) {
           console.error(
-            'Error cargando notificaciones:',
-            preferencesError,
+            'Error verificando notificaciones:',
+            caughtError,
           )
+
+          if (!cancelled) {
+            setEnabled(false)
+          }
+        } finally {
+          if (!cancelled) {
+            setLoading(false)
+          }
         }
-
-        setEnabled(
-          data?.enabled ??
-            false,
-        )
-
-        setLoading(false)
       }
 
-    void loadPreferences()
+    void checkDevice()
+
+    return () => {
+      cancelled = true
+    }
   }, [userId])
 
   const handleEnable =
@@ -101,12 +99,27 @@ function NotificationSettings({
           userId,
         )
 
-        setEnabled(true)
+        const deviceEnabled =
+          await getCurrentDevicePushStatus(
+            userId,
+          )
+
+        setEnabled(
+          deviceEnabled,
+        )
+
+        if (!deviceEnabled) {
+          setError(
+            'La suscripción se creó, pero no pudimos verificar este dispositivo.',
+          )
+        }
       } catch (caughtError) {
         console.error(
           'Error activando push:',
           caughtError,
         )
+
+        setEnabled(false)
 
         setError(
           caughtError instanceof
@@ -122,9 +135,16 @@ function NotificationSettings({
   if (loading) {
     return (
       <section className="rounded-[24px] bg-white p-5 shadow-sm">
-        <p className="text-sm font-bold text-zinc-400">
-          Cargando notificaciones...
-        </p>
+        <div className="flex items-center gap-3">
+          <LoaderCircle
+            size={20}
+            className="animate-spin text-violet-500"
+          />
+
+          <p className="text-sm font-bold text-zinc-400">
+            Verificando notificaciones...
+          </p>
+        </div>
       </section>
     )
   }
@@ -140,13 +160,9 @@ function NotificationSettings({
           }`}
         >
           {enabled ? (
-            <BellRing
-              size={22}
-            />
+            <BellRing size={22} />
           ) : (
-            <Bell
-              size={22}
-            />
+            <Bell size={22} />
           )}
         </div>
 
@@ -165,12 +181,24 @@ function NotificationSettings({
 
       {enabled ? (
         <div className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3">
-          <p className="text-sm font-black text-emerald-600">
-            🔔 Notificaciones activadas
+          <div className="flex items-center gap-2">
+            <Smartphone
+              size={17}
+              className="text-emerald-600"
+            />
+
+            <p className="text-sm font-black text-emerald-600">
+              Activadas en este dispositivo
+            </p>
+          </div>
+
+          <p className="mt-2 text-xs font-semibold text-emerald-500">
+            🔔 13:00 · 20:30
           </p>
 
-          <p className="mt-1 text-xs font-semibold text-emerald-500">
-            13:00 · 20:30
+          <p className="mt-1 text-xs text-emerald-500">
+            Podés recibirlas incluso
+            con Racha cerrada.
           </p>
         </div>
       ) : (
@@ -196,11 +224,9 @@ function NotificationSettings({
             </>
           ) : (
             <>
-              <Bell
-                size={18}
-              />
+              <Bell size={18} />
 
-              Activar notificaciones
+              Activar en este dispositivo
             </>
           )}
         </button>
@@ -208,16 +234,18 @@ function NotificationSettings({
 
       {!supported && (
         <p className="mt-3 text-xs font-semibold leading-relaxed text-orange-500">
-          Este navegador todavía
-          no permite activar las
+          Este dispositivo o navegador
+          todavía no permite activar las
           notificaciones de Racha.
         </p>
       )}
 
       {error && (
-        <p className="mt-3 text-xs font-bold leading-relaxed text-red-500">
-          {error}
-        </p>
+        <div className="mt-3 rounded-2xl bg-red-50 px-4 py-3">
+          <p className="text-xs font-bold leading-relaxed text-red-500">
+            {error}
+          </p>
+        </div>
       )}
     </section>
   )

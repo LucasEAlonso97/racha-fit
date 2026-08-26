@@ -37,11 +37,6 @@ function App() {
     useState(false)
 
   useEffect(() => {
-    /*
-     * Primero escuchamos eventos
-     * de autenticación.
-     */
-
     const {
       data: {
         subscription,
@@ -52,16 +47,43 @@ function App() {
           event,
           newSession,
         ) => {
+        
           setSession(
             newSession,
           )
 
           /*
-           * El usuario llegó desde
-           * el link del mail de
-           * recuperación.
+           * Supabase dispara INITIAL_SESSION
+           * cuando termina de recuperar
+           * la sesión guardada.
+           *
+           * No necesitamos llamar también
+           * a getSession().
            */
+          if (
+            event ===
+            'INITIAL_SESSION'
+          ) {
+            setLoading(
+              false,
+            )
+          }
 
+          /*
+           * Login correcto.
+           */
+          if (
+            event ===
+            'SIGNED_IN'
+          ) {
+            setLoading(
+              false,
+            )
+          }
+
+          /*
+           * Recuperación de contraseña.
+           */
           if (
             event ===
             'PASSWORD_RECOVERY'
@@ -69,13 +91,15 @@ function App() {
             setPasswordRecovery(
               true,
             )
+
+            setLoading(
+              false,
+            )
           }
 
           /*
-           * Si salió de la cuenta,
-           * limpiamos el modo recovery.
+           * Logout.
            */
-
           if (
             event ===
             'SIGNED_OUT'
@@ -83,34 +107,13 @@ function App() {
             setPasswordRecovery(
               false,
             )
+
+            setLoading(
+              false,
+            )
           }
         },
       )
-
-    /*
-     * Recuperar sesión actual.
-     */
-
-    const loadSession =
-      async () => {
-        const {
-          data: {
-            session:
-              currentSession,
-          },
-        } =
-          await supabase.auth.getSession()
-
-        setSession(
-          currentSession,
-        )
-
-        setLoading(
-          false,
-        )
-      }
-
-    void loadSession()
 
     return () => {
       subscription.unsubscribe()
@@ -138,12 +141,7 @@ function App() {
   }
 
   /*
-   * RECUPERAR CONTRASEÑA
-   *
-   * Tiene prioridad sobre RachaApp
-   * porque Supabase crea una sesión
-   * temporal al entrar mediante
-   * el link de recuperación.
+   * RECUPERACIÓN
    */
 
   if (
