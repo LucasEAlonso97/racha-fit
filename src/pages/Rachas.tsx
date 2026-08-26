@@ -19,7 +19,7 @@ import type {
   ActivitiesByDate,
   User,
 } from '../types'
-
+import GroupWeeklyGoal from '../components/GroupWeeklyGoal'
 import UserAvatar from '../components/UserAvatar'
 
 type Props = {
@@ -336,6 +336,12 @@ function Rachas({
           <p className="text-xs font-black tracking-wider text-violet-500">
             ESTA SEMANA
           </p>
+
+          <GroupWeeklyGoal
+  activities={activities}
+  users={users}
+  today={today}
+/>
 
           <div className="mt-4 flex items-center gap-4">
             <UserAvatar

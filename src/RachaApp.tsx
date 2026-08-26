@@ -16,6 +16,7 @@ import {
 import ActivityModal from './components/ActivityModal'
 import BottomNavigation from './components/BottomNavigation'
 import DayDetailModal from './components/DayDetailModal'
+import GroupSwitcher from './components/GroupSwitcher'
 
 import Calendar from './pages/Calendar'
 import GroupSetup from './pages/GroupSetup'
@@ -79,22 +80,6 @@ const avatarColors = [
   'bg-orange-500',
 ]
 
-/*
- * ========================================
- * RETRY JWT
- * ========================================
- *
- * A veces Supabase Auth acaba de emitir
- * el JWT, pero PostgREST lo rechaza
- * durante unos segundos con:
- *
- * PGRST303
- * JWT issued at future
- *
- * En ese caso esperamos y volvemos
- * a consultar automáticamente.
- */
-
 const sleep = (
   milliseconds: number,
 ) =>
@@ -134,16 +119,6 @@ function isJwtIssuedAtFuture(
 async function loadAccountWithRetry(
   userId: string,
 ) {
-  /*
-   * Intento inmediato.
-   * Después 1.5 segundos.
-   * Después 3 segundos.
-   *
-   * En total damos tiempo de sobra
-   * para que desaparezca el pequeño
-   * desfase del JWT.
-   */
-
   const delays = [
     0,
     1500,
@@ -152,8 +127,7 @@ async function loadAccountWithRetry(
 
   for (
     let attempt = 0;
-    attempt <
-    delays.length;
+    attempt < delays.length;
     attempt += 1
   ) {
     const delay =
@@ -191,8 +165,7 @@ async function loadAccountWithRetry(
           .order(
             'created_at',
             {
-              ascending:
-                true,
+              ascending: true,
             },
           ),
       ])
@@ -207,15 +180,6 @@ async function loadAccountWithRetry(
         groupsResult.error,
       )
 
-    /*
-     * Si ninguno de los dos
-     * tiene el problema temporal
-     * del JWT, devolvemos el resultado.
-     *
-     * Aunque exista otro error real,
-     * RachaApp lo va a manejar abajo.
-     */
-
     if (
       !profileJwtError &&
       !groupsJwtError
@@ -225,12 +189,6 @@ async function loadAccountWithRetry(
         groupsResult,
       }
     }
-
-    /*
-     * Si era el último intento,
-     * devolvemos igualmente el resultado
-     * para que aparezca el error normal.
-     */
 
     if (
       attempt ===
@@ -242,13 +200,6 @@ async function loadAccountWithRetry(
       }
     }
   }
-
-  /*
-   * TypeScript necesita saber
-   * que siempre existe un retorno.
-   * Este bloque en la práctica
-   * nunca debería alcanzarse.
-   */
 
   const [
     profileResult,
@@ -274,8 +225,7 @@ async function loadAccountWithRetry(
         .order(
           'created_at',
           {
-            ascending:
-              true,
+            ascending: true,
           },
         ),
     ])
@@ -289,12 +239,6 @@ async function loadAccountWithRetry(
 function RachaApp({
   session,
 }: Props) {
-  /*
-   * =========================
-   * FECHA
-   * =========================
-   */
-
   const today =
     useMemo(
       () => new Date(),
@@ -304,19 +248,16 @@ function RachaApp({
   const todayKey =
     formatDateKey(today)
 
-  /*
-   * =========================
-   * USUARIO
-   * =========================
-   */
-
   const currentUserId =
     session.user.id
 
+  const activeGroupStorageKey =
+    `racha-active-group-${currentUserId}`
+
   /*
-   * =========================
+   * ========================================
    * PERFIL
-   * =========================
+   * ========================================
    */
 
   const [
@@ -328,10 +269,16 @@ function RachaApp({
     )
 
   /*
-   * =========================
-   * GRUPO
-   * =========================
+   * ========================================
+   * GRUPOS
+   * ========================================
    */
+
+  const [
+    groups,
+    setGroups,
+  ] =
+    useState<Group[]>([])
 
   const [
     activeGroup,
@@ -342,9 +289,9 @@ function RachaApp({
     )
 
   /*
-   * =========================
+   * ========================================
    * CUENTA
-   * =========================
+   * ========================================
    */
 
   const [
@@ -362,9 +309,9 @@ function RachaApp({
     )
 
   /*
-   * =========================
+   * ========================================
    * USUARIOS
-   * =========================
+   * ========================================
    */
 
   const [
@@ -374,9 +321,9 @@ function RachaApp({
     useState<User[]>([])
 
   /*
-   * =========================
+   * ========================================
    * ACTIVIDADES
-   * =========================
+   * ========================================
    */
 
   const [
@@ -388,9 +335,9 @@ function RachaApp({
     )
 
   /*
-   * =========================
-   * ESTADO GRUPO
-   * =========================
+   * ========================================
+   * ESTADO DEL GRUPO
+   * ========================================
    */
 
   const [
@@ -408,23 +355,21 @@ function RachaApp({
     )
 
   /*
-   * =========================
+   * ========================================
    * NAVEGACIÓN
-   * =========================
+   * ========================================
    */
 
   const [
     view,
     setView,
   ] =
-    useState<View>(
-      'home',
-    )
+    useState<View>('home')
 
   /*
-   * =========================
+   * ========================================
    * DÍA SELECCIONADO
-   * =========================
+   * ========================================
    */
 
   const [
@@ -436,9 +381,9 @@ function RachaApp({
     )
 
   /*
-   * =========================
+   * ========================================
    * ACTIVIDAD EN EDICIÓN
-   * =========================
+   * ========================================
    */
 
   const [
@@ -463,13 +408,12 @@ function RachaApp({
 
   /*
    * ========================================
-   * PERFIL + GRUPOS
+   * PERFIL + TODOS LOS GRUPOS
    * ========================================
    */
 
   useEffect(() => {
-    let cancelled =
-      false
+    let cancelled = false
 
     const loadAccount =
       async () => {
@@ -481,17 +425,6 @@ function RachaApp({
           null,
         )
 
-        /*
-         * Acá está el fix.
-         *
-         * Ya no consultamos profiles
-         * una sola vez.
-         *
-         * Si aparece PGRST303:
-         * JWT issued at future,
-         * reintentamos automáticamente.
-         */
-
         const {
           profileResult,
           groupsResult,
@@ -499,12 +432,6 @@ function RachaApp({
           await loadAccountWithRetry(
             currentUserId,
           )
-
-        /*
-         * Evitamos actualizar estado
-         * si el componente se desmontó
-         * mientras esperábamos un retry.
-         */
 
         if (cancelled) {
           return
@@ -553,16 +480,48 @@ function RachaApp({
           profileResult.data as Profile,
         )
 
-        const firstGroup =
-          groupsResult
-            .data?.[0] ??
+        const loadedGroups =
+          (
+            groupsResult.data ??
+            []
+          ) as Group[]
+
+        setGroups(
+          loadedGroups,
+        )
+
+        /*
+         * Intentamos recuperar
+         * el último grupo utilizado.
+         */
+
+        const savedGroupId =
+          window.localStorage.getItem(
+            activeGroupStorageKey,
+          )
+
+        const savedGroup =
+          loadedGroups.find(
+            (group) =>
+              group.id ===
+              savedGroupId,
+          )
+
+        const groupToActivate =
+          savedGroup ??
+          loadedGroups[0] ??
           null
 
         setActiveGroup(
-          firstGroup
-            ? (firstGroup as Group)
-            : null,
+          groupToActivate,
         )
+
+        if (groupToActivate) {
+          window.localStorage.setItem(
+            activeGroupStorageKey,
+            groupToActivate.id,
+          )
+        }
 
         setAccountLoading(
           false,
@@ -572,10 +531,232 @@ function RachaApp({
     void loadAccount()
 
     return () => {
-      cancelled =
-        true
+      cancelled = true
     }
-  }, [currentUserId])
+  }, [
+    currentUserId,
+    activeGroupStorageKey,
+  ])
+
+  /*
+   * ========================================
+   * CAMBIAR GRUPO
+   * ========================================
+   */
+
+  const selectGroup = (
+    group: Group,
+  ) => {
+    if (
+      activeGroup?.id ===
+      group.id
+    ) {
+      return
+    }
+
+    /*
+     * Cerramos cualquier interacción
+     * perteneciente al grupo anterior.
+     */
+
+    setSelectedDate(null)
+
+    setActivityModalOpen(
+      false,
+    )
+
+    setEditingActivityId(
+      null,
+    )
+
+    setGroupError(null)
+
+    /*
+     * Limpiamos mientras carga
+     * el nuevo grupo para no mostrar
+     * datos viejos ni por un instante.
+     */
+
+    setUsers([])
+    setActivities({})
+
+    setActiveGroup(group)
+
+    window.localStorage.setItem(
+      activeGroupStorageKey,
+      group.id,
+    )
+  }
+
+  /*
+ * ========================================
+ * GRUPO CREADO / UNIDO
+ * ========================================
+ */
+
+const handleGroupReady = (
+  group: Group,
+) => {
+  setGroups(
+    (currentGroups) => {
+      const alreadyExists =
+        currentGroups.some(
+          (currentGroup) =>
+            currentGroup.id ===
+            group.id,
+        )
+
+      if (alreadyExists) {
+        return currentGroups.map(
+          (currentGroup) =>
+            currentGroup.id ===
+            group.id
+              ? group
+              : currentGroup,
+        )
+      }
+
+      return [
+        ...currentGroups,
+        group,
+      ]
+    },
+  )
+
+  setActiveGroup(group)
+
+  window.localStorage.setItem(
+    activeGroupStorageKey,
+    group.id,
+  )
+}
+
+/*
+ * ========================================
+ * GRUPO ACTUALIZADO
+ * ========================================
+ */
+
+const handleGroupUpdated = (
+  updatedGroup: Group,
+) => {
+  setGroups(
+    (currentGroups) =>
+      currentGroups.map(
+        (group) =>
+          group.id ===
+          updatedGroup.id
+            ? updatedGroup
+            : group,
+      ),
+  )
+
+  setActiveGroup(
+    (currentGroup) =>
+      currentGroup?.id ===
+      updatedGroup.id
+        ? updatedGroup
+        : currentGroup,
+  )
+}
+
+/*
+ * ========================================
+ * ABANDONAR GRUPO
+ * ========================================
+ */
+
+const handleLeftGroup = (
+  groupId: string,
+) => {
+  const remainingGroups =
+    groups.filter(
+      (group) =>
+        group.id !== groupId,
+    )
+
+  setGroups(
+    remainingGroups,
+  )
+
+  const nextGroup =
+    remainingGroups[0] ??
+    null
+
+  setActiveGroup(
+    nextGroup,
+  )
+
+  if (nextGroup) {
+    window.localStorage.setItem(
+      activeGroupStorageKey,
+      nextGroup.id,
+    )
+  } else {
+    window.localStorage.removeItem(
+      activeGroupStorageKey,
+    )
+  }
+
+  setUsers([])
+  setActivities({})
+  setSelectedDate(null)
+}
+
+/*
+ * ========================================
+ * MIEMBRO EXPULSADO
+ * ========================================
+ */
+
+const handleMemberRemoved = (
+  userId: string,
+) => {
+  setUsers(
+    (currentUsers) =>
+      currentUsers.filter(
+        (user) =>
+          user.id !== userId,
+      ),
+  )
+
+  setActivities(
+    (currentActivities) => {
+      const nextActivities:
+        ActivitiesByDate = {}
+
+      Object.entries(
+        currentActivities,
+      ).forEach(
+        ([
+          dateKey,
+          day,
+        ]) => {
+          const nextDay = {
+            ...day,
+          }
+
+          delete nextDay[
+            userId
+          ]
+
+          if (
+            Object.keys(
+              nextDay,
+            ).length > 0
+          ) {
+            nextActivities[
+              dateKey
+            ] = nextDay
+          }
+        },
+      )
+
+      return nextActivities
+    },
+  )
+}
+
 
   /*
    * ========================================
@@ -590,6 +771,8 @@ function RachaApp({
 
       return
     }
+
+    let cancelled = false
 
     const loadGroupData =
       async () => {
@@ -645,11 +828,14 @@ function RachaApp({
               .order(
                 'created_at',
                 {
-                  ascending:
-                    true,
+                  ascending: true,
                 },
               ),
           ])
+
+        if (cancelled) {
+          return
+        }
 
         if (
           membersResult.error
@@ -690,9 +876,7 @@ function RachaApp({
         }
 
         /*
-         * =========================
          * USERS
-         * =========================
          */
 
         const memberRows =
@@ -764,14 +948,8 @@ function RachaApp({
               },
             )
 
-        setUsers(
-          loadedUsers,
-        )
-
         /*
-         * =========================
          * ACTIVITIES
-         * =========================
          */
 
         const activityRows =
@@ -781,8 +959,7 @@ function RachaApp({
           ) as unknown as ActivityRow[]
 
         const activityMap:
-          ActivitiesByDate =
-            {}
+          ActivitiesByDate = {}
 
         activityRows.forEach(
           (row) => {
@@ -799,15 +976,11 @@ function RachaApp({
             if (
               !activityMap[
                 row.activity_date
-              ][
-                row.user_id
-              ]
+              ][row.user_id]
             ) {
               activityMap[
                 row.activity_date
-              ][
-                row.user_id
-              ] = []
+              ][row.user_id] = []
             }
 
             const reactions:
@@ -816,7 +989,9 @@ function RachaApp({
                   row.reactions ??
                   []
                 ).map(
-                  (reaction) => ({
+                  (
+                    reaction,
+                  ) => ({
                     user_id:
                       reaction.user_id,
 
@@ -827,11 +1002,8 @@ function RachaApp({
 
             activityMap[
               row.activity_date
-            ][
-              row.user_id
-            ].push({
-              id:
-                row.id,
+            ][row.user_id].push({
+              id: row.id,
 
               type:
                 row.type as ActivityType,
@@ -844,6 +1016,14 @@ function RachaApp({
           },
         )
 
+        if (cancelled) {
+          return
+        }
+
+        setUsers(
+          loadedUsers,
+        )
+
         setActivities(
           activityMap,
         )
@@ -854,14 +1034,18 @@ function RachaApp({
       }
 
     void loadGroupData()
-  }, [
-    activeGroup,
-    currentUserId,
-  ])
 
+    return () => {
+      cancelled = true
+    }
+  
+    }, [
+  activeGroup?.id,
+  currentUserId,
+])
   /*
    * ========================================
-   * CURRENT USER
+   * USUARIO ACTUAL
    * ========================================
    */
 
@@ -874,7 +1058,7 @@ function RachaApp({
 
   /*
    * ========================================
-   * MODAL
+   * MODAL DE ACTIVIDAD
    * ========================================
    */
 
@@ -883,9 +1067,7 @@ function RachaApp({
     activityId:
       string | null = null,
   ) => {
-    setSelectedDate(
-      null,
-    )
+    setSelectedDate(null)
 
     setEditingDate(
       dateKey,
@@ -1097,8 +1279,7 @@ function RachaApp({
 
       const newActivity:
         Activity = {
-          id:
-            data.id,
+          id: data.id,
 
           type:
             data.type as ActivityType,
@@ -1202,9 +1383,11 @@ function RachaApp({
           }
 
           const currentDay = {
-            ...(copy[
-              editingDate
-            ] ?? {}),
+            ...(
+              copy[
+                editingDate
+              ] ?? {}
+            ),
           }
 
           const userActivities =
@@ -1271,8 +1454,7 @@ function RachaApp({
         currentActivities,
       ) => {
         const nextActivities:
-          ActivitiesByDate =
-            {}
+          ActivitiesByDate = {}
 
         Object.entries(
           currentActivities,
@@ -1294,13 +1476,9 @@ function RachaApp({
               ]) => {
                 nextActivities[
                   dateKey
-                ][
-                  userId
-                ] =
+                ][userId] =
                   userActivities.map(
-                    (
-                      activity,
-                    ) =>
+                    (activity) =>
                       activity.id ===
                       activityId
                         ? {
@@ -1325,18 +1503,17 @@ function RachaApp({
       emoji: ReactionEmoji,
     ) => {
       let targetActivity:
-        Activity | null =
-          null
+        Activity | null = null
 
       for (
-        const day of Object.values(
+        const day of
+        Object.values(
           activities,
         )
       ) {
         for (
-          const userActivities of Object.values(
-            day,
-          )
+          const userActivities of
+          Object.values(day)
         ) {
           const found =
             userActivities.find(
@@ -1353,16 +1530,12 @@ function RachaApp({
           }
         }
 
-        if (
-          targetActivity
-        ) {
+        if (targetActivity) {
           break
         }
       }
 
-      if (
-        !targetActivity
-      ) {
+      if (!targetActivity) {
         return
       }
 
@@ -1378,8 +1551,8 @@ function RachaApp({
         )
 
       /*
-       * TOCÓ LA MISMA:
-       * ELIMINAMOS REACCIÓN
+       * MISMA REACCIÓN:
+       * LA QUITAMOS
        */
 
       if (
@@ -1432,7 +1605,7 @@ function RachaApp({
       }
 
       /*
-       * NUEVA O CAMBIO DE REACCIÓN
+       * NUEVA O CAMBIO
        */
 
       const {
@@ -1513,8 +1686,10 @@ function RachaApp({
   const saveProfile =
     async (
       name: string,
-      avatarUrl: string | null,
-      avatarFile: File | null,
+      avatarUrl:
+        string | null,
+      avatarFile:
+        File | null,
     ) => {
       let finalAvatarUrl =
         avatarUrl
@@ -1543,9 +1718,7 @@ function RachaApp({
               },
             )
 
-        if (
-          uploadError
-        ) {
+        if (uploadError) {
           console.error(
             'Error subiendo avatar:',
             uploadError,
@@ -1743,6 +1916,7 @@ function RachaApp({
           </p>
 
           <button
+            type="button"
             onClick={
               handleLogout
             }
@@ -1771,7 +1945,7 @@ function RachaApp({
           profile.name
         }
         onReady={
-          setActiveGroup
+          handleGroupReady
         }
         onLogout={
           handleLogout
@@ -1795,7 +1969,8 @@ function RachaApp({
           </div>
 
           <p className="mt-3 font-bold text-violet-500">
-            Cargando tu grupo...
+            Cargando{' '}
+            {activeGroup.name}...
           </p>
         </div>
       </main>
@@ -1825,12 +2000,13 @@ function RachaApp({
           </p>
 
           <button
-            onClick={
-              handleLogout
+            type="button"
+            onClick={() =>
+              window.location.reload()
             }
             className="mt-5 rounded-2xl bg-violet-500 px-5 py-3 font-bold text-white"
           >
-            Salir
+            Reintentar
           </button>
         </div>
       </main>
@@ -1849,20 +2025,20 @@ function RachaApp({
 
       <div className="mx-auto w-full max-w-md px-5 pt-4">
         <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
-          <div className="min-w-0">
-            <p className="text-[10px] font-black tracking-wider text-zinc-400">
-              TU RACHA
-            </p>
-
-            <p className="truncate font-black text-zinc-800">
-              🔥{' '}
-              {
-                activeGroup.name
-              }
-            </p>
-          </div>
+          <GroupSwitcher
+            groups={
+              groups
+            }
+            activeGroup={
+              activeGroup
+            }
+            onSelectGroup={
+              selectGroup
+            }
+          />
 
           <button
+            type="button"
             onClick={
               copyInviteCode
             }
@@ -1879,8 +2055,18 @@ function RachaApp({
           </button>
         </div>
 
+        {groups.length > 1 && (
+          <p className="mt-2 text-left text-[11px] font-semibold text-zinc-400">
+            Tenés{' '}
+            {groups.length}{' '}
+            grupos · tocá el nombre
+            para cambiar
+          </p>
+        )}
+
         <div className="mt-2 flex justify-end">
           <button
+            type="button"
             onClick={
               handleLogout
             }
@@ -1976,30 +2162,45 @@ function RachaApp({
       {view ===
         'profile' &&
         currentUser && (
-          <Perfil
-            currentUser={
-              currentUser
-            }
-            profile={
-              profile
-            }
-            email={
-              session.user
-                .email ?? ''
-            }
-            group={
-              activeGroup
-            }
-            memberCount={
-              users.length
-            }
-            onLogout={
-              handleLogout
-            }
-            onSaveProfile={
-              saveProfile
-            }
-          />
+   <Perfil
+      currentUser={
+        currentUser
+      }
+      profile={
+        profile
+      }
+      email={
+        session.user
+          .email ?? ''
+      }
+      group={
+        activeGroup
+      }
+      members={
+        users
+      }
+      memberCount={
+        users.length
+      }
+      onLogout={
+        handleLogout
+      }
+      onSaveProfile={
+        saveProfile
+      }
+      onGroupReady={
+        handleGroupReady
+      }
+      onGroupUpdated={
+        handleGroupUpdated
+      }
+      onLeftGroup={
+        handleLeftGroup
+      }
+      onMemberRemoved={
+        handleMemberRemoved
+      }
+    />
         )}
 
       {/* NAV */}

@@ -3,8 +3,6 @@ import {
   useState,
 } from 'react'
 
-import NotificationSettings from '../components/NotificationSettings'
-
 import {
   Camera,
   Check,
@@ -14,10 +12,15 @@ import {
   LogOut,
   Mail,
   Pencil,
+  Plus,
+  Settings,
   Users,
   X,
 } from 'lucide-react'
 
+import AddGroupModal from '../components/AddGroupModal'
+import GroupManagementModal from '../components/GroupManagementModal'
+import NotificationSettings from '../components/NotificationSettings'
 import UserAvatar from '../components/UserAvatar'
 
 import type {
@@ -31,7 +34,9 @@ type Props = {
   profile: Profile
   email: string
   group: Group
+  members: User[]
   memberCount: number
+
   onLogout: () => void
 
   onSaveProfile: (
@@ -39,6 +44,22 @@ type Props = {
     avatarUrl: string | null,
     avatarFile: File | null,
   ) => Promise<boolean>
+
+  onGroupReady: (
+    group: Group,
+  ) => void
+
+  onGroupUpdated: (
+    group: Group,
+  ) => void
+
+  onLeftGroup: (
+    groupId: string,
+  ) => void
+
+  onMemberRemoved: (
+    userId: string,
+  ) => void
 }
 
 const avatarOptions = [
@@ -64,10 +85,21 @@ function Perfil({
   profile,
   email,
   group,
+  members,
   memberCount,
   onLogout,
   onSaveProfile,
+  onGroupReady,
+  onGroupUpdated,
+  onLeftGroup,
+  onMemberRemoved,
 }: Props) {
+  /*
+   * ========================================
+   * EDICIÓN DEL PERFIL
+   * ========================================
+   */
+
   const [
     editing,
     setEditing,
@@ -120,6 +152,28 @@ function Perfil({
     string | null
   >(null)
 
+  /*
+   * ========================================
+   * MODALES DE GRUPO
+   * ========================================
+   */
+
+  const [
+    groupModalOpen,
+    setGroupModalOpen,
+  ] = useState(false)
+
+  const [
+    groupManagementOpen,
+    setGroupManagementOpen,
+  ] = useState(false)
+
+  /*
+   * ========================================
+   * SINCRONIZAR PERFIL
+   * ========================================
+   */
+
   useEffect(() => {
     setName(
       profile.name,
@@ -129,6 +183,12 @@ function Perfil({
       profile.avatar_url,
     )
   }, [profile])
+
+  /*
+   * ========================================
+   * LIMPIAR PREVIEW
+   * ========================================
+   */
 
   useEffect(() => {
     return () => {
@@ -161,12 +221,31 @@ function Perfil({
       )
     }
 
+  /*
+   * ========================================
+   * COPIAR INVITACIÓN
+   * ========================================
+   */
+
   const copyInviteCode =
     async () => {
-      await navigator.clipboard.writeText(
-        group.invite_code,
-      )
+      try {
+        await navigator.clipboard.writeText(
+          group.invite_code,
+        )
+      } catch (error) {
+        console.error(
+          'No se pudo copiar el código:',
+          error,
+        )
+      }
     }
+
+  /*
+   * ========================================
+   * CANCELAR EDICIÓN
+   * ========================================
+   */
 
   const cancelEditing =
     () => {
@@ -187,6 +266,12 @@ function Perfil({
       setEditing(false)
     }
 
+  /*
+   * ========================================
+   * AVATAR PREDEFINIDO
+   * ========================================
+   */
+
   const selectAvatar = (
     value: string | null,
   ) => {
@@ -200,6 +285,12 @@ function Perfil({
       null,
     )
   }
+
+  /*
+   * ========================================
+   * SUBIR AVATAR
+   * ========================================
+   */
 
   const handleAvatarFile = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -268,15 +359,15 @@ function Perfil({
       preview,
     )
 
-    /*
-     * avatarUrl queda como estaba.
-     * La foto se sube recién cuando
-     * tocamos Guardar.
-     */
-
     event.target.value =
       ''
   }
+
+  /*
+   * ========================================
+   * GUARDAR PERFIL
+   * ========================================
+   */
 
   const saveProfile =
     async () => {
@@ -316,6 +407,12 @@ function Perfil({
       )
     }
 
+  /*
+   * ========================================
+   * PREVIEW USUARIO
+   * ========================================
+   */
+
   const previewUser: User =
     {
       ...currentUser,
@@ -340,7 +437,9 @@ function Perfil({
 
   return (
     <div className="mx-auto w-full max-w-md px-5 pt-8">
+      {/* ================================= */}
       {/* HEADER */}
+      {/* ================================= */}
 
       <header className="mb-7">
         <div className="flex items-start justify-between">
@@ -354,13 +453,14 @@ function Perfil({
             </h1>
 
             <p className="mt-1 text-zinc-500">
-              Vos, tu grupo y tu
+              Vos, tus grupos y tu
               Racha 🔥
             </p>
           </div>
 
           {!editing ? (
             <button
+              type="button"
               onClick={() =>
                 setEditing(
                   true,
@@ -374,6 +474,7 @@ function Perfil({
             </button>
           ) : (
             <button
+              type="button"
               onClick={
                 cancelEditing
               }
@@ -387,7 +488,9 @@ function Perfil({
         </div>
       </header>
 
+      {/* ================================= */}
       {/* PERFIL */}
+      {/* ================================= */}
 
       <section className="mb-5 rounded-[30px] bg-gradient-to-br from-violet-100 to-pink-50 p-6 text-center shadow-sm">
         <div className="mx-auto w-fit">
@@ -411,7 +514,9 @@ function Perfil({
 
             <input
               type="text"
-              value={name}
+              value={
+                name
+              }
               onChange={(
                 event,
               ) =>
@@ -446,7 +551,9 @@ function Perfil({
         </div>
       </section>
 
+      {/* ================================= */}
       {/* AVATAR */}
+      {/* ================================= */}
 
       {editing && (
         <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
@@ -473,8 +580,8 @@ function Perfil({
                   avatarUrl ===
                     option.value
 
-                const optionUser: User =
-                  {
+                const optionUser:
+                  User = {
                     ...currentUser,
 
                     name:
@@ -499,6 +606,7 @@ function Perfil({
                     key={
                       option.id
                     }
+                    type="button"
                     onClick={() =>
                       selectAvatar(
                         option.value,
@@ -605,6 +713,7 @@ function Perfil({
           )}
 
           <button
+            type="button"
             onClick={
               saveProfile
             }
@@ -630,18 +739,28 @@ function Perfil({
         </section>
       )}
 
+      {/* PERFIL GUARDADO */}
+
       {saved && (
         <div className="mb-5 rounded-2xl bg-green-50 px-4 py-3 text-center text-sm font-bold text-green-600">
           ✓ Perfil actualizado
         </div>
       )}
 
-      {/* GRUPO */}
+      {/* ================================= */}
+      {/* GRUPO ACTIVO */}
+      {/* ================================= */}
 
       <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
-        <p className="text-xs font-black tracking-wider text-zinc-400">
-          TU GRUPO
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-black tracking-wider text-zinc-400">
+            GRUPO ACTIVO
+          </p>
+
+          <span className="rounded-full bg-green-50 px-3 py-1 text-[10px] font-black text-green-600">
+            ACTIVO
+          </span>
+        </div>
 
         <div className="mt-3 flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-600">
@@ -651,7 +770,7 @@ function Perfil({
           </div>
 
           <div className="min-w-0 flex-1">
-            <h3 className="font-black text-zinc-800">
+            <h3 className="truncate font-black text-zinc-800">
               {group.name}
             </h3>
 
@@ -668,23 +787,27 @@ function Perfil({
           </div>
         </div>
 
+        {/* CÓDIGO */}
+
         <div className="mt-5 rounded-2xl bg-zinc-50 p-4">
           <p className="text-xs font-bold text-zinc-400">
             CÓDIGO DE INVITACIÓN
           </p>
 
-          <div className="mt-2 flex items-center justify-between">
-            <span className="text-xl font-black tracking-[0.15em] text-zinc-800">
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <span className="truncate text-xl font-black tracking-[0.15em] text-zinc-800">
               {
                 group.invite_code
               }
             </span>
 
             <button
+              type="button"
               onClick={
                 copyInviteCode
               }
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-600"
+              title="Copiar código"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-600"
             >
               <Copy
                 size={18}
@@ -694,12 +817,55 @@ function Perfil({
 
           <p className="mt-2 text-xs text-zinc-400">
             Compartilo con alguien
-            para sumarlo a tu grupo.
+            para sumarlo a este grupo.
           </p>
         </div>
+
+        {/* CREAR / UNIRSE */}
+
+        <button
+          type="button"
+          onClick={() =>
+            setGroupModalOpen(
+              true,
+            )
+          }
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-100 py-3.5 font-black text-violet-600 transition active:scale-[0.98]"
+        >
+          <Plus
+            size={18}
+          />
+
+          Crear o unirme a otro grupo
+        </button>
+
+        {/* ADMINISTRAR */}
+
+        <button
+          type="button"
+          onClick={() =>
+            setGroupManagementOpen(
+              true,
+            )
+          }
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-zinc-100 py-3.5 font-black text-zinc-600 transition active:scale-[0.98]"
+        >
+          <Settings
+            size={18}
+          />
+
+          Administrar grupo
+        </button>
+
+        <p className="mt-3 text-center text-xs font-medium text-zinc-400">
+          Podés cambiar entre tus
+          grupos desde arriba.
+        </p>
       </section>
 
+      {/* ================================= */}
       {/* CUENTA */}
+      {/* ================================= */}
 
       <section className="rounded-[28px] bg-white p-5 shadow-sm">
         <p className="mb-4 text-xs font-black tracking-wider text-zinc-400">
@@ -707,14 +873,17 @@ function Perfil({
         </p>
 
         <NotificationSettings
-  userId={currentUser.id}
-/>
+          userId={
+            currentUser.id
+          }
+        />
 
         <button
+          type="button"
           onClick={
             onLogout
           }
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 py-3.5 font-bold text-red-500 transition active:scale-[0.98]"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 py-3.5 font-bold text-red-500 transition active:scale-[0.98]"
         >
           <LogOut
             size={18}
@@ -727,6 +896,60 @@ function Perfil({
       <p className="mt-6 text-center text-xs font-medium text-zinc-300">
         Racha · Un día más cuenta 🔥
       </p>
+
+      {/* ================================= */}
+      {/* MODAL CREAR / UNIRSE */}
+      {/* ================================= */}
+
+      <AddGroupModal
+        open={
+          groupModalOpen
+        }
+        userId={
+          currentUser.id
+        }
+        onClose={() =>
+          setGroupModalOpen(
+            false,
+          )
+        }
+        onReady={
+          onGroupReady
+        }
+      />
+
+      {/* ================================= */}
+      {/* MODAL ADMINISTRAR GRUPO */}
+      {/* ================================= */}
+
+      <GroupManagementModal
+        open={
+          groupManagementOpen
+        }
+        group={
+          group
+        }
+        members={
+          members
+        }
+        currentUserId={
+          currentUser.id
+        }
+        onClose={() =>
+          setGroupManagementOpen(
+            false,
+          )
+        }
+        onGroupUpdated={
+          onGroupUpdated
+        }
+        onLeftGroup={
+          onLeftGroup
+        }
+        onMemberRemoved={
+          onMemberRemoved
+        }
+      />
     </div>
   )
 }
