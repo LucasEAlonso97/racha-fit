@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useState,
 } from 'react'
 
@@ -15,6 +16,7 @@ import {
   LockKeyhole,
   Mail,
   UserRound,
+  Users,
 } from 'lucide-react'
 
 import {
@@ -98,6 +100,65 @@ function Auth() {
     recoverySent,
     setRecoverySent,
   ] = useState(false)
+
+  /*
+   * ========================================
+   * USUARIOS REGISTRADOS
+   * ========================================
+   */
+
+  const [
+    registeredUsers,
+    setRegisteredUsers,
+  ] =
+    useState<number | null>(
+      null,
+    )
+
+  /*
+   * ========================================
+   * CARGAR CANTIDAD DE USUARIOS
+   * ========================================
+   */
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadRegisteredUsers =
+      async () => {
+        const {
+          data,
+          error:
+            countError,
+        } =
+          await supabase.rpc(
+            'get_registered_user_count',
+          )
+
+        if (cancelled) {
+          return
+        }
+
+        if (countError) {
+          console.error(
+            'Error cargando cantidad de usuarios:',
+            countError,
+          )
+
+          return
+        }
+
+        setRegisteredUsers(
+          Number(data),
+        )
+      }
+
+    void loadRegisteredUsers()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   /*
    * ========================================
@@ -244,9 +305,6 @@ function Auth() {
       }
 
       /*
-       * No necesitamos navegar
-       * manualmente.
-       *
        * App.tsx escucha el cambio
        * de sesión y abre RachaApp.
        */
@@ -343,8 +401,6 @@ function Auth() {
        * Si Confirm Email está
        * desactivado, Supabase puede
        * devolver sesión inmediatamente.
-       *
-       * En ese caso App.tsx entra solo.
        */
 
       if (data.session) {
@@ -437,9 +493,7 @@ function Auth() {
     ) => {
       event.preventDefault()
 
-      if (
-        loading
-      ) {
+      if (loading) {
         return
       }
 
@@ -549,10 +603,10 @@ function Auth() {
 
         <header className="mb-8 text-center">
           <img
-  src="/racha-192.png"
-  alt="Racha"
-  className="mx-auto h-16 w-16 rounded-[22px] object-cover shadow-sm"
-/>
+            src="/racha-192.png"
+            alt="Racha"
+            className="mx-auto h-16 w-16 rounded-[22px] object-cover shadow-sm"
+          />
 
           <h1 className="mt-5 text-4xl font-black tracking-tight text-zinc-800">
             Racha
@@ -561,6 +615,29 @@ function Auth() {
           <p className="mt-2 text-zinc-500">
             Un día más cuenta 🏋️‍♀️
           </p>
+
+          {/* ================================= */}
+          {/* PERSONAS REGISTRADAS */}
+          {/* ================================= */}
+
+          {mode !==
+            'recovery' &&
+            registeredUsers !==
+              null && (
+              <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-violet-50 px-4 py-2 text-sm font-bold text-violet-600">
+                <Users
+                  size={16}
+                  strokeWidth={2.5}
+                />
+
+                <span>
+                  {registeredUsers ===
+                  1
+                    ? '1 persona ya se sumó'
+                    : `${registeredUsers} personas ya se sumaron`}
+                </span>
+              </div>
+            )}
         </header>
 
         {/* ================================= */}

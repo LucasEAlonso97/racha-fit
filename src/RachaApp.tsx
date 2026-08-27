@@ -1,5 +1,5 @@
 import {
-  useEffect,
+    useEffect,
   useMemo,
   useState,
 } from 'react'
@@ -17,12 +17,13 @@ import ActivityModal from './components/ActivityModal'
 import BottomNavigation from './components/BottomNavigation'
 import DayDetailModal from './components/DayDetailModal'
 import GroupSwitcher from './components/GroupSwitcher'
-
+import Onboarding from './pages/Onboarding'
 import Calendar from './pages/Calendar'
 import GroupSetup from './pages/GroupSetup'
 import Home from './pages/Home'
 import Perfil from './pages/Perfil'
 import Rachas from './pages/Rachas'
+import InviteJoin from './pages/InviteJoin'
 
 import {
   supabase,
@@ -149,7 +150,7 @@ async function loadAccountWithRetry(
         supabase
           .from('profiles')
           .select(
-            'id, name, avatar_url',
+            'id, name, avatar_url, onboarding_completed',
           )
           .eq(
             'id',
@@ -209,7 +210,7 @@ async function loadAccountWithRetry(
       supabase
         .from('profiles')
         .select(
-          'id, name, avatar_url',
+          'id, name, avatar_url, onboarding_completed',
         )
         .eq(
           'id',
@@ -253,6 +254,27 @@ function RachaApp({
 
   const activeGroupStorageKey =
     `racha-active-group-${currentUserId}`
+
+    const [
+  pendingInviteCode,
+  setPendingInviteCode,
+] =
+  useState<string | null>(
+    () => {
+      const params =
+        new URLSearchParams(
+          window.location.search,
+        )
+
+      const code =
+        params
+          .get('join')
+          ?.trim()
+          .toUpperCase()
+
+      return code || null
+    },
+  )
 
   /*
    * ========================================
@@ -345,6 +367,14 @@ function RachaApp({
     setGroupLoading,
   ] =
     useState(false)
+
+  
+
+    const [
+  groupRefreshKey,
+  setGroupRefreshKey,
+] =
+  useState(0)
 
   const [
     groupError,
@@ -633,6 +663,34 @@ const handleGroupReady = (
 
 /*
  * ========================================
+ * LIMPIAR INVITACIÓN DEL LINK
+ * ========================================
+ */
+
+const clearInviteLink =
+  () => {
+    const url =
+      new URL(
+        window.location.href,
+      )
+
+    url.searchParams.delete(
+      'join',
+    )
+
+    window.history.replaceState(
+      {},
+      '',
+      `${url.pathname}${url.search}${url.hash}`,
+    )
+
+    setPendingInviteCode(
+      null,
+    )
+  }
+
+/*
+ * ========================================
  * GRUPO ACTUALIZADO
  * ========================================
  */
@@ -757,7 +815,21 @@ const handleMemberRemoved = (
   )
 }
 
+/*
+ * ========================================
+ * LOADING AL CAMBIAR DE GRUPO
+ * ========================================
+ */
 
+useEffect(() => {
+  if (!activeGroup) {
+    return
+  }
+
+  setGroupLoading(true)
+}, [
+  activeGroup?.id,
+])
   /*
    * ========================================
    * MIEMBROS + ACTIVIDADES + REACCIONES
@@ -765,24 +837,30 @@ const handleMemberRemoved = (
    */
 
   useEffect(() => {
-    if (!activeGroup) {
-      setUsers([])
-      setActivities({})
+   if (!activeGroup) {
+ 
 
-      return
-    }
+  setUsers([])
+  setActivities({})
+
+  return
+}
 
     let cancelled = false
 
-    const loadGroupData =
-      async () => {
-        setGroupLoading(
-          true,
-        )
+   const loadGroupData =
+  async () => {
+    const isInitialLoad =
+      
+      activeGroup.id
 
-        setGroupError(
-          null,
-        )
+    if (isInitialLoad) {
+      
+    }
+
+    setGroupError(
+      null,
+    )
 
         const [
           membersResult,
@@ -1042,6 +1120,107 @@ const handleMemberRemoved = (
     }, [
   activeGroup?.id,
   currentUserId,
+  groupRefreshKey,
+])
+
+/*
+ * ========================================
+ * REALTIME DEL GRUPO
+ * ========================================
+ */
+
+useEffect(() => {
+  if (!activeGroup) {
+    return
+  }
+
+  const refreshGroup =
+    () => {
+      setGroupRefreshKey(
+        (current) =>
+          current + 1,
+      )
+    }
+
+  const channel =
+    supabase
+      .channel(
+        `racha-group-${activeGroup.id}`,
+      )
+
+      /*
+       * ACTIVIDADES
+       */
+
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'activities',
+          filter:
+            `group_id=eq.${activeGroup.id}`,
+        },
+        () => {
+          refreshGroup()
+        },
+      )
+
+      /*
+       * MIEMBROS
+       */
+
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table:
+            'group_members',
+        },
+        () => {
+          refreshGroup()
+        },
+      )
+
+      /*
+       * REACCIONES
+       */
+
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table:
+            'activity_reactions',
+        },
+        () => {
+          refreshGroup()
+        },
+      )
+
+      .subscribe(
+        (status) => {
+          if (
+            status ===
+            'SUBSCRIBED'
+          ) {
+            console.log(
+              'Racha Realtime conectado:',
+              activeGroup.name,
+            )
+          }
+        },
+      )
+
+  return () => {
+    void supabase.removeChannel(
+      channel,
+    )
+  }
+}, [
+  activeGroup?.id,
 ])
   /*
    * ========================================
@@ -1764,7 +1943,7 @@ const handleMemberRemoved = (
             currentUserId,
           )
           .select(
-            'id, name, avatar_url',
+            'id, name, avatar_url, onboarding_completed',
           )
           .single()
 
@@ -1821,6 +2000,56 @@ const handleMemberRemoved = (
 
       return true
     }
+
+    /*
+ * ========================================
+ * COMPLETAR ONBOARDING
+ * ========================================
+ */
+
+const completeOnboarding =
+  async () => {
+    const {
+      error,
+    } =
+      await supabase
+        .from('profiles')
+        .update({
+          onboarding_completed:
+            true,
+        })
+        .eq(
+          'id',
+          currentUserId,
+        )
+
+    if (error) {
+      console.error(
+        'Error completando onboarding:',
+        error,
+      )
+
+      window.alert(
+        'No pudimos terminar la introducción. Probá nuevamente.',
+      )
+
+      return
+    }
+
+    setProfile(
+      (currentProfile) => {
+        if (!currentProfile) {
+          return currentProfile
+        }
+
+        return {
+          ...currentProfile,
+          onboarding_completed:
+            true,
+        }
+      },
+    )
+  }
 
   /*
    * ========================================
@@ -1928,6 +2157,64 @@ const handleMemberRemoved = (
       </main>
     )
   }
+
+
+  /*
+ * ========================================
+ * ONBOARDING
+ * ========================================
+ */
+
+if (
+  !profile.onboarding_completed
+) {
+  return (
+    <Onboarding
+      onComplete={
+        completeOnboarding
+      }
+    />
+  )
+}
+
+/*
+ * ========================================
+ * INVITACIÓN POR LINK
+ * ========================================
+ */
+
+if (pendingInviteCode) {
+  const existingInvitedGroup =
+    groups.find(
+      (group) =>
+        group.invite_code
+          .toUpperCase() ===
+        pendingInviteCode,
+    ) ?? null
+
+  return (
+    <InviteJoin
+      inviteCode={
+        pendingInviteCode
+      }
+      existingGroup={
+        existingInvitedGroup
+      }
+      onReady={(
+        group,
+      ) => {
+        handleGroupReady(
+          group,
+        )
+
+        clearInviteLink()
+      }}
+      onCancel={
+        clearInviteLink
+      }
+    />
+  )
+}
 
   /*
    * ========================================

@@ -14,6 +14,7 @@ import {
   Trash2,
   UserMinus,
   Users,
+  Share2,
   X,
 } from 'lucide-react'
 
@@ -92,6 +93,10 @@ function GroupManagementModal({
     setCopied,
   ] = useState(false)
 
+  const [
+  linkCopied,
+  setLinkCopied,
+] = useState(false)
   const [
     regeneratingCode,
     setRegeneratingCode,
@@ -174,6 +179,70 @@ function GroupManagementModal({
         )
       }
     }
+
+    /*
+ * ========================================
+ * COMPARTIR INVITACIÓN
+ * ========================================
+ */
+
+const shareInviteLink =
+  async () => {
+    const inviteLink =
+      `${window.location.origin}/?join=${encodeURIComponent(
+        group.invite_code,
+      )}`
+
+    const shareText =
+      `Sumate a "${group.name}" en Racha 💪`
+
+    try {
+      if (
+        navigator.share
+      ) {
+        await navigator.share({
+          title: 'Racha',
+          text: shareText,
+          url: inviteLink,
+        })
+
+        return
+      }
+
+      await navigator.clipboard.writeText(
+        inviteLink,
+      )
+
+      setLinkCopied(true)
+
+      window.setTimeout(
+        () => {
+          setLinkCopied(false)
+        },
+        1800,
+      )
+    } catch (caughtError) {
+      /*
+       * Si el usuario cerró
+       * la ventana de compartir,
+       * no es realmente un error.
+       */
+
+      if (
+        caughtError instanceof
+          DOMException &&
+        caughtError.name ===
+          'AbortError'
+      ) {
+        return
+      }
+
+      console.error(
+        'Error compartiendo invitación:',
+        caughtError,
+      )
+    }
+  }
 
   /*
    * ========================================
@@ -890,6 +959,32 @@ function GroupManagementModal({
               </button>
             </div>
           </div>
+
+          <button
+  type="button"
+  onClick={
+    shareInviteLink
+  }
+  className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-3.5 text-sm font-black text-white shadow-lg shadow-violet-100 transition active:scale-[0.98]"
+>
+  {linkCopied ? (
+    <>
+      <Check
+        size={18}
+      />
+
+      Link copiado
+    </>
+  ) : (
+    <>
+      <Share2
+        size={18}
+      />
+
+      Compartir invitación
+    </>
+  )}
+</button>
 
           {/* REGENERAR CÓDIGO */}
 

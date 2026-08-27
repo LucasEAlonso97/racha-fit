@@ -47,6 +47,7 @@ export type Profile = {
   id: string
   name: string
   avatar_url: string | null
+  onboarding_completed: boolean
 }
 
 export type Group = {

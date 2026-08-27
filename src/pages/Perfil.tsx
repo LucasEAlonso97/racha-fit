@@ -859,7 +859,7 @@ function Perfil({
 
         <p className="mt-3 text-center text-xs font-medium text-zinc-400">
           Podés cambiar entre tus
-          grupos desde arriba.
+          grupos desde arriba
         </p>
       </section>
 
@@ -894,7 +894,7 @@ function Perfil({
       </section>
 
       <p className="mt-6 text-center text-xs font-medium text-zinc-300">
-        Racha · Un día más cuenta 🔥
+        Racha · Un día más cuenta 🏋️‍♀️
       </p>
 
       {/* ================================= */}

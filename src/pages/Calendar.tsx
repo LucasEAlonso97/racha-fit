@@ -559,7 +559,7 @@ function Calendar({
         <p className="mt-1 text-sm text-violet-500">
           Tocá cualquier día
           para ver todas las
-          actividades del grupo.
+          actividades del grupo
         </p>
       </section>
 

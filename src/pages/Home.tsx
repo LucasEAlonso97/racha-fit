@@ -218,7 +218,7 @@ function Home({
         </div>
 
         <p className="text-zinc-500">
-          Un día más cuenta.
+          Un día más cuenta 🏋️‍♀️
         </p>
       </header>
 
@@ -667,7 +667,7 @@ function Home({
 
       <section className="rounded-[28px] bg-pink-100 px-5 py-4">
         <p className="font-black text-pink-600">
-          🔥 No cortes la cadena.
+          🔥 No cortes la cadena
         </p>
 
         <p className="mt-1 text-sm text-pink-500">
@@ -675,7 +675,7 @@ function Home({
           0
             ? myActivities.length >
               1
-              ? `Hoy ya metiste ${myActivities.length} actividades. Banco una locura jajaj.`
+              ? `Hoy ya metiste ${myActivities.length} actividades. Dejá de farmear tanta aura!`
               : 'Ya sumaste tu día. Si pinta, podés meter otra.'
             : todayOtherUsers.length >
                 0
