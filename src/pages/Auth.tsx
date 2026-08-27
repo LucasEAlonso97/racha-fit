@@ -502,7 +502,7 @@ function Auth() {
               Entrá desde ese enlace
               y Racha te va a mostrar
               una pantalla para elegir
-              una contraseña nueva.
+              una contraseña nueva
             </p>
 
             <button
@@ -559,7 +559,7 @@ function Auth() {
           </h1>
 
           <p className="mt-2 text-zinc-500">
-            Un día más cuenta. 🔥
+            Un día más cuenta 🏋️‍♀️
           </p>
         </header>
 
@@ -652,14 +652,14 @@ function Auth() {
                 {mode ===
                 'login'
                   ? 'Bienvenido/a 👋'
-                  : 'Sumate a Racha 🔥'}
+                  : 'Sumate a Racha '}
               </h2>
 
               <p className="mt-2 text-sm text-zinc-500">
                 {mode ===
                 'login'
-                  ? 'Entrá y fijate quién ya se movió hoy.'
-                  : 'Creá tu cuenta y empezá una racha con tus amigos.'}
+                  ? 'Entrá y fijate quién ya se movió hoy'
+                  : 'Creá tu cuenta y empezá una racha con tus amigos'}
               </p>
             </>
           )}
@@ -907,10 +907,10 @@ function Auth() {
                 </>
               ) : mode ===
                 'login' ? (
-                'Entrar a Racha 🔥'
+                'Entrar a Racha '
               ) : mode ===
                 'register' ? (
-                'Crear mi cuenta 🔥'
+                'Crear mi cuenta '
               ) : (
                 'Enviarme el enlace'
               )}
@@ -926,7 +926,7 @@ function Auth() {
             <p className="mt-5 text-center text-xs leading-relaxed text-zinc-400">
               El enlace te va a llevar
               nuevamente a Racha para
-              elegir tu nueva contraseña.
+              elegir tu nueva contraseña
             </p>
           )}
         </section>
@@ -936,7 +936,7 @@ function Auth() {
         {/* ================================= */}
 
         <p className="mt-6 text-center text-xs font-semibold text-zinc-300">
-          🔥 Racha · Un día más cuenta.
+          Desarrollado por Lucas Ezequiel Alonso
         </p>
       </div>
     </main>
