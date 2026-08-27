@@ -552,10 +552,9 @@ function Calendar({
       {/* ================================= */}
 
       <section className="mt-5 rounded-[25px] bg-violet-100 p-4">
-        <p className="font-black text-violet-700">
-          🔥 Calendario de la
-          racha
-        </p>
+      <p className="font-black text-violet-700">
+  👥 Calendario del grupo
+</p>
 
         <p className="mt-1 text-sm text-violet-500">
           Tocá cualquier día

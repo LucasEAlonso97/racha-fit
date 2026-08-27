@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  Flame,
   LoaderCircle,
   LockKeyhole,
   Mail,
@@ -549,12 +548,11 @@ function Auth() {
         {/* ================================= */}
 
         <header className="mb-8 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[22px] bg-violet-100">
-            <Flame
-              size={34}
-              className="fill-orange-400 text-orange-400"
-            />
-          </div>
+          <img
+  src="/racha-192.png"
+  alt="Racha"
+  className="mx-auto h-16 w-16 rounded-[22px] object-cover shadow-sm"
+/>
 
           <h1 className="mt-5 text-4xl font-black tracking-tight text-zinc-800">
             Racha
@@ -653,7 +651,7 @@ function Auth() {
               <h2 className="text-2xl font-black text-zinc-800">
                 {mode ===
                 'login'
-                  ? 'Bienvenido de nuevo 👋'
+                  ? 'Bienvenido/a 👋'
                   : 'Sumate a Racha 🔥'}
               </h2>
 

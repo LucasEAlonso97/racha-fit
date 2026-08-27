@@ -443,7 +443,7 @@ function Home({
         <p className="mt-3 text-sm font-semibold text-violet-600">
           {weekActivityCount >=
           weeklyGoal
-            ? 'Meta completada 🔥'
+            ? 'Meta completada 🏆'
             : `Te faltan ${
                 weeklyGoal -
                 weekActivityCount
@@ -542,11 +542,9 @@ function Home({
                           </>
                         ) : (
                           <>
-                            🔥{' '}
-                            {
-                              userActivities.length
-                            }{' '}
-                            actividades ·{' '}
+  💪{' '}
+  {userActivities.length}{' '}
+  actividades ·{' '}
                             {
                               totalMinutes
                             }{' '}
@@ -556,9 +554,9 @@ function Home({
                       </p>
                     </div>
 
-                    <span className="text-xl">
-                      🔥
-                    </span>
+                   <span className="text-xl">
+  💪
+</span>
                   </button>
                 )
               },

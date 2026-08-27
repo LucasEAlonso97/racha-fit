@@ -1,7 +1,7 @@
 import {
   Check,
   ChevronDown,
-  Flame,
+  Users,
   X,
 } from 'lucide-react'
 
@@ -53,8 +53,8 @@ function GroupSwitcher({
 
         <div className="mt-0.5 flex items-center gap-1">
           <p className="truncate font-black text-zinc-800">
-            🔥 {activeGroup.name}
-          </p>
+  {activeGroup.name}
+</p>
 
           {groups.length > 1 && (
             <ChevronDown
@@ -126,22 +126,18 @@ function GroupSwitcher({
                           : 'border-zinc-100 bg-zinc-50'
                       }`}
                     >
-                      <div
-                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
-                          isActive
-                            ? 'bg-violet-500 text-white'
-                            : 'bg-white text-orange-500'
-                        }`}
-                      >
-                        <Flame
-                          size={23}
-                          className={
-                            isActive
-                              ? 'fill-orange-300 text-orange-300'
-                              : 'fill-orange-100'
-                          }
-                        />
-                      </div>
+                    <div
+  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
+    isActive
+      ? 'bg-violet-500 text-white'
+      : 'bg-violet-100 text-violet-500'
+  }`}
+>
+  <Users
+    size={22}
+    strokeWidth={2.5}
+  />
+</div>
 
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-black text-zinc-800">
