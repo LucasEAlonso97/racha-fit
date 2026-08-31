@@ -1,53 +1,113 @@
 import {
-  Flame,
+  useState,
+} from 'react'
+
+import {
+  Bell,
+  ChevronDown,
+  ChevronUp,
+  History,
+  LoaderCircle,
+  RotateCcw,
   Trophy,
 } from 'lucide-react'
+
+import GroupStreakCard from '../components/GroupStreakCard'
+import ReactionBar from '../components/ReactionBar'
+import UserAvatar from '../components/UserAvatar'
 
 import {
   getActivityEmoji,
 } from '../data/activities'
 
+import type {
+  SocialNotification,
+} from '../hooks/useSocialNotifications'
+
 import {
-  getBestStreak,
-  getCurrentStreak,
   getWeekActivityCount,
 } from '../utils/activityStats'
 
 import {
   formatDateKey,
-  getWeekDates,
   monthNames,
   weekDayNames,
 } from '../utils/date'
 
 import type {
   ActivitiesByDate,
+  ReactionEmoji,
   User,
 } from '../types'
 
-import UserAvatar from '../components/UserAvatar'
-
 type Props = {
-  activities: ActivitiesByDate
-  users: User[]
-  currentUserId: string
-  today: Date
+  groupId: string
+
+  activities:
+    ActivitiesByDate
+
+  users:
+    User[]
+
+  currentUserId:
+    string
+
+  today:
+    Date
 
   onSelectDate: (
     dateKey: string,
   ) => void
 
-  onAddActivity: () => void
+  onAddActivity:
+    () => void
+
+  onReactActivity: (
+    activityId: string,
+    emoji: ReactionEmoji,
+  ) => void | Promise<void>
+
+  socialNotifications:
+    SocialNotification[]
+
+  socialUnreadCount:
+    number
+
+  socialNotificationsLoading:
+    boolean
+
+  onMarkSocialNotificationsRead:
+    () => void | Promise<void>
 }
 
 function Home({
+  groupId,
   activities,
   users,
   currentUserId,
   today,
   onSelectDate,
   onAddActivity,
+  onReactActivity,
+  socialNotifications,
+  socialUnreadCount,
+  socialNotificationsLoading,
+  onMarkSocialNotificationsRead,
 }: Props) {
+  /*
+   * ========================================
+   * NOVEDADES
+   * ========================================
+   */
+
+  const [
+    notificationsOpen,
+    setNotificationsOpen,
+  ] =
+    useState(
+      false,
+    )
+
   /*
    * ========================================
    * FECHA
@@ -55,7 +115,9 @@ function Home({
    */
 
   const todayKey =
-    formatDateKey(today)
+    formatDateKey(
+      today,
+    )
 
   /*
    * ========================================
@@ -65,25 +127,28 @@ function Home({
 
   const currentUser =
     users.find(
-      (user) =>
+      (
+        user,
+      ) =>
         user.id ===
         currentUserId,
     )
 
-  if (!currentUser) {
+  if (
+    !currentUser
+  ) {
     return null
   }
 
   /*
    * ========================================
-   * SEMANA
+   * META PERSONAL
    * ========================================
    */
 
-  const weekDates =
-    getWeekDates(today)
-
-  const weeklyGoal = 5
+  const weeklyGoal =
+    currentUser.weeklyGoal ??
+    4
 
   const weekActivityCount =
     getWeekActivityCount(
@@ -94,29 +159,19 @@ function Home({
 
   const weeklyProgress =
     Math.min(
-      (weekActivityCount /
-        weeklyGoal) *
+      (
+        weekActivityCount /
+        weeklyGoal
+      ) *
         100,
       100,
     )
 
-  /*
-   * ========================================
-   * RACHAS
-   * ========================================
-   */
-
-  const currentStreak =
-    getCurrentStreak(
-      activities,
-      currentUserId,
-      today,
-    )
-
-  const bestStreak =
-    getBestStreak(
-      activities,
-      currentUserId,
+  const weeklyRemaining =
+    Math.max(
+      weeklyGoal -
+        weekActivityCount,
+      0,
     )
 
   /*
@@ -126,20 +181,14 @@ function Home({
    */
 
   const todayActivities =
-    activities[todayKey] ?? {}
-
-  /*
-   * Ahora esto es un ARRAY.
-   */
+    activities[
+      todayKey
+    ] ?? {}
 
   const myActivities =
     todayActivities[
       currentUserId
     ] ?? []
-
-  /*
-   * Total de minutos propios.
-   */
 
   const myTotalMinutes =
     myActivities.reduce(
@@ -152,22 +201,205 @@ function Home({
       0,
     )
 
-  /*
-   * Usuarios del grupo
-   * que hicieron algo hoy.
-   */
-
   const todayOtherUsers =
     users.filter(
-      (user) =>
+      (
+        user,
+      ) =>
         user.id !==
           currentUserId &&
         (
           todayActivities[
             user.id
           ] ?? []
-        ).length > 0,
+        ).length >
+          0,
     )
+
+  /*
+   * ========================================
+   * ACTIVIDAD RECIENTE
+   * ========================================
+   */
+
+  const recentActivities =
+    Object.entries(
+      activities,
+    )
+      .flatMap(
+        ([
+          dateKey,
+          day,
+        ]) =>
+          users.flatMap(
+            (
+              user,
+            ) =>
+              (
+                day[
+                  user.id
+                ] ?? []
+              ).map(
+                (
+                  activity,
+                  index,
+                ) => ({
+                  activity,
+                  user,
+                  dateKey,
+                  index,
+                }),
+              ),
+          ),
+      )
+      .filter(
+        (
+          item,
+        ) =>
+          item.dateKey <=
+          todayKey,
+      )
+      .sort(
+        (
+          a,
+          b,
+        ) => {
+          const dateComparison =
+            b.dateKey.localeCompare(
+              a.dateKey,
+            )
+
+          if (
+            dateComparison !==
+            0
+          ) {
+            return dateComparison
+          }
+
+          return (
+            b.index -
+            a.index
+          )
+        },
+      )
+      .slice(
+        0,
+        5,
+      )
+
+  /*
+   * ========================================
+   * LABEL DE FECHA
+   * ========================================
+   */
+
+  const getDateLabel = (
+    dateKey: string,
+  ) => {
+    if (
+      dateKey ===
+      todayKey
+    ) {
+      return 'Hoy'
+    }
+
+    const activityDate =
+      new Date(
+        `${dateKey}T12:00:00`,
+      )
+
+    const todayDate =
+      new Date(
+        `${todayKey}T12:00:00`,
+      )
+
+    const difference =
+      Math.round(
+        (
+          todayDate.getTime() -
+          activityDate.getTime()
+        ) /
+          86400000,
+      )
+
+    if (
+      difference ===
+      1
+    ) {
+      return 'Ayer'
+    }
+
+    if (
+      difference >=
+        2 &&
+      difference <=
+        6
+    ) {
+      return (
+        weekDayNames[
+          activityDate.getDay()
+        ]
+      )
+    }
+
+    return `${activityDate.getDate()} de ${
+      monthNames[
+        activityDate.getMonth()
+      ]
+    }`
+  }
+
+  /*
+   * ========================================
+   * USUARIO PARA NOTIFICACIÓN
+   * ========================================
+   */
+
+  const getNotificationUser = (
+    notification:
+      SocialNotification,
+  ): User => {
+    const existingUser =
+      users.find(
+        (
+          user,
+        ) =>
+          user.id ===
+          notification.actorUserId,
+      )
+
+    if (
+      existingUser
+    ) {
+      return existingUser
+    }
+
+    return {
+      id:
+        notification.actorUserId,
+
+      name:
+        notification.actorName,
+
+      avatar:
+        notification.actorAvatar,
+
+      fallback:
+        notification.actorName
+          .trim()
+          .charAt(
+            0,
+          )
+          .toUpperCase() ||
+        '?',
+
+      avatarColor:
+        'bg-violet-500',
+
+      weeklyGoal:
+        4,
+    }
+  }
 
   /*
    * ========================================
@@ -191,7 +423,9 @@ function Home({
                 ]
               }
               ,{' '}
-              {today.getDate()}{' '}
+              {
+                today.getDate()
+              }{' '}
               de{' '}
               {
                 monthNames[
@@ -223,192 +457,36 @@ function Home({
       </header>
 
       {/* ================================= */}
-      {/* RACHA */}
+      {/* RACHA DEL GRUPO */}
       {/* ================================= */}
 
-      <section className="mb-5 overflow-hidden rounded-[30px] bg-gradient-to-br from-violet-100 to-pink-50 p-5 shadow-sm">
-        <div className="mb-5 flex items-start justify-between">
-          <div>
-            <p className="text-xs font-black tracking-wider text-violet-500">
-              TU RACHA
-            </p>
-
-            <div className="mt-1 flex items-center gap-2">
-              <Flame
-                size={34}
-                className="fill-orange-400 text-orange-400"
-              />
-
-              <span className="text-4xl font-black text-zinc-800">
-                {
-                  currentStreak
-                }
-              </span>
-
-              <span className="mt-2 font-semibold text-zinc-600">
-                días
-              </span>
-            </div>
-          </div>
-
-          <div className="rounded-2xl bg-white/80 px-4 py-2 text-center shadow-sm">
-            <p className="text-xs font-semibold text-zinc-400">
-              Mejor
-            </p>
-
-            <p className="font-black text-violet-600">
-              {
-                bestStreak
-              }{' '}
-              días
-            </p>
-          </div>
-        </div>
-
-        {/* ================================= */}
-        {/* MINI CALENDARIO SEMANAL */}
-        {/* ================================= */}
-
-        <div className="grid grid-cols-7 gap-1">
-          {weekDates.map(
-            (date) => {
-              const dateKey =
-                formatDateKey(
-                  date,
-                )
-
-              const dayActivities =
-                activities[
-                  dateKey
-                ] ?? {}
-
-              /*
-               * Un usuario aparece
-               * una sola vez aunque
-               * haya hecho 5 actividades.
-               */
-
-              const activeUsers =
-                users.filter(
-                  (user) =>
-                    (
-                      dayActivities[
-                        user.id
-                      ] ?? []
-                    ).length >
-                    0,
-                )
-
-              const isToday =
-                dateKey ===
-                todayKey
-
-              return (
-                <button
-                  key={
-                    dateKey
-                  }
-                  onClick={() =>
-                    onSelectDate(
-                      dateKey,
-                    )
-                  }
-                  className="text-center"
-                >
-                  <p className="mb-1 text-xs font-bold text-zinc-400">
-                    {
-                      [
-                        'D',
-                        'L',
-                        'M',
-                        'M',
-                        'J',
-                        'V',
-                        'S',
-                      ][
-                        date.getDay()
-                      ]
-                    }
-                  </p>
-
-                  <div
-                    className={`mx-auto flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${
-                      isToday
-                        ? 'bg-violet-500 text-white'
-                        : 'text-zinc-600'
-                    }`}
-                  >
-                    {
-                      date.getDate()
-                    }
-                  </div>
-
-                  <div className="mt-2 flex min-h-10 justify-center">
-                    <div className="flex -space-x-3">
-                      {activeUsers.map(
-                        (
-                          user,
-                        ) => (
-                          <UserAvatar
-                            key={
-                              user.id
-                            }
-                            user={
-                              user
-                            }
-                            size="sm"
-                          />
-                        ),
-                      )}
-                    </div>
-                  </div>
-                </button>
-              )
-            },
-          )}
-        </div>
-
-        {/* ================================= */}
-        {/* LEYENDA */}
-        {/* ================================= */}
-
-        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3 border-t border-violet-200/70 pt-4">
-          {users.map(
-            (user) => (
-              <div
-                key={
-                  user.id
-                }
-                className="flex items-center gap-2"
-              >
-                <UserAvatar
-                  user={
-                    user
-                  }
-                  size="sm"
-                />
-
-                <span className="text-xs font-semibold text-zinc-500">
-                  {user.id ===
-                  currentUserId
-                    ? 'Vos'
-                    : user.name}
-                </span>
-              </div>
-            ),
-          )}
-        </div>
-      </section>
+      <GroupStreakCard
+        groupId={
+          groupId
+        }
+        activities={
+          activities
+        }
+        users={
+          users
+        }
+        currentUserId={
+          currentUserId
+        }
+        today={
+          today
+        }
+      />
 
       {/* ================================= */}
-      {/* META SEMANAL */}
+      {/* META PERSONAL */}
       {/* ================================= */}
 
       <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <p className="text-xs font-black tracking-wider text-zinc-400">
-              META SEMANAL
+              TU META ESTA SEMANA
             </p>
 
             <h2 className="mt-1 text-xl font-black text-zinc-800">
@@ -425,7 +503,9 @@ function Home({
 
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-yellow-100">
             <Trophy
-              size={25}
+              size={
+                25
+              }
               className="text-yellow-600"
             />
           </div>
@@ -435,34 +515,53 @@ function Home({
           <div
             className="h-full rounded-full bg-violet-500 transition-all duration-500"
             style={{
-              width: `${weeklyProgress}%`,
+              width:
+                `${weeklyProgress}%`,
             }}
           />
         </div>
 
-        <p className="mt-3 text-sm font-semibold text-violet-600">
-          {weekActivityCount >=
-          weeklyGoal
-            ? 'Meta completada 🏆'
-            : `Te faltan ${
-                weeklyGoal -
-                weekActivityCount
-              } días`}
-        </p>
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="text-sm font-semibold text-violet-600">
+            {weekActivityCount >=
+            weeklyGoal
+              ? 'Tu parte ya está hecha ✓'
+              : weeklyRemaining ===
+                  1
+                ? 'Te falta 1 día'
+                : `Te faltan ${weeklyRemaining} días`}
+          </p>
+
+          <span className="shrink-0 rounded-full bg-violet-50 px-3 py-1 text-[10px] font-black text-violet-500">
+            META{' '}
+            {
+              weeklyGoal
+            }
+          </span>
+        </div>
       </section>
 
       {/* ================================= */}
-      {/* ACTIVIDAD DEL GRUPO HOY */}
+      {/* HOY */}
       {/* ================================= */}
 
       <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
-          <p className="text-xs font-black tracking-wider text-zinc-400">
-            HOY
-          </p>
+          <div>
+            <p className="text-xs font-black tracking-wider text-zinc-400">
+              HOY
+            </p>
+
+            <h2 className="mt-1 text-lg font-black text-zinc-800">
+              La banda hoy
+            </h2>
+          </div>
 
           <p className="text-xs font-bold text-violet-500">
-            Tu grupo
+            {
+              todayOtherUsers.length
+            }{' '}
+            activos
           </p>
         </div>
 
@@ -474,7 +573,9 @@ function Home({
         0 ? (
           <div className="space-y-4">
             {todayOtherUsers.map(
-              (user) => {
+              (
+                user,
+              ) => {
                 const userActivities =
                   todayActivities[
                     user.id
@@ -501,12 +602,13 @@ function Home({
                     key={
                       user.id
                     }
+                    type="button"
                     onClick={() =>
                       onSelectDate(
                         todayKey,
                       )
                     }
-                    className="flex w-full items-center gap-4 rounded-2xl p-1 text-left transition active:scale-[0.99]"
+                    className="flex w-full items-center gap-4 rounded-2xl bg-zinc-50 p-3 text-left transition active:scale-[0.99]"
                   >
                     <UserAvatar
                       user={
@@ -520,7 +622,7 @@ function Home({
                         {
                           user.name
                         }{' '}
-                        ya sumó su día
+                        ya se movió
                       </p>
 
                       <p className="mt-1 text-sm text-zinc-500">
@@ -542,9 +644,12 @@ function Home({
                           </>
                         ) : (
                           <>
-  💪{' '}
-  {userActivities.length}{' '}
-  actividades ·{' '}
+                            💪{' '}
+                            {
+                              userActivities.length
+                            }{' '}
+                            actividades
+                            {' · '}
                             {
                               totalMinutes
                             }{' '}
@@ -554,9 +659,9 @@ function Home({
                       </p>
                     </div>
 
-                   <span className="text-xl">
-  💪
-</span>
+                    <span className="text-xl">
+                      ✓
+                    </span>
                   </button>
                 )
               },
@@ -564,20 +669,21 @@ function Home({
           </div>
         ) : (
           <div className="rounded-2xl bg-zinc-50 p-4 text-sm text-zinc-500">
-            Nadie del grupo
-            sumó actividad
-            todavía 👀
+            Todavía nadie más del
+            grupo sumó actividad hoy
+            👀
           </div>
         )}
 
         {/* ================================= */}
-        {/* MIS ACTIVIDADES */}
+        {/* MI ACTIVIDAD */}
         {/* ================================= */}
 
         {myActivities.length >
         0 ? (
           <div className="mt-5">
             <button
+              type="button"
               onClick={() =>
                 onSelectDate(
                   todayKey,
@@ -587,7 +693,7 @@ function Home({
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-bold text-green-700">
+                  <p className="font-black text-green-700">
                     ✓ Vos también
                     sumaste hoy
                   </p>
@@ -609,11 +715,9 @@ function Home({
                 </div>
 
                 <span className="text-xl">
-                  🔥
+                  💪
                 </span>
               </div>
-
-              {/* RESUMEN */}
 
               <div className="mt-3 flex flex-wrap gap-2">
                 {myActivities.map(
@@ -641,20 +745,22 @@ function Home({
             </button>
 
             <button
+              type="button"
               onClick={
                 onAddActivity
               }
-              className="mt-3 w-full rounded-2xl bg-violet-100 py-3 font-bold text-violet-600 transition active:scale-[0.98]"
+              className="mt-3 w-full rounded-2xl bg-violet-100 py-3 font-black text-violet-600 transition active:scale-[0.98]"
             >
               + Agregar otra actividad
             </button>
           </div>
         ) : (
           <button
+            type="button"
             onClick={
               onAddActivity
             }
-            className="mt-5 w-full rounded-2xl bg-violet-500 py-3.5 font-bold text-white shadow-lg shadow-violet-100 transition active:scale-[0.98]"
+            className="mt-5 w-full rounded-2xl bg-violet-500 py-3.5 font-black text-white shadow-lg shadow-violet-100 transition active:scale-[0.98]"
           >
             Sumar mi actividad
           </button>
@@ -662,25 +768,479 @@ function Home({
       </section>
 
       {/* ================================= */}
-      {/* MENSAJE */}
+      {/* NOVEDADES */}
+      {/* ================================= */}
+
+      <section className="mb-5 overflow-hidden rounded-[28px] bg-white shadow-sm">
+        <button
+          type="button"
+          onClick={() =>
+            setNotificationsOpen(
+              (
+                current,
+              ) =>
+                !current,
+            )
+          }
+          className="flex w-full items-center gap-4 p-5 text-left"
+        >
+          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-600">
+            <Bell
+              size={
+                22
+              }
+            />
+
+            {socialUnreadCount >
+              0 && (
+              <div className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-pink-500 px-1 text-[10px] font-black text-white">
+                {socialUnreadCount >
+                9
+                  ? '9+'
+                  : socialUnreadCount}
+              </div>
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-black tracking-wider text-zinc-400">
+              NOVEDADES
+            </p>
+
+            <p className="mt-1 font-black text-zinc-800">
+              {socialUnreadCount >
+              0
+                ? `${socialUnreadCount} ${
+                    socialUnreadCount ===
+                    1
+                      ? 'nueva'
+                      : 'nuevas'
+                  }`
+                : 'Todo visto'}
+            </p>
+          </div>
+
+          {notificationsOpen ? (
+            <ChevronUp
+              size={
+                20
+              }
+              className="text-zinc-400"
+            />
+          ) : (
+            <ChevronDown
+              size={
+                20
+              }
+              className="text-zinc-400"
+            />
+          )}
+        </button>
+
+        {notificationsOpen && (
+          <div className="border-t border-zinc-100 px-5 pb-5">
+            {socialNotificationsLoading ? (
+              <div className="flex items-center justify-center gap-2 py-6 text-sm font-bold text-zinc-400">
+                <LoaderCircle
+                  size={
+                    18
+                  }
+                  className="animate-spin"
+                />
+
+                Cargando novedades...
+              </div>
+            ) : socialNotifications.length >
+              0 ? (
+              <>
+                <div className="divide-y divide-zinc-100">
+                  {socialNotifications
+                    .slice(
+                      0,
+                      5,
+                    )
+                    .map(
+                      (
+                        notification,
+                      ) => {
+                        const actor =
+                          getNotificationUser(
+                            notification,
+                          )
+
+                        /*
+                         * ===========================
+                         * EMPUJÓN
+                         * ===========================
+                         */
+
+                        if (
+                          notification.type ===
+                          'nudge'
+                        ) {
+                          return (
+                            <div
+                              key={
+                                notification.id
+                              }
+                              className="flex w-full items-center gap-3 py-4 text-left"
+                            >
+                              <div className="relative">
+                                <UserAvatar
+                                  user={
+                                    actor
+                                  }
+                                  size="md"
+                                />
+
+                                <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-orange-100 text-xs">
+                                  👊
+                                </div>
+                              </div>
+
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm leading-relaxed text-zinc-600">
+                                  <span className="font-black text-zinc-800">
+                                    {
+                                      notification.actorName
+                                    }
+                                  </span>{' '}
+                                  te mandó
+                                  un{' '}
+                                  <span className="font-black text-orange-600">
+                                    empujón
+                                    👊
+                                  </span>
+                                </p>
+
+                                <p className="mt-1 text-xs font-bold text-zinc-400">
+                                  Dale,
+                                  faltás vos.
+                                </p>
+                              </div>
+
+                              {!notification.isRead && (
+                                <div className="h-2.5 w-2.5 shrink-0 rounded-full bg-violet-500" />
+                              )}
+                            </div>
+                          )
+                        }
+
+                        /*
+                         * ===========================
+                         * REACCIÓN
+                         * ===========================
+                         */
+
+                        return (
+                          <button
+                            key={
+                              notification.id
+                            }
+                            type="button"
+                            onClick={() => {
+                              if (
+                                notification.activityDate
+                              ) {
+                                onSelectDate(
+                                  notification.activityDate,
+                                )
+                              }
+                            }}
+                            className="flex w-full items-center gap-3 py-4 text-left"
+                          >
+                            <div className="relative">
+                              <UserAvatar
+                                user={
+                                  actor
+                                }
+                                size="md"
+                              />
+
+                              <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-violet-100 text-xs">
+                                {
+                                  notification.emoji ??
+                                  '💪'
+                                }
+                              </div>
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm leading-relaxed text-zinc-600">
+                                <span className="font-black text-zinc-800">
+                                  {
+                                    notification.actorName
+                                  }
+                                </span>{' '}
+                                reaccionó{' '}
+                                <span className="font-black">
+                                  {
+                                    notification.emoji ??
+                                    '💪'
+                                  }
+                                </span>{' '}
+                                a tu{' '}
+                                <span className="font-black text-zinc-800">
+                                  {
+                                    notification.activityType ??
+                                    'actividad'
+                                  }
+                                </span>
+                              </p>
+
+                              <p className="mt-1 text-xs font-bold capitalize text-zinc-400">
+                                {notification.activityDate
+                                  ? getDateLabel(
+                                      notification.activityDate,
+                                    )
+                                  : ''}
+
+                                {notification.activityDate &&
+                                  notification.activityDuration !==
+                                    null &&
+                                  ' · '}
+
+                                {notification.activityDuration !==
+                                  null && (
+                                  <>
+                                    {
+                                      notification.activityDuration
+                                    }{' '}
+                                    min
+                                  </>
+                                )}
+                              </p>
+                            </div>
+
+                            {!notification.isRead && (
+                              <div className="h-2.5 w-2.5 shrink-0 rounded-full bg-violet-500" />
+                            )}
+                          </button>
+                        )
+                      },
+                    )}
+                </div>
+
+                {socialUnreadCount >
+                  0 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void onMarkSocialNotificationsRead()
+                    }
+                    className="mt-3 w-full rounded-2xl bg-violet-50 py-3 text-sm font-black text-violet-600 transition active:scale-[0.98]"
+                  >
+                    Marcar como
+                    vistas
+                  </button>
+                )}
+              </>
+            ) : (
+              <div className="py-6 text-center">
+                <p className="font-black text-zinc-600">
+                  Todavía no hay
+                  novedades
+                </p>
+
+                <p className="mt-1 text-sm text-zinc-400">
+                  Las reacciones y
+                  los empujones de
+                  la banda van a
+                  aparecer acá.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* ================================= */}
+      {/* ACTIVIDAD RECIENTE */}
+      {/* ================================= */}
+
+      <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-black tracking-wider text-zinc-400">
+              ACTIVIDAD RECIENTE
+            </p>
+
+            <h2 className="mt-1 text-lg font-black text-zinc-800">
+              Últimos movimientos
+            </h2>
+          </div>
+
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
+            <History
+              size={
+                20
+              }
+            />
+          </div>
+        </div>
+
+        {recentActivities.length >
+        0 ? (
+          <div className="space-y-4">
+            {recentActivities.map(
+              (
+                item,
+              ) => {
+                const {
+                  activity,
+                  user,
+                  dateKey,
+                  index,
+                } =
+                  item
+
+                const isMe =
+                  user.id ===
+                  currentUserId
+
+                return (
+                  <article
+                    key={
+                      activity.id ??
+                      `${dateKey}-${user.id}-${activity.type}-${index}`
+                    }
+                    className="rounded-[22px] bg-zinc-50 p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <UserAvatar
+                        user={
+                          user
+                        }
+                        size="md"
+                      />
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <p className="font-black text-zinc-800">
+                            {isMe
+                              ? 'Vos'
+                              : user.name}
+                          </p>
+
+                          <span className="text-xs font-bold capitalize text-zinc-400">
+                            {
+                              getDateLabel(
+                                dateKey,
+                              )
+                            }
+                          </span>
+                        </div>
+
+                        <p className="mt-1 text-sm font-semibold text-zinc-600">
+                          {getActivityEmoji(
+                            activity.type,
+                          )}{' '}
+                          {
+                            activity.type
+                          }{' '}
+                          ·{' '}
+                          {
+                            activity.duration
+                          }{' '}
+                          min
+                        </p>
+
+                        {activity.recovered_with_wildcard && (
+                          <div className="mt-2 flex w-fit items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-black text-amber-700">
+                            <RotateCcw
+                              size={
+                                10
+                              }
+                              strokeWidth={
+                                3
+                              }
+                            />
+
+                            Día
+                            recuperado
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onSelectDate(
+                            dateKey,
+                          )
+                        }
+                        className="shrink-0 rounded-xl bg-white px-3 py-2 text-[11px] font-black text-violet-600 shadow-sm"
+                      >
+                        Ver
+                      </button>
+                    </div>
+
+                    {activity.id && (
+                      <div className="mt-1">
+                        <ReactionBar
+                          reactions={
+                            activity.reactions ??
+                            []
+                          }
+                          currentUserId={
+                            currentUserId
+                          }
+                          onReact={(
+                            emoji,
+                          ) =>
+                            onReactActivity(
+                              activity.id!,
+                              emoji,
+                            )
+                          }
+                        />
+                      </div>
+                    )}
+                  </article>
+                )
+              },
+            )}
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-zinc-50 px-4 py-6 text-center">
+            <p className="font-black text-zinc-600">
+              Todavía está
+              tranquilo por acá
+            </p>
+
+            <p className="mt-1 text-sm text-zinc-400">
+              Cuando alguien del
+              grupo registre una
+              actividad va a
+              aparecer acá.
+            </p>
+          </div>
+        )}
+      </section>
+
+      {/* ================================= */}
+      {/* MENSAJE FINAL */}
       {/* ================================= */}
 
       <section className="rounded-[28px] bg-pink-100 px-5 py-4">
         <p className="font-black text-pink-600">
-          🔥 No cortes la cadena
+          🔥 Que no se corte
         </p>
 
         <p className="mt-1 text-sm text-pink-500">
           {myActivities.length >
           0
-            ? myActivities.length >
-              1
-              ? `Hoy ya metiste ${myActivities.length} actividades. Dejá de farmear tanta aura!`
-              : 'Ya sumaste tu día. Si pinta, podés meter otra.'
+            ? weekActivityCount >=
+              weeklyGoal
+              ? 'Tu parte ya está hecha. Ahora que llegue toda la banda.'
+              : myActivities.length >
+                  1
+                ? `Hoy ya metiste ${myActivities.length} actividades. Dejá de farmear tanta aura jajaj.`
+                : 'Ya sumaste tu día. Uno menos para salvar la semana.'
             : todayOtherUsers.length >
                 0
               ? 'Ellos ya se movieron. ¿Vos qué onda?'
-              : 'Hoy la racha puede arrancar con vos.'}
+              : 'Todavía nadie arrancó hoy. Podés ser el primero.'}
         </p>
       </section>
     </div>

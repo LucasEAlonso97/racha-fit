@@ -31,8 +31,9 @@ export type User = {
   avatar: string | null
   fallback: string
   avatarColor: string
-}
 
+  weeklyGoal: number
+}
 export type ActivitiesByDate = Record<
   string,
   Record<string, Activity[]>
