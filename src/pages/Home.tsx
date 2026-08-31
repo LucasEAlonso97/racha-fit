@@ -397,7 +397,10 @@ function Home({
         'bg-violet-500',
 
       weeklyGoal:
-        4,
+  4,
+
+streakEligibleFrom:
+  null,
     }
   }
 

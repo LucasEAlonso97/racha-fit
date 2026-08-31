@@ -63,6 +63,9 @@ type MemberRow = {
 
   weekly_goal: number
 
+  streak_eligible_from:
+    string
+
   profile: {
     id: string
     name: string
@@ -1050,6 +1053,7 @@ function RachaApp({
               .select(`
                 user_id,
                 weekly_goal,
+                streak_eligible_from,
 
                 profile:profiles!group_members_user_id_fkey (
                   id,
@@ -1206,6 +1210,8 @@ function RachaApp({
                   weeklyGoal:
                     member.weekly_goal ??
                     4,
+                    streakEligibleFrom:
+  member.streak_eligible_from,
                 }
               },
             )

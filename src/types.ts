@@ -33,6 +33,9 @@ export type User = {
   avatarColor: string
 
   weeklyGoal: number
+
+  streakEligibleFrom:
+    string | null
 }
 export type ActivitiesByDate = Record<
   string,

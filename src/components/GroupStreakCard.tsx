@@ -90,17 +90,70 @@ function GroupStreakCard({
 
   /*
    * ========================================
+   * LUNES DE ESTA SEMANA
+   * ========================================
+   */
+
+  const weekStart =
+    new Date(
+      today,
+    )
+
+  weekStart.setHours(
+    12,
+    0,
+    0,
+    0,
+  )
+
+  const weekDay =
+    weekStart.getDay()
+
+  const distanceToMonday =
+    weekDay === 0
+      ? -6
+      : 1 - weekDay
+
+  weekStart.setDate(
+    weekStart.getDate() +
+      distanceToMonday,
+  )
+
+  const currentWeekStartKey =
+    [
+      weekStart.getFullYear(),
+
+      String(
+        weekStart.getMonth() +
+          1,
+      ).padStart(
+        2,
+        '0',
+      ),
+
+      String(
+        weekStart.getDate(),
+      ).padStart(
+        2,
+        '0',
+      ),
+    ].join(
+      '-',
+    )
+
+  /*
+   * ========================================
    * PROGRESO DE CADA INTEGRANTE
    * ========================================
    *
-   * IMPORTANTE:
+   * SIEMPRE recorremos users.
    *
-   * Esto sale SIEMPRE de users.
+   * Por eso cualquier persona nueva
+   * aparece automáticamente.
    *
-   * Si mañana se suma Darío,
-   * automáticamente aparece acá.
-   *
-   * No hay ningún nombre hardcodeado.
+   * streakEligibleFrom solamente determina
+   * si cuenta o no para la racha grupal
+   * de ESTA semana.
    * ========================================
    */
 
@@ -149,6 +202,33 @@ function GroupStreakCard({
           ).length >
           0
 
+        /*
+         * ========================================
+         * ¿CUENTA PARA LA RACHA ESTA SEMANA?
+         * ========================================
+         *
+         * Ejemplo:
+         *
+         * Semana actual:
+         * 31/08
+         *
+         * Darío se suma:
+         * 03/09
+         *
+         * streakEligibleFrom:
+         * 07/09
+         *
+         * 07/09 > 31/08
+         *
+         * Entonces esta semana NO cuenta.
+         * ========================================
+         */
+
+        const eligibleThisWeek =
+          !user.streakEligibleFrom ||
+          user.streakEligibleFrom <=
+            currentWeekStartKey
+
         return {
           user,
           goal,
@@ -157,8 +237,21 @@ function GroupStreakCard({
           completed,
           progress,
           activeToday,
+          eligibleThisWeek,
         }
       },
+    )
+
+  /*
+   * ========================================
+   * MIEMBROS QUE CUENTAN ESTA SEMANA
+   * ========================================
+   */
+
+  const eligibleMemberProgress =
+    memberProgress.filter(
+      member =>
+        member.eligibleThisWeek,
     )
 
   /*
@@ -168,7 +261,7 @@ function GroupStreakCard({
    */
 
   const totalGoal =
-    memberProgress.reduce(
+    eligibleMemberProgress.reduce(
       (
         total,
         member,
@@ -179,17 +272,15 @@ function GroupStreakCard({
     )
 
   /*
-   * Un usuario no puede compensar
-   * lo que le falta a otro.
+   * Una persona no puede compensar
+   * lo que le falta a otra.
    *
-   * Si Lucas hace 6/4,
-   * para el objetivo grupal
-   * aporta máximo 4.
-   * ========================================
+   * Si alguien hace 6/4,
+   * aporta máximo 4 al objetivo grupal.
    */
 
   const totalCompleted =
-    memberProgress.reduce(
+    eligibleMemberProgress.reduce(
       (
         total,
         member,
@@ -203,7 +294,7 @@ function GroupStreakCard({
     )
 
   const totalRemaining =
-    memberProgress.reduce(
+    eligibleMemberProgress.reduce(
       (
         total,
         member,
@@ -220,7 +311,7 @@ function GroupStreakCard({
    */
 
   const completedMembers =
-    memberProgress.filter(
+    eligibleMemberProgress.filter(
       member =>
         member.completed,
     ).length
@@ -232,22 +323,14 @@ function GroupStreakCard({
    */
 
   const pendingMembers =
-    memberProgress.filter(
+    eligibleMemberProgress.filter(
       member =>
         !member.completed,
     )
 
   /*
-   * Si queda exactamente uno,
-   * se convierte en "el último pendiente".
-   *
-   * Esto también es dinámico.
-   *
-   * Ej:
-   * Darío se une al grupo
-   * y queda como único pendiente:
-   *
-   * "Todo depende de Darío 👀"
+   * ========================================
+   * ÚLTIMO PENDIENTE
    * ========================================
    */
 
@@ -266,10 +349,10 @@ function GroupStreakCard({
    */
 
   const everybodyCompleted =
-    users.length >
+    eligibleMemberProgress.length >
       0 &&
     completedMembers ===
-      users.length
+      eligibleMemberProgress.length
 
   /*
    * ========================================
@@ -293,6 +376,13 @@ function GroupStreakCard({
   /*
    * ========================================
    * LA BANDA HOY
+   * ========================================
+   *
+   * Acá SÍ contamos a todos.
+   *
+   * Aunque alguien todavía no cuente
+   * para la racha semanal, sigue siendo
+   * parte del grupo y puede entrenar.
    * ========================================
    */
 
@@ -398,7 +488,9 @@ function GroupStreakCard({
             </div>
           </div>
 
+          {/* ================================= */}
           {/* CUMPLIERON */}
+          {/* ================================= */}
 
           <div className="shrink-0 rounded-2xl bg-white/80 px-3 py-2 text-center shadow-sm">
             <p className="text-xl font-black text-violet-600">
@@ -407,7 +499,7 @@ function GroupStreakCard({
               }
               /
               {
-                users.length
+                eligibleMemberProgress.length
               }
             </p>
 
@@ -592,14 +684,16 @@ function GroupStreakCard({
                 currentUserId
 
               /*
-               * Se puede empujar si:
+               * ========================================
+               * EMPUJÓN DISPONIBLE
+               * ========================================
                *
-               * - no soy yo
-               * - no cumplió su meta
-               * - no entrenó hoy
+               * Solo si YA está compitiendo
+               * por la racha esta semana.
                */
 
               const nudgeAvailable =
+                member.eligibleThisWeek &&
                 !isMe &&
                 !member.completed &&
                 !member.activeToday
@@ -614,13 +708,16 @@ function GroupStreakCard({
                 member.user.id
 
               /*
-               * ¿Es el último pendiente?
+               * ========================================
+               * ÚLTIMO PENDIENTE
+               * ========================================
                */
 
               const isLastPending =
+                member.eligibleThisWeek &&
                 lastPendingMember
                   ?.user.id ===
-                member.user.id
+                  member.user.id
 
               return (
                 <div
@@ -628,12 +725,16 @@ function GroupStreakCard({
                     member.user.id
                   }
                   className={`rounded-[20px] p-3.5 transition ${
-                    isLastPending
-                      ? 'bg-pink-50 ring-1 ring-pink-100'
-                      : 'bg-white/80'
+                    !member.eligibleThisWeek
+                      ? 'bg-white/60 ring-1 ring-violet-100'
+                      : isLastPending
+                        ? 'bg-pink-50 ring-1 ring-pink-100'
+                        : 'bg-white/80'
                   }`}
                 >
+                  {/* ================================= */}
                   {/* PERSONA */}
+                  {/* ================================= */}
 
                   <div className="flex items-center gap-3">
                     <div className="relative">
@@ -652,15 +753,25 @@ function GroupStreakCard({
                     </div>
 
                     <div className="min-w-0 flex-1">
+                      {/* ================================= */}
                       {/* NOMBRE + PROGRESO */}
+                      {/* ================================= */}
 
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-black text-zinc-800">
-                            {isMe
-                              ? 'Vos'
-                              : member.user.name}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="truncate text-sm font-black text-zinc-800">
+                              {isMe
+                                ? 'Vos'
+                                : member.user.name}
+                            </p>
+
+                            {!member.eligibleThisWeek && (
+                              <span className="shrink-0 rounded-full bg-violet-100 px-2 py-0.5 text-[8px] font-black tracking-wide text-violet-500">
+                                NUEVO
+                              </span>
+                            )}
+                          </div>
 
                           {isLastPending && (
                             <p className="mt-0.5 text-[9px] font-black tracking-wide text-pink-500">
@@ -672,11 +783,13 @@ function GroupStreakCard({
                         <div className="flex shrink-0 items-center gap-2">
                           <span
                             className={`text-sm font-black ${
-                              member.completed
-                                ? 'text-green-600'
-                                : isLastPending
-                                  ? 'text-pink-600'
-                                  : 'text-zinc-600'
+                              !member.eligibleThisWeek
+                                ? 'text-violet-400'
+                                : member.completed
+                                  ? 'text-green-600'
+                                  : isLastPending
+                                    ? 'text-pink-600'
+                                    : 'text-zinc-600'
                             }`}
                           >
                             {
@@ -688,31 +801,36 @@ function GroupStreakCard({
                             }
                           </span>
 
-                          {member.completed && (
-                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-green-600">
-                              <Check
-                                size={
-                                  12
-                                }
-                                strokeWidth={
-                                  3
-                                }
-                              />
-                            </div>
-                          )}
+                          {member.completed &&
+                            member.eligibleThisWeek && (
+                              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-green-600">
+                                <Check
+                                  size={
+                                    12
+                                  }
+                                  strokeWidth={
+                                    3
+                                  }
+                                />
+                              </div>
+                            )}
                         </div>
                       </div>
 
+                      {/* ================================= */}
                       {/* BARRA */}
+                      {/* ================================= */}
 
                       <div className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-100">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ${
-                            member.completed
-                              ? 'bg-green-400'
-                              : isLastPending
-                                ? 'bg-pink-400'
-                                : 'bg-violet-400'
+                            !member.eligibleThisWeek
+                              ? 'bg-violet-200'
+                              : member.completed
+                                ? 'bg-green-400'
+                                : isLastPending
+                                  ? 'bg-pink-400'
+                                  : 'bg-violet-400'
                           }`}
                           style={{
                             width:
@@ -721,22 +839,28 @@ function GroupStreakCard({
                         />
                       </div>
 
+                      {/* ================================= */}
                       {/* ESTADO */}
+                      {/* ================================= */}
 
                       <div className="mt-2 flex items-center justify-between gap-2">
                         <p
                           className={`text-[10px] font-bold ${
-                            isLastPending
-                              ? 'text-pink-500'
-                              : 'text-zinc-400'
+                            !member.eligibleThisWeek
+                              ? 'text-violet-400'
+                              : isLastPending
+                                ? 'text-pink-500'
+                                : 'text-zinc-400'
                           }`}
                         >
-                          {member.completed
-                            ? 'Meta cumplida'
-                            : member.remaining ===
-                                1
-                              ? 'Le falta 1 día'
-                              : `Le faltan ${member.remaining} días`}
+                          {!member.eligibleThisWeek
+                            ? 'Se suma a la racha el lunes'
+                            : member.completed
+                              ? 'Meta cumplida'
+                              : member.remaining ===
+                                  1
+                                ? 'Le falta 1 día'
+                                : `Le faltan ${member.remaining} días`}
                         </p>
 
                         {member.activeToday && (
@@ -848,7 +972,9 @@ function GroupStreakCard({
             </p>
           </div>
 
+          {/* ================================= */}
           {/* AVATARES DINÁMICOS */}
+          {/* ================================= */}
 
           <div className="flex -space-x-2">
             {memberProgress
@@ -877,8 +1003,6 @@ function GroupStreakCard({
                   </div>
                 ),
               )}
-
-            {/* SI SON MÁS DE 6 */}
 
             {memberProgress.length >
               6 && (
