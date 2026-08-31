@@ -14,6 +14,11 @@ import {
   activityOptions,
 } from '../data/activities'
 
+import {
+  monthNames,
+  parseDateKey,
+} from '../utils/date'
+
 import type {
   Activity,
   ActivityType,
@@ -22,13 +27,15 @@ import type {
 type Props = {
   open: boolean
 
-  /*
-   * undefined = actividad nueva
-   *
-   * Activity = estamos editando
-   * una actividad existente.
-   */
   activity?: Activity
+
+  dateKey: string
+  todayKey: string
+
+  usesWildcard: boolean
+
+  wildcardBalance:
+    number | null
 
   onClose: () => void
 
@@ -43,13 +50,17 @@ type Props = {
 function ActivityModal({
   open,
   activity,
+  dateKey,
+  todayKey,
+  usesWildcard,
+  wildcardBalance,
   onClose,
   onSave,
   onDelete,
 }: Props) {
   /*
    * ========================================
-   * ACTIVIDAD SELECCIONADA
+   * ACTIVIDAD
    * ========================================
    */
 
@@ -71,38 +82,29 @@ function ActivityModal({
   const [
     duration,
     setDuration,
-  ] = useState(
-    activity?.duration ??
-      60,
-  )
+  ] =
+    useState(
+      activity?.duration ??
+        60,
+    )
 
   /*
    * ========================================
-   * GUARDANDO
+   * ESTADOS
    * ========================================
    */
 
   const [
     saving,
     setSaving,
-  ] = useState(false)
-
-  /*
-   * ========================================
-   * ELIMINANDO
-   * ========================================
-   */
+  ] =
+    useState(false)
 
   const [
     deleting,
     setDeleting,
-  ] = useState(false)
-
-  /*
-   * ========================================
-   * ERROR
-   * ========================================
-   */
+  ] =
+    useState(false)
 
   const [
     error,
@@ -114,25 +116,35 @@ function ActivityModal({
 
   /*
    * ========================================
-   * EDITANDO O CREANDO
+   * TIPO DE FLUJO
    * ========================================
    */
 
   const isEditing =
-    Boolean(activity?.id)
+    Boolean(
+      activity?.id,
+    )
+
+  const isPastDay =
+    dateKey <
+    todayKey
+
+  const date =
+    parseDateKey(
+      dateKey,
+    )
+
+  const formattedDate =
+    `${date.getDate()} de ${
+      monthNames[
+        date.getMonth()
+      ]
+    }`
 
   /*
    * ========================================
-   * RESETEAR CUANDO ABRE EL MODAL
+   * RESET
    * ========================================
-   *
-   * Esto es importante ahora
-   * porque podemos abrir:
-   *
-   * - actividad nueva
-   * - Gym existente
-   * - Caminata existente
-   * - etc.
    */
 
   useEffect(() => {
@@ -184,7 +196,9 @@ function ActivityModal({
 
   const handleSave =
     async () => {
-      setError(null)
+      setError(
+        null,
+      )
 
       if (
         duration <= 0
@@ -206,19 +220,12 @@ function ActivityModal({
         return
       }
 
-      setSaving(true)
+      setSaving(
+        true,
+      )
 
       try {
         await onSave({
-          /*
-           * Si estamos editando,
-           * mantenemos el ID.
-           *
-           * Para una actividad nueva
-           * va undefined y Supabase
-           * genera el UUID.
-           */
-
           id:
             activity?.id,
 
@@ -227,6 +234,15 @@ function ActivityModal({
 
           duration,
         })
+
+        /*
+         * Si onSave no cierra
+         * por algún error controlado,
+         * permitimos volver a tocar.
+         */
+        setSaving(
+          false,
+        )
       } catch (
         saveError
       ) {
@@ -239,7 +255,9 @@ function ActivityModal({
           'No pudimos guardar la actividad.',
         )
 
-        setSaving(false)
+        setSaving(
+          false,
+        )
       }
     }
 
@@ -266,8 +284,13 @@ function ActivityModal({
         return
       }
 
-      setError(null)
-      setDeleting(true)
+      setError(
+        null,
+      )
+
+      setDeleting(
+        true,
+      )
 
       try {
         await onDelete()
@@ -283,13 +306,15 @@ function ActivityModal({
           'No pudimos eliminar la actividad.',
         )
 
-        setDeleting(false)
+        setDeleting(
+          false,
+        )
       }
     }
 
   /*
    * ========================================
-   * MODAL CERRADO
+   * CERRADO
    * ========================================
    */
 
@@ -299,33 +324,51 @@ function ActivityModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/30 backdrop-blur-[2px]">
-      <div className="w-full max-w-md rounded-t-[34px] bg-white px-5 pb-8 pt-5 shadow-2xl">
+      <div className="max-h-[calc(100dvh-20px)] w-full max-w-md overflow-y-auto overscroll-contain rounded-t-[34px] bg-white px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-5 shadow-2xl">
         {/* ================================= */}
         {/* HEADER */}
         {/* ================================= */}
 
-        <div className="mb-6 flex items-start justify-between">
+        <div className="sticky top-0 z-20 -mx-5 mb-5 flex items-start justify-between bg-white px-5 pb-3">
           <div>
-            <p className="text-sm font-bold text-violet-500">
+            <p
+              className={`text-sm font-bold ${
+                usesWildcard
+                  ? 'text-amber-600'
+                  : 'text-violet-500'
+              }`}
+            >
               {isEditing
                 ? 'Editar'
-                : 'Sumar actividad'}
+                : usesWildcard
+                  ? '🃏 Recuperar día'
+                  : isPastDay
+                    ? 'Agregar actividad'
+                    : 'Sumar actividad'}
             </p>
 
             <h2 className="text-2xl font-black text-zinc-800">
               {isEditing
                 ? '¿Qué hiciste?'
-                : '¿Qué hiciste hoy?'}
+                : usesWildcard ||
+                    isPastDay
+                  ? '¿Qué hiciste ese día?'
+                  : '¿Qué hiciste hoy?'}
             </h2>
 
             <p className="mt-1 text-sm text-zinc-500">
               {isEditing
                 ? 'Podés cambiar el tipo o la duración.'
-                : 'Podés agregar todas las actividades que quieras.'}
+                : usesWildcard
+                  ? `Actividad del ${formattedDate}.`
+                  : isPastDay
+                    ? `Actividad del ${formattedDate}.`
+                    : 'Podés agregar todas las actividades que quieras.'}
             </p>
           </div>
 
           <button
+            type="button"
             onClick={
               handleClose
             }
@@ -342,7 +385,50 @@ function ActivityModal({
         </div>
 
         {/* ================================= */}
-        {/* TIPO DE ACTIVIDAD */}
+        {/* COMODÍN */}
+        {/* ================================= */}
+
+        {usesWildcard && (
+          <section className="mb-5 rounded-[24px] bg-amber-50 p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-xl">
+                🃏
+              </div>
+
+              <div>
+                <p className="font-black text-amber-800">
+                  Vas a usar 1
+                  comodín
+                </p>
+
+                <p className="mt-1 text-sm leading-relaxed text-amber-700">
+                  Este día se
+                  agregará a tu
+                  historial y
+                  contará normalmente
+                  para tu racha.
+                </p>
+
+                {wildcardBalance !==
+                  null && (
+                  <p className="mt-2 text-xs font-black text-amber-600">
+                    Tenés{' '}
+                    {
+                      wildcardBalance
+                    }{' '}
+                    {wildcardBalance ===
+                    1
+                      ? 'comodín disponible'
+                      : 'comodines disponibles'}
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ================================= */}
+        {/* ACTIVIDAD */}
         {/* ================================= */}
 
         <section>
@@ -364,6 +450,7 @@ function ActivityModal({
                     key={
                       option.name
                     }
+                    type="button"
                     onClick={() =>
                       setSelectedType(
                         option.name,
@@ -422,6 +509,7 @@ function ActivityModal({
           <div className="rounded-[24px] bg-zinc-50 p-4">
             <div className="flex items-center justify-between gap-3">
               <button
+                type="button"
                 onClick={() =>
                   setDuration(
                     (
@@ -438,7 +526,7 @@ function ActivityModal({
                   saving ||
                   deleting
                 }
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-xl font-black text-violet-600 shadow-sm transition active:scale-95"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-xl font-black text-violet-600 shadow-sm transition active:scale-95 disabled:opacity-50"
               >
                 −
               </button>
@@ -483,11 +571,13 @@ function ActivityModal({
                 </div>
 
                 <p className="mt-1 text-xs font-semibold text-zinc-400">
-                  Tiempo de actividad
+                  Tiempo de
+                  actividad
                 </p>
               </div>
 
               <button
+                type="button"
                 onClick={() =>
                   setDuration(
                     (
@@ -504,7 +594,7 @@ function ActivityModal({
                   saving ||
                   deleting
                 }
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-xl font-black text-violet-600 shadow-sm transition active:scale-95"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-xl font-black text-violet-600 shadow-sm transition active:scale-95 disabled:opacity-50"
               >
                 +
               </button>
@@ -526,6 +616,7 @@ function ActivityModal({
                     key={
                       minutes
                     }
+                    type="button"
                     onClick={() =>
                       setDuration(
                         minutes,
@@ -568,6 +659,7 @@ function ActivityModal({
         {/* ================================= */}
 
         <button
+          type="button"
           onClick={
             handleSave
           }
@@ -576,7 +668,11 @@ function ActivityModal({
             deleting ||
             duration <= 0
           }
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-50"
+          className={`mt-6 flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-black text-white transition active:scale-[0.98] disabled:opacity-50 ${
+            usesWildcard
+              ? 'bg-amber-500 shadow-lg shadow-amber-100'
+              : 'bg-violet-500 shadow-lg shadow-violet-200'
+          }`}
         >
           {saving ? (
             <>
@@ -589,8 +685,12 @@ function ActivityModal({
             </>
           ) : isEditing ? (
             'Guardar cambios'
+          ) : usesWildcard ? (
+            '🃏 Usar comodín y guardar'
+          ) : isPastDay ? (
+            'Agregar actividad'
           ) : (
-            'Sumar actividad 🔥'
+            'Sumar actividad'
           )}
         </button>
 
@@ -600,6 +700,7 @@ function ActivityModal({
 
         {isEditing && (
           <button
+            type="button"
             onClick={
               handleDelete
             }
@@ -624,23 +725,34 @@ function ActivityModal({
                   size={18}
                 />
 
-                Eliminar actividad
+                Eliminar
+                actividad
               </>
             )}
           </button>
         )}
 
         {/* ================================= */}
-        {/* MENSAJE */}
+        {/* ACLARACIÓN */}
         {/* ================================= */}
 
-        {!isEditing && (
-          <p className="mt-4 text-center text-xs font-semibold text-zinc-400">
-            Si después hacés otra
-            cosa, la podés sumar
-            también. El día cuenta
-            una sola vez para tu
-            racha 🔥
+        {!isEditing &&
+          !usesWildcard &&
+          !isPastDay && (
+            <p className="mt-4 text-center text-xs font-semibold leading-relaxed text-zinc-400">
+              Si después hacés
+              otra cosa, la podés
+              sumar también. El
+              día cuenta una sola
+              vez para tu racha.
+            </p>
+          )}
+
+        {usesWildcard && (
+          <p className="mt-4 text-center text-xs font-semibold leading-relaxed text-zinc-400">
+            El comodín se consume
+            al guardar la
+            actividad.
           </p>
         )}
       </div>

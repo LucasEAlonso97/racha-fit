@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  RotateCcw,
 } from 'lucide-react'
 
 import {
@@ -66,7 +67,9 @@ function Calendar({
    */
 
   const todayKey =
-    formatDateKey(today)
+    formatDateKey(
+      today,
+    )
 
   /*
    * ========================================
@@ -131,14 +134,19 @@ function Calendar({
     (number | null)[] = [
       ...Array(
         mondayOffset,
-      ).fill(null),
+      ).fill(
+        null,
+      ),
 
       ...Array.from(
         {
           length:
             daysInMonth,
         },
-        (_, index) =>
+        (
+          _,
+          index,
+        ) =>
           index + 1,
       ),
     ]
@@ -210,8 +218,9 @@ function Calendar({
     }
 
   /*
-   * ¿Estamos viendo
-   * el mes actual?
+   * ========================================
+   * ¿MES ACTUAL?
+   * ========================================
    */
 
   const isCurrentMonth =
@@ -219,6 +228,32 @@ function Calendar({
       today.getFullYear() &&
     calendarMonth ===
       today.getMonth()
+
+  /*
+   * ========================================
+   * ¿HAY ALGÚN DÍA RECUPERADO?
+   * ========================================
+   */
+
+  const hasRecoveredDays =
+    Object.values(
+      activities,
+    ).some(
+      (
+        day,
+      ) =>
+        (
+          day[
+            currentUserId
+          ] ?? []
+        ).some(
+          (
+            activity,
+          ) =>
+            activity.recovered_with_wildcard ===
+            true,
+        ),
+    )
 
   return (
     <div className="mx-auto w-full max-w-md px-5 pt-8">
@@ -228,11 +263,16 @@ function Calendar({
 
       <header className="mb-7">
         <button
-          onClick={onBack}
+          type="button"
+          onClick={
+            onBack
+          }
           className="mb-5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-zinc-600 shadow-sm transition active:scale-95"
         >
           <ArrowLeft
-            size={20}
+            size={
+              20
+            }
           />
         </button>
 
@@ -261,13 +301,16 @@ function Calendar({
 
         <div className="mb-5 flex items-center justify-between">
           <button
+            type="button"
             onClick={
               previousMonth
             }
             className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-50 text-zinc-500 transition active:scale-95"
           >
             <ChevronLeft
-              size={20}
+              size={
+                20
+              }
             />
           </button>
 
@@ -285,6 +328,7 @@ function Calendar({
 
             {!isCurrentMonth && (
               <button
+                type="button"
                 onClick={
                   goToToday
                 }
@@ -296,13 +340,16 @@ function Calendar({
           </div>
 
           <button
+            type="button"
             onClick={
               nextMonth
             }
             className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-50 text-zinc-500 transition active:scale-95"
           >
             <ChevronRight
-              size={20}
+              size={
+                20
+              }
             />
           </button>
         </div>
@@ -321,12 +368,18 @@ function Calendar({
             'S',
             'D',
           ].map(
-            (day) => (
+            (
+              day,
+            ) => (
               <div
-                key={day}
+                key={
+                  day
+                }
                 className="py-2 text-center text-xs font-black text-zinc-400"
               >
-                {day}
+                {
+                  day
+                }
               </div>
             ),
           )}
@@ -346,7 +399,9 @@ function Calendar({
                * Celda vacía.
                */
 
-              if (!day) {
+              if (
+                !day
+              ) {
                 return (
                   <div
                     key={`empty-${index}`}
@@ -377,16 +432,13 @@ function Calendar({
 
               /*
                * Usuarios activos.
-               *
-               * Cada usuario aparece
-               * solamente una vez,
-               * aunque tenga varias
-               * actividades.
                */
 
               const activeUsers =
                 users.filter(
-                  (user) =>
+                  (
+                    user,
+                  ) =>
                     (
                       dayActivities[
                         user.id
@@ -396,8 +448,8 @@ function Calendar({
                 )
 
               /*
-               * Número total de
-               * actividades del día.
+               * Cantidad total de
+               * actividades.
                */
 
               const activityCount =
@@ -413,9 +465,17 @@ function Calendar({
                   0,
                 )
 
+              /*
+               * Hoy.
+               */
+
               const isToday =
                 dateKey ===
                 todayKey
+
+              /*
+               * Actividades propias.
+               */
 
               const currentUserActivities =
                 dayActivities[
@@ -426,11 +486,27 @@ function Calendar({
                 currentUserActivities.length >
                 0
 
+              /*
+               * ====================================
+               * DÍA RECUPERADO CON COMODÍN
+               * ====================================
+               */
+
+              const currentUserRecoveredDay =
+                currentUserActivities.some(
+                  (
+                    activity,
+                  ) =>
+                    activity.recovered_with_wildcard ===
+                    true,
+                )
+
               return (
                 <button
                   key={
                     dateKey
                   }
+                  type="button"
                   onClick={() =>
                     onSelectDate(
                       dateKey,
@@ -438,21 +514,49 @@ function Calendar({
                   }
                   className="relative flex h-[74px] flex-col items-center rounded-xl transition active:bg-zinc-50"
                 >
+                  {/* ================================= */}
+                  {/* MARCA DE RECUPERADO */}
+                  {/* ================================= */}
+
+                  {currentUserRecoveredDay && (
+                    <div
+                      title="Día recuperado con comodín"
+                      className="absolute left-0 top-0 flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-amber-600"
+                    >
+                      <RotateCcw
+                        size={
+                          10
+                        }
+                        strokeWidth={
+                          3
+                        }
+                      />
+                    </div>
+                  )}
+
+                  {/* ================================= */}
                   {/* NÚMERO */}
+                  {/* ================================= */}
 
                   <div
                     className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
                       isToday
                         ? 'bg-violet-500 text-white'
-                        : currentUserWasActive
-                          ? 'text-violet-600'
-                          : 'text-zinc-600'
+                        : currentUserRecoveredDay
+                          ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
+                          : currentUserWasActive
+                            ? 'text-violet-600'
+                            : 'text-zinc-600'
                     }`}
                   >
-                    {day}
+                    {
+                      day
+                    }
                   </div>
 
+                  {/* ================================= */}
                   {/* AVATARES */}
+                  {/* ================================= */}
 
                   <div className="mt-1 flex min-h-8 justify-center">
                     <div className="flex -space-x-3">
@@ -479,7 +583,9 @@ function Calendar({
                     </div>
                   </div>
 
+                  {/* ================================= */}
                   {/* MÁS USUARIOS */}
+                  {/* ================================= */}
 
                   {activeUsers.length >
                     3 && (
@@ -490,7 +596,9 @@ function Calendar({
                     </span>
                   )}
 
+                  {/* ================================= */}
                   {/* VARIAS ACTIVIDADES */}
+                  {/* ================================= */}
 
                   {activityCount >
                     activeUsers.length && (
@@ -520,7 +628,9 @@ function Calendar({
 
           <div className="flex flex-wrap gap-x-5 gap-y-3">
             {users.map(
-              (user) => (
+              (
+                user,
+              ) => (
                 <div
                   key={
                     user.id
@@ -544,6 +654,30 @@ function Calendar({
               ),
             )}
           </div>
+
+          {/* ================================= */}
+          {/* LEYENDA DE COMODÍN */}
+          {/* ================================= */}
+
+          {hasRecoveredDays && (
+            <div className="mt-4 flex items-center gap-2 border-t border-zinc-100 pt-4">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                <RotateCcw
+                  size={
+                    12
+                  }
+                  strokeWidth={
+                    3
+                  }
+                />
+              </div>
+
+              <p className="text-xs font-semibold text-zinc-500">
+                Día recuperado con
+                comodín
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -552,9 +686,9 @@ function Calendar({
       {/* ================================= */}
 
       <section className="mt-5 rounded-[25px] bg-violet-100 p-4">
-      <p className="font-black text-violet-700">
-  👥 Calendario del grupo
-</p>
+        <p className="font-black text-violet-700">
+          👥 Calendario del grupo
+        </p>
 
         <p className="mt-1 text-sm text-violet-500">
           Tocá cualquier día

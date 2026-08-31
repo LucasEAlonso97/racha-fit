@@ -22,6 +22,7 @@ export type Activity = {
   type: ActivityType
   duration: number
   reactions?: ActivityReaction[]
+  recovered_with_wildcard?: boolean
 }
 
 export type User = {

@@ -32,6 +32,12 @@ type Props = {
 
   currentUserId: string
 
+  wildcardBalance:
+    number | null
+
+  wildcardRecoveryDates:
+    string[]
+
   onClose: () => void
 
   onEditActivity: (
@@ -51,6 +57,8 @@ function DayDetailModal({
   activities,
   users,
   currentUserId,
+  wildcardBalance,
+  wildcardRecoveryDates,
   onClose,
   onEditActivity,
   onReactActivity,
@@ -59,8 +67,27 @@ function DayDetailModal({
     return null
   }
 
+  /*
+   * ========================================
+   * FECHA
+   * ========================================
+   */
+
   const date =
-    parseDateKey(dateKey)
+    parseDateKey(
+      dateKey,
+    )
+
+  const todayDate =
+    parseDateKey(
+      todayKey,
+    )
+
+  /*
+   * ========================================
+   * ACTIVIDADES DEL DÍA
+   * ========================================
+   */
 
   const dayActivities =
     activities[
@@ -95,14 +122,83 @@ function DayDetailModal({
         ).length > 0,
     ).length
 
+  /*
+   * ========================================
+   * ESTADO DE LA FECHA
+   * ========================================
+   */
+
   const isToday =
     dateKey ===
     todayKey
 
+  const differenceInDays =
+    Math.round(
+      (
+        todayDate.getTime() -
+        date.getTime()
+      ) /
+        86400000,
+    )
+
+  const isPastDay =
+    differenceInDays > 0
+
+  const isRecoverablePastDay =
+    differenceInDays >= 1 &&
+    differenceInDays <= 7
+
+  const isTooOld =
+    differenceInDays > 7
+
+  const isFuture =
+    differenceInDays < 0
+
+  /*
+   * ========================================
+   * COMODINES
+   * ========================================
+   */
+
+  const dayAlreadyRecovered =
+    wildcardRecoveryDates.includes(
+      dateKey,
+    )
+
+  const wildcardsLoading =
+    wildcardBalance ===
+    null
+
+  const hasWildcard =
+    (
+      wildcardBalance ??
+      0
+    ) > 0
+
+  const needsWildcard =
+    isRecoverablePastDay &&
+    currentUserActivities.length ===
+      0 &&
+    !dayAlreadyRecovered
+
+  const canAddActivity =
+    isToday ||
+    (
+      isRecoverablePastDay &&
+      (
+        currentUserActivities.length >
+          0 ||
+        dayAlreadyRecovered ||
+        hasWildcard
+      )
+    )
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 backdrop-blur-[2px]">
-      <div className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-t-[34px] bg-white px-5 pb-8 pt-5 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex justify-center bg-white">
+  <div className="h-[100dvh] w-full max-w-md overflow-y-auto overscroll-contain bg-white px-5 pt-[calc(1.25rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))]">
+        {/* ================================= */}
         {/* HEADER */}
+        {/* ================================= */}
 
         <div className="mb-6 flex items-start justify-between">
           <div>
@@ -147,6 +243,7 @@ function DayDetailModal({
           </div>
 
           <button
+            type="button"
             onClick={
               onClose
             }
@@ -158,28 +255,54 @@ function DayDetailModal({
           </button>
         </div>
 
+        {/* ================================= */}
+        {/* DÍA RECUPERADO */}
+        {/* ================================= */}
+
+        {dayAlreadyRecovered && (
+          <div className="mb-5 rounded-2xl bg-amber-50 px-4 py-3">
+            <p className="text-sm font-black text-amber-700">
+              🃏 Día recuperado
+            </p>
+
+            <p className="mt-1 text-xs font-semibold leading-relaxed text-amber-600">
+              Usaste un comodín
+              para recuperar este
+              día.
+            </p>
+          </div>
+        )}
+
+        {/* ================================= */}
         {/* VACÍO */}
+        {/* ================================= */}
 
         {totalActivities ===
           0 && (
           <div className="mb-5 rounded-[24px] bg-zinc-50 px-5 py-8 text-center">
             <div className="text-4xl">
-              👀
+              {isRecoverablePastDay
+                ? '🃏'
+                : '👀'}
             </div>
 
             <p className="mt-3 font-black text-zinc-700">
-              Nadie se movió
-              todavía
+              {isRecoverablePastDay
+                ? 'Este día quedó vacío'
+                : 'Nadie se movió todavía'}
             </p>
 
             <p className="mt-1 text-sm text-zinc-400">
-              La cadena puede
-              empezar acá.
+              {isRecoverablePastDay
+                ? 'Si entrenaste y te olvidaste de cargarlo, todavía podés recuperarlo.'
+                : 'La cadena puede empezar acá.'}
             </p>
           </div>
         )}
 
+        {/* ================================= */}
         {/* USUARIOS */}
+        {/* ================================= */}
 
         <div className="space-y-4">
           {users.map(
@@ -248,7 +371,9 @@ function DayDetailModal({
                     </div>
                   </div>
 
+                  {/* ================================= */}
                   {/* ACTIVIDADES */}
+                  {/* ================================= */}
 
                   {hasActivities && (
                     <div className="mt-4 space-y-3">
@@ -298,6 +423,13 @@ function DayDetailModal({
                                     }{' '}
                                     min
                                   </p>
+
+                                  {activity.recovered_with_wildcard && (
+                                    <p className="mt-1 text-[11px] font-black text-amber-600">
+                                      🃏 Día
+                                      recuperado
+                                    </p>
+                                  )}
                                 </div>
 
                                 {/* EDITAR */}
@@ -357,41 +489,191 @@ function DayDetailModal({
           )}
         </div>
 
-        {/* AGREGAR */}
+        {/* ================================= */}
+        {/* HOY */}
+        {/* ================================= */}
 
         {isToday && (
-          <button
-            onClick={() =>
-              onEditActivity(
-                dateKey,
-                null,
-              )
-            }
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98]"
-          >
-            <Plus
-              size={20}
-              strokeWidth={3}
-            />
+          <>
+            <button
+              type="button"
+              onClick={() =>
+                onEditActivity(
+                  dateKey,
+                  null,
+                )
+              }
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98]"
+            >
+              <Plus
+                size={20}
+                strokeWidth={3}
+              />
+
+              {currentUserActivities.length >
+              0
+                ? 'Agregar otra actividad'
+                : 'Sumar mi actividad'}
+            </button>
 
             {currentUserActivities.length >
-            0
-              ? 'Agregar otra actividad'
-              : 'Sumar mi actividad 🔥'}
-          </button>
+              1 && (
+              <p className="mt-3 text-center text-xs font-semibold text-violet-400">
+                Hiciste{' '}
+                {
+                  currentUserActivities.length
+                }{' '}
+                actividades hoy.
+                Igual suma 1 día a
+                tu racha 🔥
+              </p>
+            )}
+          </>
         )}
 
-        {isToday &&
+        {/* ================================= */}
+        {/* DÍA PASADO RECUPERABLE */}
+        {/* ================================= */}
+
+        {isRecoverablePastDay && (
+          <>
+            <button
+              type="button"
+              onClick={() =>
+                onEditActivity(
+                  dateKey,
+                  null,
+                )
+              }
+              disabled={
+                !canAddActivity ||
+                (
+                  needsWildcard &&
+                  wildcardsLoading
+                )
+              }
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:bg-zinc-200 disabled:text-zinc-400 disabled:shadow-none"
+            >
+              <Plus
+                size={20}
+                strokeWidth={3}
+              />
+
+              {currentUserActivities.length >
+                0 ||
+              dayAlreadyRecovered
+                ? 'Agregar otra actividad'
+                : wildcardsLoading
+                  ? 'Cargando comodines...'
+                  : hasWildcard
+                    ? '🃏 Recuperar este día'
+                    : 'Sin comodines disponibles'}
+            </button>
+
+            {/* AVISO DE CONSUMO */}
+
+            {needsWildcard &&
+              hasWildcard &&
+              !wildcardsLoading && (
+                <div className="mt-3 rounded-2xl bg-amber-50 px-4 py-3">
+                  <p className="text-center text-xs font-bold leading-relaxed text-amber-700">
+                    🃏 Usarás 1 de tus{' '}
+                    {
+                      wildcardBalance
+                    }{' '}
+                    {wildcardBalance ===
+                    1
+                      ? 'comodín'
+                      : 'comodines'}{' '}
+                    para recuperar
+                    este día.
+                  </p>
+                </div>
+              )}
+
+            {/* SIN COMODINES */}
+
+            {needsWildcard &&
+              !hasWildcard &&
+              !wildcardsLoading && (
+                <p className="mt-3 text-center text-xs font-semibold leading-relaxed text-zinc-400">
+                  Este día todavía
+                  está dentro de los
+                  últimos 7 días,
+                  pero no te quedan
+                  comodines.
+                </p>
+              )}
+
+            {/* YA RECUPERADO */}
+
+            {dayAlreadyRecovered &&
+              currentUserActivities.length >
+                0 && (
+                <p className="mt-3 text-center text-xs font-bold leading-relaxed text-amber-600">
+                  🃏 Podés agregar
+                  otra actividad.
+                  No consume otro
+                  comodín.
+                </p>
+              )}
+          </>
+        )}
+
+        {/* ================================= */}
+        {/* DÍA DEMASIADO ANTIGUO */}
+        {/* ================================= */}
+
+        {isTooOld && (
+          <div className="mt-6 rounded-2xl bg-zinc-100 px-4 py-3 text-center">
+            <p className="text-sm font-black text-zinc-500">
+              Este día ya no se
+              puede recuperar
+            </p>
+
+            <p className="mt-1 text-xs font-semibold leading-relaxed text-zinc-400">
+              Los comodines sirven
+              solamente para los
+              últimos 7 días.
+            </p>
+          </div>
+        )}
+
+        {/* ================================= */}
+        {/* FUTURO */}
+        {/* ================================= */}
+
+        {isFuture && (
+          <div className="mt-6 rounded-2xl bg-zinc-100 px-4 py-3 text-center">
+            <p className="text-sm font-black text-zinc-500">
+              Todavía no llegamos
+              acá 😅
+            </p>
+
+            <p className="mt-1 text-xs font-semibold text-zinc-400">
+              No se pueden cargar
+              actividades futuras.
+            </p>
+          </div>
+        )}
+
+        {/* ================================= */}
+        {/* ACLARACIÓN */}
+        {/* ================================= */}
+
+        {isPastDay &&
+          isRecoverablePastDay &&
           currentUserActivities.length >
             1 && (
-            <p className="mt-3 text-center text-xs font-semibold text-violet-400">
-              Hiciste{' '}
+            <p className="mt-3 text-center text-xs font-semibold text-zinc-400">
+              Tenés{' '}
               {
                 currentUserActivities.length
               }{' '}
-              actividades hoy.
-              Igual suma 1 día a
-              tu racha 🔥
+              actividades en este
+              día. Para la racha
+              sigue contando una
+              sola vez.
             </p>
           )}
       </div>
