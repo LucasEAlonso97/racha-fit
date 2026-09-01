@@ -1,6 +1,13 @@
 import {
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
+
+import {
   ArrowRight,
   Gift,
+  History,
   RefreshCw,
   Sparkles,
   Swords,
@@ -14,15 +21,72 @@ import {
   useTournament,
 } from '../hooks/useTournament'
 
+import {
+  supabase,
+} from '../lib/supabase'
+
 import type {
   Group,
   User,
 } from '../types'
 
+/*
+ * ========================================
+ * TYPES
+ * ========================================
+ */
+
 type Props = {
   group: Group
   users: User[]
   currentUserId: string
+}
+
+type HistoryParticipant = {
+  user_id: string
+  name: string
+  team_number: number | null
+  score: number
+  weekly_goal_at_start?: number
+}
+
+type HistoryChallenge = {
+  id: string
+  name: string
+  emoji: string
+  description: string
+  scoring_type: string
+}
+
+type HistoryPrize = {
+  id: string
+  title: string
+  emoji: string
+  description: string
+  category: string
+}
+
+type TournamentHistoryItem = {
+  id: string
+  group_id: string
+  selector_user_id: string
+  selected_card: number | null
+
+  mode:
+    | 'free_for_all'
+    | 'two_vs_two'
+    | null
+
+  starts_on: string | null
+  ends_on: string | null
+  finished_at: string | null
+
+  winner_user_id: string | null
+
+  challenge: HistoryChallenge | null
+  prize: HistoryPrize | null
+
+  participants: HistoryParticipant[]
 }
 
 /*
@@ -69,6 +133,49 @@ function getPositionLabel(
   }
 
   return `${position + 1}°`
+}
+
+/*
+ * ========================================
+ * POSICIÓN CON EMPATES
+ * ========================================
+ */
+
+function getRankingPosition(
+  ranking: {
+    score: number
+  }[],
+  index: number,
+) {
+  const currentScore =
+    ranking[index]?.score
+
+  if (
+    currentScore ===
+    undefined
+  ) {
+    return index
+  }
+
+  const higherScores =
+    new Set(
+      ranking
+        .slice(
+          0,
+          index,
+        )
+        .filter(
+          participant =>
+            participant.score >
+            currentScore,
+        )
+        .map(
+          participant =>
+            participant.score,
+        ),
+    )
+
+  return higherScores.size
 }
 
 /*
@@ -122,6 +229,344 @@ function getScoringRules(
 
 /*
  * ========================================
+ * HISTORIAL
+ * ========================================
+ */
+
+function TournamentHistory({
+  history,
+  loading,
+}: {
+  history: TournamentHistoryItem[]
+  loading: boolean
+}) {
+  return (
+    <section className="mt-6 rounded-[28px] bg-white p-5 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-100 text-violet-600">
+          <History size={21} />
+        </div>
+
+        <div>
+          <p className="text-[10px] font-black tracking-wider text-violet-500">
+            HISTORIAL
+          </p>
+
+          <h3 className="text-lg font-black text-zinc-800">
+            Torneos anteriores
+          </h3>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="mt-5 rounded-2xl bg-zinc-50 px-4 py-5 text-center">
+          <p className="text-xs font-bold text-zinc-400">
+            Cargando historial...
+          </p>
+        </div>
+      ) : history.length === 0 ? (
+        <div className="mt-5 rounded-2xl bg-zinc-50 px-4 py-5 text-center">
+          <p className="text-2xl">
+            🏆
+          </p>
+
+          <p className="mt-2 text-sm font-black text-zinc-600">
+            Todavía no hay torneos terminados
+          </p>
+
+          <p className="mt-1 text-xs font-semibold text-zinc-400">
+            Cuando termine el primero,
+            va a aparecer acá.
+          </p>
+        </div>
+      ) : (
+        <div className="mt-5 space-y-4">
+          {history.map(
+            item => {
+              const ranking = [
+                ...item.participants,
+              ].sort(
+                (
+                  a,
+                  b,
+                ) => {
+                  if (
+                    b.score !==
+                    a.score
+                  ) {
+                    return (
+                      b.score -
+                      a.score
+                    )
+                  }
+
+                  return (
+                    a.name.localeCompare(
+                      b.name,
+                    )
+                  )
+                },
+              )
+
+              const teamOne =
+                ranking.filter(
+                  participant =>
+                    participant.team_number ===
+                    1,
+                )
+
+              const teamTwo =
+                ranking.filter(
+                  participant =>
+                    participant.team_number ===
+                    2,
+                )
+
+              const teamOneScore =
+                teamOne.reduce(
+                  (
+                    total,
+                    participant,
+                  ) =>
+                    total +
+                    participant.score,
+                  0,
+                )
+
+              const teamTwoScore =
+                teamTwo.reduce(
+                  (
+                    total,
+                    participant,
+                  ) =>
+                    total +
+                    participant.score,
+                  0,
+                )
+
+              let resultTitle =
+                'Sin resultado'
+
+              let resultSubtitle =
+                ''
+
+              let resultEmoji =
+                '🏆'
+
+              /*
+               * ============================
+               * 2 VS 2
+               * ============================
+               */
+
+              if (
+                item.mode ===
+                'two_vs_two'
+              ) {
+                if (
+                  teamOneScore ===
+                  teamTwoScore
+                ) {
+                  resultTitle =
+                    'Empate entre equipos'
+
+                  resultSubtitle =
+                    `${teamOneScore} pts por equipo`
+
+                  resultEmoji =
+                    '🤝'
+                } else {
+                  const winningTeam =
+                    teamOneScore >
+                    teamTwoScore
+                      ? teamOne
+                      : teamTwo
+
+                  const winningScore =
+                    Math.max(
+                      teamOneScore,
+                      teamTwoScore,
+                    )
+
+                  const winnerNames =
+                    winningTeam
+                      .map(
+                        participant =>
+                          participant.name,
+                      )
+                      .join(' + ')
+
+                  resultTitle =
+                    winnerNames ||
+                    'Equipo campeón'
+
+                  resultSubtitle =
+                    `${winningScore} pts`
+
+                  resultEmoji =
+                    '🏆'
+                }
+              }
+
+              /*
+               * ============================
+               * TODOS VS TODOS
+               * ============================
+               */
+
+              if (
+                item.mode ===
+                'free_for_all'
+              ) {
+                const topScore =
+                  ranking[0]?.score ??
+                  0
+
+                const leaders =
+                  ranking.filter(
+                    participant =>
+                      participant.score ===
+                      topScore,
+                  )
+
+                if (
+                  leaders.length >
+                  1
+                ) {
+                  resultTitle =
+                    `Empate: ${leaders
+                      .map(
+                        participant =>
+                          participant.name,
+                      )
+                      .join(' · ')}`
+
+                  resultSubtitle =
+                    `${topScore} pts`
+
+                  resultEmoji =
+                    '🤝'
+                } else if (
+                  leaders.length ===
+                  1
+                ) {
+                  resultTitle =
+                    leaders[0].name
+
+                  resultSubtitle =
+                    `${topScore} pts`
+
+                  resultEmoji =
+                    '🏆'
+                }
+              }
+
+              return (
+                <article
+                  key={item.id}
+                  className="overflow-hidden rounded-[24px] border border-zinc-100 bg-zinc-50"
+                >
+                  {/* ======================= */}
+                  {/* TORNEO */}
+                  {/* ======================= */}
+
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+                          {item.mode ===
+                          'two_vs_two'
+                            ? '2 VS 2'
+                            : 'TODOS VS TODOS'}
+                        </p>
+
+                        <h4 className="mt-1 truncate text-base font-black text-zinc-800">
+                          {item.challenge
+                            ? `${item.challenge.emoji} ${item.challenge.name}`
+                            : '🏆 Torneo'}
+                        </h4>
+                      </div>
+
+                      {item.selected_card && (
+                        <div className="shrink-0 rounded-full bg-violet-100 px-3 py-1 text-[10px] font-black text-violet-600">
+                          Carta #
+                          {
+                            item.selected_card
+                          }
+                        </div>
+                      )}
+                    </div>
+
+                    <p className="mt-2 text-xs font-semibold text-zinc-400">
+                      {formatDate(
+                        item.starts_on,
+                      )}{' '}
+                      →{' '}
+                      {formatDate(
+                        item.ends_on,
+                      )}
+                    </p>
+
+                    {/* ===================== */}
+                    {/* RESULTADO */}
+                    {/* ===================== */}
+
+                    <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white px-4 py-3">
+                      <div className="text-2xl">
+                        {resultEmoji}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-black text-zinc-700">
+                          {resultTitle}
+                        </p>
+
+                        <p className="mt-0.5 text-xs font-bold text-zinc-400">
+                          {resultSubtitle}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* ===================== */}
+                    {/* PREMIO */}
+                    {/* ===================== */}
+
+                    {item.prize && (
+                      <div className="mt-3 flex items-start gap-3 rounded-2xl bg-amber-50 px-4 py-3">
+                        <span className="text-xl">
+                          {
+                            item.prize
+                              .emoji
+                          }
+                        </span>
+
+                        <div>
+                          <p className="text-[9px] font-black uppercase tracking-wider text-amber-600">
+                            Premio
+                          </p>
+
+                          <p className="mt-0.5 text-xs font-black text-zinc-700">
+                            {
+                              item.prize
+                                .title
+                            }
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </article>
+              )
+            },
+          )}
+        </div>
+      )}
+    </section>
+  )
+}
+
+/*
+ * ========================================
  * TORNEOS
  * ========================================
  */
@@ -146,7 +591,110 @@ function Torneos({
 
   /*
    * ========================================
-   * USUARIO QUE ELIGE
+   * HISTORIAL STATE
+   * ========================================
+   */
+
+  const [
+    history,
+    setHistory,
+  ] =
+    useState<
+      TournamentHistoryItem[]
+    >([])
+
+  const [
+    historyLoading,
+    setHistoryLoading,
+  ] =
+    useState(true)
+
+  /*
+   * ========================================
+   * CARGAR HISTORIAL
+   * ========================================
+   */
+
+  const loadHistory =
+    useCallback(
+      async () => {
+        if (!group.id) {
+          return
+        }
+
+        setHistoryLoading(
+          true,
+        )
+
+        const {
+          data,
+          error:
+            historyError,
+        } =
+          await supabase.rpc(
+            'get_tournament_history',
+            {
+              p_group_id:
+                group.id,
+
+              p_limit:
+                10,
+            },
+          )
+
+        if (
+          historyError
+        ) {
+          console.error(
+            'Error cargando historial de torneos:',
+            historyError,
+          )
+
+          setHistoryLoading(
+            false,
+          )
+
+          return
+        }
+
+        if (
+          Array.isArray(
+            data,
+          )
+        ) {
+          setHistory(
+            data as TournamentHistoryItem[],
+          )
+        } else {
+          setHistory([])
+        }
+
+        setHistoryLoading(
+          false,
+        )
+      },
+      [
+        group.id,
+      ],
+    )
+
+  /*
+   * El historial se vuelve
+   * a consultar cuando cambia
+   * el torneo actual.
+   */
+
+  useEffect(() => {
+    void loadHistory()
+  }, [
+    loadHistory,
+    tournament?.id,
+    tournament?.status,
+  ])
+
+  /*
+   * ========================================
+   * SELECTORES
    * ========================================
    */
 
@@ -258,7 +806,16 @@ function Torneos({
    */
 
   if (!tournament) {
-    return null
+    return (
+      <div className="mx-auto w-full max-w-md px-5 pb-8 pt-6">
+        <TournamentHistory
+          history={history}
+          loading={
+            historyLoading
+          }
+        />
+      </div>
+    )
   }
 
   /*
@@ -446,16 +1003,14 @@ function Torneos({
               {tournament.mode ===
               'free_for_all' ? (
                 <p className="mt-2 text-sm font-semibold text-zinc-300">
-                  {
-                    leaders
-                      .map(
-                        leader =>
-                          leader.name,
-                      )
-                      .join(
-                        ' · ',
-                      )
-                  }{' '}
+                  {leaders
+                    .map(
+                      leader =>
+                        leader.name,
+                    )
+                    .join(
+                      ' · ',
+                    )}{' '}
                   terminaron con{' '}
                   <span className="font-black text-white">
                     {topScore}{' '}
@@ -515,7 +1070,9 @@ function Torneos({
                         className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-2"
                       >
                         <UserAvatar
-                          user={user}
+                          user={
+                            user
+                          }
                           size="sm"
                         />
 
@@ -559,7 +1116,8 @@ function Torneos({
 
               <h2 className="mt-3 text-2xl font-black text-white">
                 {winner?.name ??
-                  ranking[0]?.name ??
+                  ranking[0]
+                    ?.name ??
                   'Ganador'}
               </h2>
 
@@ -631,17 +1189,21 @@ function Torneos({
                   tournament.mode ===
                   'two_vs_two' ? (
                     <p className="mt-1 text-sm font-semibold leading-relaxed text-zinc-500">
-                      Como hubo empate
-                      entre equipos,
-                      esta vez el premio
-                      queda vacante 🤝
+                      Como hubo
+                      empate entre
+                      equipos, esta
+                      vez el premio
+                      queda vacante
+                      🤝
                     </p>
                   ) : (
                     <p className="mt-1 text-sm font-semibold leading-relaxed text-zinc-500">
-                      Hubo empate en el
-                      primer puesto. Los
-                      campeones comparten
-                      el premio 🤝
+                      Hubo empate en
+                      el primer
+                      puesto. Los
+                      campeones
+                      comparten el
+                      premio 🤝
                     </p>
                   )
                 ) : (
@@ -659,7 +1221,7 @@ function Torneos({
         )}
 
         {/* ================================= */}
-        {/* RESULTADOS */}
+        {/* TABLA FINAL */}
         {/* ================================= */}
 
         <section className="mt-5 rounded-[28px] bg-white p-5 shadow-sm">
@@ -683,8 +1245,6 @@ function Torneos({
           {tournament.mode ===
           'two_vs_two' ? (
             <div className="mt-4 space-y-3">
-              {/* EQUIPO 1 */}
-
               <div className="rounded-2xl bg-violet-50 p-4">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-black text-violet-700">
@@ -724,8 +1284,6 @@ function Torneos({
                   )}
                 </div>
               </div>
-
-              {/* EQUIPO 2 */}
 
               <div className="rounded-2xl bg-orange-50 p-4">
                 <div className="flex items-center justify-between">
@@ -785,6 +1343,12 @@ function Torneos({
                     return null
                   }
 
+                  const position =
+                    getRankingPosition(
+                      ranking,
+                      index,
+                    )
+
                   return (
                     <div
                       key={
@@ -795,12 +1359,14 @@ function Torneos({
                       <div className="flex min-w-0 items-center gap-3">
                         <div className="flex w-7 shrink-0 justify-center text-base font-black">
                           {getPositionLabel(
-                            index,
+                            position,
                           )}
                         </div>
 
                         <UserAvatar
-                          user={user}
+                          user={
+                            user
+                          }
                           size="sm"
                         />
 
@@ -837,7 +1403,9 @@ function Torneos({
 
             <div className="mt-4 flex items-center gap-3">
               <UserAvatar
-                user={nextSelector}
+                user={
+                  nextSelector
+                }
                 size="lg"
               />
 
@@ -900,6 +1468,13 @@ function Torneos({
             {error}
           </p>
         )}
+
+        <TournamentHistory
+          history={history}
+          loading={
+            historyLoading
+          }
+        />
       </div>
     )
   }
@@ -927,6 +1502,10 @@ function Torneos({
     const teamsTied =
       teamOneScore ===
       teamTwoScore
+
+    const topScore =
+      ranking[0]?.score ??
+      0
 
     return (
       <div className="mx-auto w-full max-w-md px-5 pb-8 pt-6">
@@ -1034,7 +1613,7 @@ function Torneos({
         </section>
 
         {/* ================================= */}
-        {/* CÓMO SE GANA */}
+        {/* REGLAS */}
         {/* ================================= */}
 
         <section className="mt-5 rounded-[28px] bg-white p-5 shadow-sm">
@@ -1056,7 +1635,8 @@ function Torneos({
 
           <div className="mt-4 space-y-2">
             {getScoringRules(
-              tournament.challenge.scoring_type,
+              tournament.challenge
+                .scoring_type,
             ).map(
               rule => (
                 <div
@@ -1075,8 +1655,9 @@ function Torneos({
 
           <div className="mt-3 rounded-2xl bg-amber-50 px-4 py-3">
             <p className="text-xs font-semibold leading-relaxed text-amber-700">
-              🃏 Los días recuperados
-              con comodín no suman
+              🃏 Los días
+              recuperados con
+              comodín no suman
               puntos en Torneos.
             </p>
           </div>
@@ -1146,7 +1727,8 @@ function Torneos({
                 </p>
 
                 <h3 className="text-lg font-black text-zinc-800">
-                  Batalla por equipos
+                  Batalla por
+                  equipos
                 </h3>
               </div>
             </div>
@@ -1215,7 +1797,9 @@ function Torneos({
                         >
                           <div className="flex items-center gap-3">
                             <UserAvatar
-                              user={user}
+                              user={
+                                user
+                              }
                               size="sm"
                             />
 
@@ -1315,7 +1899,9 @@ function Torneos({
                         >
                           <div className="flex items-center gap-3">
                             <UserAvatar
-                              user={user}
+                              user={
+                                user
+                              }
                               size="sm"
                             />
 
@@ -1363,7 +1949,8 @@ function Torneos({
                 </p>
 
                 <h3 className="text-lg font-black text-zinc-800">
-                  Todos contra todos
+                  Todos contra
+                  todos
                 </h3>
               </div>
             </div>
@@ -1385,8 +1972,15 @@ function Torneos({
                     return null
                   }
 
+                  const position =
+                    getRankingPosition(
+                      ranking,
+                      index,
+                    )
+
                   const isLeader =
-                    index === 0
+                    participant.score ===
+                    topScore
 
                   return (
                     <div
@@ -1402,12 +1996,14 @@ function Torneos({
                       <div className="flex min-w-0 items-center gap-3">
                         <div className="flex w-8 shrink-0 items-center justify-center text-lg font-black">
                           {getPositionLabel(
-                            index,
+                            position,
                           )}
                         </div>
 
                         <UserAvatar
-                          user={user}
+                          user={
+                            user
+                          }
                           size="sm"
                         />
 
@@ -1452,10 +2048,12 @@ function Torneos({
 
         <section className="mt-4 rounded-2xl bg-violet-50 px-4 py-3">
           <p className="text-xs font-semibold leading-relaxed text-violet-700">
-            Los puntos se actualizan
-            automáticamente con las
-            actividades registradas
-            durante el torneo.
+            Los puntos se
+            actualizan
+            automáticamente con
+            las actividades
+            registradas durante
+            el torneo.
           </p>
         </section>
 
@@ -1474,6 +2072,13 @@ function Torneos({
             {error}
           </p>
         )}
+
+        <TournamentHistory
+          history={history}
+          loading={
+            historyLoading
+          }
+        />
       </div>
     )
   }
@@ -1540,9 +2145,11 @@ function Torneos({
 
               <p className="mt-1 text-xs font-semibold leading-relaxed text-zinc-500">
                 El turno rota entre
-                todos los integrantes.
+                todos los
+                integrantes.
                 Cuando termina la
-                ronda, vuelve a empezar.
+                ronda, vuelve a
+                empezar.
               </p>
             </div>
           </div>
@@ -1573,13 +2180,9 @@ function Torneos({
         </div>
 
         <p className="mt-2 text-sm font-semibold leading-relaxed text-zinc-500">
-          Desafío, modalidad y premio
-          se revelan juntos.
+          Desafío, modalidad y
+          premio se revelan juntos.
         </p>
-
-        {/* ================================= */}
-        {/* CARTAS */}
-        {/* ================================= */}
 
         <div className="mt-6 grid grid-cols-3 gap-3">
           {[1, 2, 3].map(
@@ -1688,10 +2291,6 @@ function Torneos({
           )}
         </div>
 
-        {/* ================================= */}
-        {/* ESTADO DE TURNO */}
-        {/* ================================= */}
-
         {!isMyTurn &&
           selector && (
             <div className="mt-5 rounded-2xl bg-zinc-50 px-4 py-3 text-center">
@@ -1746,8 +2345,8 @@ function Torneos({
               </p>
 
               <p className="text-xs text-zinc-400">
-                Define cómo se ganan
-                los puntos.
+                Define cómo se
+                ganan los puntos.
               </p>
             </div>
           </div>
@@ -1763,8 +2362,9 @@ function Torneos({
               </p>
 
               <p className="text-xs text-zinc-400">
-                Todos contra todos o
-                2 vs 2 si son cuatro.
+                Todos contra todos
+                o 2 vs 2 si son
+                cuatro.
               </p>
             </div>
           </div>
@@ -1780,13 +2380,25 @@ function Torneos({
               </p>
 
               <p className="text-xs text-zinc-400">
-                El campeón se lleva
-                algo de verdad.
+                El campeón se
+                lleva algo de
+                verdad.
               </p>
             </div>
           </div>
         </div>
       </section>
+
+      {/* ================================= */}
+      {/* HISTORIAL */}
+      {/* ================================= */}
+
+      <TournamentHistory
+        history={history}
+        loading={
+          historyLoading
+        }
+      />
     </div>
   )
 }

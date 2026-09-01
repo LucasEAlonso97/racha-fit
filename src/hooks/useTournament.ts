@@ -39,6 +39,7 @@ export type TournamentParticipant = {
   name: string
   team_number: number | null
   score: number
+  weekly_goal_at_start?: number
 }
 
 export type Tournament = {
@@ -86,11 +87,51 @@ export type Tournament = {
     TournamentParticipant[]
 }
 
+export type TournamentHistoryItem = {
+  id: string
+  group_id: string
+
+  selector_user_id: string
+
+  selected_card:
+    number | null
+
+  mode:
+    TournamentMode | null
+
+  starts_on:
+    string | null
+
+  ends_on:
+    string | null
+
+  finished_at:
+    string | null
+
+  winner_user_id:
+    string | null
+
+  challenge:
+    TournamentChallenge | null
+
+  prize:
+    TournamentPrize | null
+
+  participants:
+    TournamentParticipant[]
+}
+
 type UseTournamentResult = {
   tournament:
     Tournament | null
 
+  history:
+    TournamentHistoryItem[]
+
   loading:
+    boolean
+
+  historyLoading:
     boolean
 
   error:
@@ -137,8 +178,22 @@ export function useTournament(
     )
 
   const [
+    history,
+    setHistory,
+  ] =
+    useState<
+      TournamentHistoryItem[]
+    >([])
+
+  const [
     loading,
     setLoading,
+  ] =
+    useState(true)
+
+  const [
+    historyLoading,
+    setHistoryLoading,
   ] =
     useState(true)
 
@@ -175,6 +230,81 @@ export function useTournament(
 
   const continuingRef =
     useRef(false)
+
+  /*
+   * ========================================
+   * HISTORIAL
+   * ========================================
+   */
+
+  const fetchHistory =
+    useCallback(
+      async (
+        silent = false,
+      ) => {
+        if (!groupId) {
+          return
+        }
+
+        if (!silent) {
+          setHistoryLoading(
+            true,
+          )
+        }
+
+        const {
+          data,
+          error:
+            historyError,
+        } =
+          await supabase.rpc(
+            'get_tournament_history',
+            {
+              p_group_id:
+                groupId,
+
+              p_limit:
+                10,
+            },
+          )
+
+        if (
+          historyError
+        ) {
+          console.error(
+            'Error cargando historial de torneos:',
+            historyError,
+          )
+
+          if (!silent) {
+            setHistoryLoading(
+              false,
+            )
+          }
+
+          return
+        }
+
+        setHistory(
+          Array.isArray(
+            data,
+          )
+            ? (
+                data as TournamentHistoryItem[]
+              )
+            : [],
+        )
+
+        if (!silent) {
+          setHistoryLoading(
+            false,
+          )
+        }
+      },
+      [
+        groupId,
+      ],
+    )
 
   /*
    * ========================================
@@ -242,9 +372,6 @@ export function useTournament(
          * ==================================
          * ¿YA TERMINÓ?
          * ==================================
-         *
-         * Si está activo, preguntamos
-         * al backend si la fecha ya venció.
          */
 
         if (
@@ -277,12 +404,8 @@ export function useTournament(
           }
 
           /*
-           * Si acaba de finalizar,
-           * volvemos a consultar.
-           *
-           * Ahora get_current_tournament
-           * devolverá el resultado
-           * pendiente de confirmar.
+           * Si acaba de terminar,
+           * volvemos a traerlo.
            */
 
           if (
@@ -342,7 +465,7 @@ export function useTournament(
 
         /*
          * ==================================
-         * GUARDAR
+         * GUARDAR TORNEO
          * ==================================
          */
 
@@ -357,6 +480,15 @@ export function useTournament(
           null,
         )
 
+        /*
+         * También refrescamos
+         * el historial.
+         */
+
+        await fetchHistory(
+          true,
+        )
+
         if (!silent) {
           setLoading(
             false,
@@ -365,6 +497,7 @@ export function useTournament(
       },
       [
         groupId,
+        fetchHistory,
       ],
     )
 
@@ -382,6 +515,10 @@ export function useTournament(
         }
 
         setLoading(
+          true,
+        )
+
+        setHistoryLoading(
           true,
         )
 
@@ -418,6 +555,10 @@ export function useTournament(
             false,
           )
 
+          setHistoryLoading(
+            false,
+          )
+
           return
         }
 
@@ -426,6 +567,10 @@ export function useTournament(
         )
 
         setLoading(
+          false,
+        )
+
+        setHistoryLoading(
           false,
         )
       },
@@ -454,10 +599,6 @@ export function useTournament(
         ) {
           return false
         }
-
-        /*
-         * Solo existen tres cartas.
-         */
 
         if (
           card < 1 ||
@@ -494,12 +635,6 @@ export function useTournament(
                 card,
             },
           )
-
-        /*
-         * ==================================
-         * ERROR
-         * ==================================
-         */
 
         if (
           chooseError
@@ -544,11 +679,6 @@ export function useTournament(
           choosingRef.current =
             false
 
-          /*
-           * Puede que otro usuario
-           * haya revelado justo antes.
-           */
-
           await fetchCurrentTournament(
             true,
           )
@@ -579,12 +709,6 @@ export function useTournament(
           )
         }
 
-        /*
-         * ==================================
-         * TRAER RESULTADO DEL REVEAL
-         * ==================================
-         */
-
         await fetchCurrentTournament(
           true,
         )
@@ -608,9 +732,6 @@ export function useTournament(
    * ========================================
    * CONTINUAR DESPUÉS DEL RESULTADO
    * ========================================
-   *
-   * Solamente puede hacerlo
-   * quien tiene el próximo turno.
    */
 
   const continueTournament =
@@ -647,12 +768,6 @@ export function useTournament(
                 tournament.id,
             },
           )
-
-        /*
-         * ==================================
-         * ERROR
-         * ==================================
-         */
 
         if (
           continueError
@@ -697,9 +812,9 @@ export function useTournament(
         }
 
         /*
-         * ==================================
-         * NUEVO TORNEO
-         * ==================================
+         * Acá el torneo anterior
+         * pasa automáticamente
+         * al historial.
          */
 
         await fetchCurrentTournament(
@@ -737,18 +852,6 @@ export function useTournament(
    * ========================================
    * REALTIME
    * ========================================
-   *
-   * Escuchamos:
-   *
-   * - tournaments
-   * - activities
-   *
-   * Así:
-   *
-   * - todos ven el reveal
-   * - todos ven el cierre
-   * - todos ven el siguiente torneo
-   * - el ranking cambia solo
    */
 
   useEffect(() => {
@@ -784,12 +887,6 @@ export function useTournament(
               `group_id=eq.${groupId}`,
           },
           () => {
-            /*
-             * No cortamos animaciones
-             * o transiciones iniciadas
-             * por este mismo dispositivo.
-             */
-
             if (
               choosingRef.current ||
               continuingRef.current
@@ -832,11 +929,6 @@ export function useTournament(
               return
             }
 
-            /*
-             * get_current_tournament()
-             * sincroniza scores.
-             */
-
             void fetchCurrentTournament(
               true,
             )
@@ -865,12 +957,6 @@ export function useTournament(
           },
         )
 
-    /*
-     * ========================================
-     * CLEANUP
-     * ========================================
-     */
-
     return () => {
       void supabase.removeChannel(
         channel,
@@ -885,12 +971,6 @@ export function useTournament(
    * ========================================
    * REFRESH AL VOLVER A LA APP
    * ========================================
-   *
-   * Esto es importante en celular:
-   *
-   * si alguien deja la PWA cerrada
-   * y vuelve después de que terminó
-   * un torneo, comprobamos su estado.
    */
 
   useEffect(() => {
@@ -929,12 +1009,19 @@ export function useTournament(
 
   return {
     tournament,
+    history,
+
     loading,
+    historyLoading,
+
     error,
+
     choosingCard,
     continuing,
+
     chooseCard,
     continueTournament,
+
     refresh:
       fetchCurrentTournament,
   }
