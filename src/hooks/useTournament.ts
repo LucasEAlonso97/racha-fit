@@ -39,15 +39,12 @@ export type TournamentParticipant = {
   name: string
   team_number: number | null
   score: number
-  weekly_goal_at_start?: number
 }
 
 export type Tournament = {
   id: string
   group_id: string
-
   selector_user_id: string
-
   selector_position: number
 
   selected_card:
@@ -87,51 +84,11 @@ export type Tournament = {
     TournamentParticipant[]
 }
 
-export type TournamentHistoryItem = {
-  id: string
-  group_id: string
-
-  selector_user_id: string
-
-  selected_card:
-    number | null
-
-  mode:
-    TournamentMode | null
-
-  starts_on:
-    string | null
-
-  ends_on:
-    string | null
-
-  finished_at:
-    string | null
-
-  winner_user_id:
-    string | null
-
-  challenge:
-    TournamentChallenge | null
-
-  prize:
-    TournamentPrize | null
-
-  participants:
-    TournamentParticipant[]
-}
-
 type UseTournamentResult = {
   tournament:
     Tournament | null
 
-  history:
-    TournamentHistoryItem[]
-
   loading:
-    boolean
-
-  historyLoading:
     boolean
 
   error:
@@ -166,6 +123,46 @@ const sleep = (
     },
   )
 
+function getFriendlyTournamentError(
+  message:
+    | string
+    | undefined,
+) {
+  const normalized =
+    message
+      ?.toLowerCase() ??
+    ''
+
+  if (
+    normalized.includes(
+      'at least two members',
+    )
+  ) {
+    return 'Necesitan ser al menos 2 integrantes para empezar un torneo.'
+  }
+
+  if (
+    normalized.includes(
+      'not your turn',
+    )
+  ) {
+    return 'Todavía no te toca elegir.'
+  }
+
+  if (
+    normalized.includes(
+      'already revealed',
+    )
+  ) {
+    return 'Este torneo ya fue revelado.'
+  }
+
+  return (
+    message ||
+    'Ocurrió un problema con el torneo.'
+  )
+}
+
 export function useTournament(
   groupId: string,
 ): UseTournamentResult {
@@ -178,22 +175,8 @@ export function useTournament(
     )
 
   const [
-    history,
-    setHistory,
-  ] =
-    useState<
-      TournamentHistoryItem[]
-    >([])
-
-  const [
     loading,
     setLoading,
-  ] =
-    useState(true)
-
-  const [
-    historyLoading,
-    setHistoryLoading,
   ] =
     useState(true)
 
@@ -233,81 +216,6 @@ export function useTournament(
 
   /*
    * ========================================
-   * HISTORIAL
-   * ========================================
-   */
-
-  const fetchHistory =
-    useCallback(
-      async (
-        silent = false,
-      ) => {
-        if (!groupId) {
-          return
-        }
-
-        if (!silent) {
-          setHistoryLoading(
-            true,
-          )
-        }
-
-        const {
-          data,
-          error:
-            historyError,
-        } =
-          await supabase.rpc(
-            'get_tournament_history',
-            {
-              p_group_id:
-                groupId,
-
-              p_limit:
-                10,
-            },
-          )
-
-        if (
-          historyError
-        ) {
-          console.error(
-            'Error cargando historial de torneos:',
-            historyError,
-          )
-
-          if (!silent) {
-            setHistoryLoading(
-              false,
-            )
-          }
-
-          return
-        }
-
-        setHistory(
-          Array.isArray(
-            data,
-          )
-            ? (
-                data as TournamentHistoryItem[]
-              )
-            : [],
-        )
-
-        if (!silent) {
-          setHistoryLoading(
-            false,
-          )
-        }
-      },
-      [
-        groupId,
-      ],
-    )
-
-  /*
-   * ========================================
    * OBTENER TORNEO ACTUAL
    * ========================================
    */
@@ -326,12 +234,6 @@ export function useTournament(
             true,
           )
         }
-
-        /*
-         * ==================================
-         * TRAER TORNEO
-         * ==================================
-         */
 
         let {
           data,
@@ -355,8 +257,9 @@ export function useTournament(
           )
 
           setError(
-            tournamentError.message ||
-              'No pudimos cargar el torneo.',
+            getFriendlyTournamentError(
+              tournamentError.message,
+            ),
           )
 
           if (!silent) {
@@ -370,7 +273,7 @@ export function useTournament(
 
         /*
          * ==================================
-         * ¿YA TERMINÓ?
+         * COMPROBAR SI YA TERMINÓ
          * ==================================
          */
 
@@ -403,11 +306,6 @@ export function useTournament(
             )
           }
 
-          /*
-           * Si acaba de terminar,
-           * volvemos a traerlo.
-           */
-
           if (
             !finishError &&
             finishResult?.finished
@@ -435,12 +333,6 @@ export function useTournament(
           }
         }
 
-        /*
-         * ==================================
-         * ERROR SEGUNDA CONSULTA
-         * ==================================
-         */
-
         if (
           tournamentError
         ) {
@@ -450,8 +342,9 @@ export function useTournament(
           )
 
           setError(
-            tournamentError.message ||
-              'No pudimos cargar el resultado.',
+            getFriendlyTournamentError(
+              tournamentError.message,
+            ),
           )
 
           if (!silent) {
@@ -462,12 +355,6 @@ export function useTournament(
 
           return
         }
-
-        /*
-         * ==================================
-         * GUARDAR TORNEO
-         * ==================================
-         */
 
         setTournament(
           (
@@ -480,15 +367,6 @@ export function useTournament(
           null,
         )
 
-        /*
-         * También refrescamos
-         * el historial.
-         */
-
-        await fetchHistory(
-          true,
-        )
-
         if (!silent) {
           setLoading(
             false,
@@ -497,30 +375,29 @@ export function useTournament(
       },
       [
         groupId,
-        fetchHistory,
       ],
     )
 
   /*
    * ========================================
-   * PREPARAR TORNEO
+   * PREPARAR / RECONCILIAR TORNEO
    * ========================================
    */
 
   const prepareTournament =
     useCallback(
-      async () => {
+      async (
+        silent = false,
+      ) => {
         if (!groupId) {
           return
         }
 
-        setLoading(
-          true,
-        )
-
-        setHistoryLoading(
-          true,
-        )
+        if (!silent) {
+          setLoading(
+            true,
+          )
+        }
 
         setError(
           null,
@@ -547,17 +424,28 @@ export function useTournament(
           )
 
           setError(
-            prepareError.message ||
-              'No pudimos preparar el próximo torneo.',
+            getFriendlyTournamentError(
+              prepareError.message,
+            ),
           )
 
-          setLoading(
-            false,
-          )
+          if (
+            prepareError.message
+              ?.toLowerCase()
+              .includes(
+                'at least two members',
+              )
+          ) {
+            setTournament(
+              null,
+            )
+          }
 
-          setHistoryLoading(
-            false,
-          )
+          if (!silent) {
+            setLoading(
+              false,
+            )
+          }
 
           return
         }
@@ -566,13 +454,11 @@ export function useTournament(
           true,
         )
 
-        setLoading(
-          false,
-        )
-
-        setHistoryLoading(
-          false,
-        )
+        if (!silent) {
+          setLoading(
+            false,
+          )
+        }
       },
       [
         groupId,
@@ -644,33 +530,11 @@ export function useTournament(
             chooseError,
           )
 
-          const message =
-            chooseError.message
-              ?.toLowerCase() ??
-            ''
-
-          if (
-            message.includes(
-              'not your turn',
-            )
-          ) {
-            setError(
-              'Todavía no te toca elegir.',
-            )
-          } else if (
-            message.includes(
-              'already revealed',
-            )
-          ) {
-            setError(
-              'Este torneo ya fue revelado.',
-            )
-          } else {
-            setError(
-              chooseError.message ||
-                'No pudimos revelar la carta.',
-            )
-          }
+          setError(
+            getFriendlyTournamentError(
+              chooseError.message,
+            ),
+          )
 
           setChoosingCard(
             null,
@@ -679,18 +543,12 @@ export function useTournament(
           choosingRef.current =
             false
 
-          await fetchCurrentTournament(
+          await prepareTournament(
             true,
           )
 
           return false
         }
-
-        /*
-         * ==================================
-         * ANIMACIÓN
-         * ==================================
-         */
 
         const elapsed =
           Date.now() -
@@ -725,6 +583,7 @@ export function useTournament(
       [
         tournament,
         fetchCurrentTournament,
+        prepareTournament,
       ],
     )
 
@@ -792,8 +651,9 @@ export function useTournament(
             )
           } else {
             setError(
-              continueError.message ||
-                'No pudimos preparar el siguiente torneo.',
+              getFriendlyTournamentError(
+                continueError.message,
+              ),
             )
           }
 
@@ -810,12 +670,6 @@ export function useTournament(
 
           return false
         }
-
-        /*
-         * Acá el torneo anterior
-         * pasa automáticamente
-         * al historial.
-         */
 
         await fetchCurrentTournament(
           true,
@@ -852,6 +706,12 @@ export function useTournament(
    * ========================================
    * REALTIME
    * ========================================
+   *
+   * Escuchamos:
+   *
+   * - tournaments
+   * - activities
+   * - group_members
    */
 
   useEffect(() => {
@@ -867,7 +727,7 @@ export function useTournament(
 
         /*
          * ==================================
-         * CAMBIOS DEL TORNEO
+         * TORNEOS
          * ==================================
          */
 
@@ -935,6 +795,47 @@ export function useTournament(
           },
         )
 
+        /*
+         * ==================================
+         * MIEMBROS
+         * ==================================
+         *
+         * Si alguien entra o sale:
+         *
+         * - recalculamos selector
+         * - mantenemos participantes
+         *   del torneo activo congelados
+         */
+
+        .on(
+          'postgres_changes',
+          {
+            event:
+              '*',
+
+            schema:
+              'public',
+
+            table:
+              'group_members',
+
+            filter:
+              `group_id=eq.${groupId}`,
+          },
+          () => {
+            if (
+              choosingRef.current ||
+              continuingRef.current
+            ) {
+              return
+            }
+
+            void prepareTournament(
+              true,
+            )
+          },
+        )
+
         .subscribe(
           status => {
             if (
@@ -965,6 +866,7 @@ export function useTournament(
   }, [
     groupId,
     fetchCurrentTournament,
+    prepareTournament,
   ])
 
   /*
@@ -980,7 +882,7 @@ export function useTournament(
           document.visibilityState ===
           'visible'
         ) {
-          void fetchCurrentTournament(
+          void prepareTournament(
             true,
           )
         }
@@ -998,30 +900,23 @@ export function useTournament(
       )
     }
   }, [
-    fetchCurrentTournament,
+    prepareTournament,
   ])
 
   /*
    * ========================================
-   * RESULTADO
+   * RETURN
    * ========================================
    */
 
   return {
     tournament,
-    history,
-
     loading,
-    historyLoading,
-
     error,
-
     choosingCard,
     continuing,
-
     chooseCard,
     continueTournament,
-
     refresh:
       fetchCurrentTournament,
   }
