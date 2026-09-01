@@ -3,6 +3,20 @@ export type ActivityType =
   | 'Caminata'
   | 'Correr'
   | 'Bicicleta'
+  | 'Calistenia'
+  | 'Tenis'
+  | 'Natación'
+  | 'Funcional'
+  | 'Yoga'
+  | 'Pilates'
+  | 'Fútbol'
+  | 'Pádel'
+  | 'Boxeo'
+  | 'Baile'
+  | 'Escalada'
+  | 'Vóley'
+  | 'Básquet'
+  | 'Handball'
   | 'Otra'
 
 export type ReactionEmoji =
@@ -37,6 +51,7 @@ export type User = {
   streakEligibleFrom:
     string | null
 }
+
 export type ActivitiesByDate = Record<
   string,
   Record<string, Activity[]>
@@ -46,6 +61,7 @@ export type View =
   | 'home'
   | 'calendar'
   | 'rachas'
+  | 'tournaments'
   | 'profile'
 
 export type Profile = {

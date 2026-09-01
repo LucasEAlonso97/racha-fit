@@ -25,6 +25,7 @@ import InviteJoin from './pages/InviteJoin'
 import Onboarding from './pages/Onboarding'
 import Perfil from './pages/Perfil'
 import Rachas from './pages/Rachas'
+import Torneos from './pages/Torneos'
 
 import {
   useSocialNotifications,
@@ -3042,6 +3043,25 @@ const updateWeeklyGoal =
   }
 />
       )}
+
+      {/* ================================= */}
+{/* TORNEOS */}
+{/* ================================= */}
+
+{view ===
+  'tournaments' && (
+  <Torneos
+    group={
+      activeGroup
+    }
+    users={
+      users
+    }
+    currentUserId={
+      currentUserId
+    }
+  />
+)}
 
       {/* ================================= */}
       {/* PERFIL */}
