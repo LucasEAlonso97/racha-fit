@@ -27,7 +27,8 @@ Cada integrante tiene su propio avatar, registra su actividad diaria y comparte 
 - 🏋️ Registro de actividad diaria con tipo y duración (se pueden registrar varias por día)
 - ✏️ Edición y eliminación de actividades
 - 🃏 Comodines para recuperar un día de los últimos 7
-- 💬 Reacciones con emoji a la actividad de otros
+- 💬 Reacciones con emoji y comentarios en la actividad de otros
+- 📸 Foto opcional en cada actividad
 
 **Rachas y motivación**
 
@@ -108,12 +109,15 @@ Tablas principales:
 | `profiles` | Datos públicos de cada usuario (`name`, `avatar_url`, `onboarding_completed`) |
 | `groups` | Grupos (`name`, `invite_code`, `created_by`) |
 | `group_members` | Usuario ↔ grupo, con `weekly_goal` y `streak_eligible_from` |
-| `activities` | Actividades (`activity_date`, `type`, `duration`, `recovered_with_wildcard`) |
+| `activities` | Actividades (`activity_date`, `type`, `duration`, `recovered_with_wildcard`, `photo_url`) |
 | `activity_reactions` | Reacción de un usuario a una actividad (una por usuario) |
+| `activity_comments` | Comentarios en las actividades (hasta 280 caracteres) |
 | `wildcard_recoveries` | Días recuperados con comodín |
 | `group_week_history` / `group_week_member_results` | Historial semanal del grupo |
 | `social_notifications` | Notificaciones dentro de la app |
 | `notification_preferences` / `push_subscriptions` | Configuración y suscripciones push |
+
+Las fotos se guardan en el bucket público `activity-photos` de Supabase Storage. Los cambios de base nuevos van en `supabase/migrations/`.
 
 Además, buena parte de la lógica vive en funciones de Postgres que la app llama con `supabase.rpc(...)`: comodines (`get_my_wildcards`), grupos (`join_group_by_code`, `leave_group`, `remove_group_member`, `delete_group`, `regenerate_group_invite_code`), objetivo semanal (`set_my_weekly_goal`), historial (`sync_group_week_history`), empujones (`send_group_nudge`) y torneos (`get_current_tournament`, `choose_tournament_card`, etc.).
 
@@ -249,9 +253,7 @@ Reaccionar y empujar al resto
 
 ## 🔮 Próximas mejoras
 
-- 📸 Foto opcional en cada actividad
-- 💬 Comentarios en las actividades
-- 🗃️ Guardar la estructura de la base (migraciones) en el repo
+- 🗃️ Guardar la estructura completa de la base en `supabase/migrations`
 
 ---
 

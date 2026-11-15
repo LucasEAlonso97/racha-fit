@@ -223,9 +223,33 @@ export function useGroupData(
         }
       })
 
+    /*
+     * COMENTARIOS
+     *
+     * Canal aparte: si la tabla todavía
+     * no existe (migración sin correr),
+     * falla solo este y no el de arriba.
+     */
+    const commentsChannel = supabase
+      .channel(`racha-comments-${groupId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'activity_comments',
+        },
+        refreshGroup,
+      )
+      .subscribe()
+
     return () => {
       void supabase.removeChannel(
         channel,
+      )
+
+      void supabase.removeChannel(
+        commentsChannel,
       )
     }
   }, [

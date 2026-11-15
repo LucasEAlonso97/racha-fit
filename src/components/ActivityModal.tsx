@@ -1,9 +1,11 @@
 import {
   useEffect,
+  useMemo,
   useState,
 } from 'react'
 
 import {
+  Camera,
   Clock,
   LoaderCircle,
   Trash2,
@@ -26,7 +28,10 @@ import {
 import type {
   Activity,
   ActivityType,
+  PhotoChange,
 } from '../types'
+
+const MAX_PHOTO_MB = 15
 
 type Props = {
   open: boolean
@@ -45,6 +50,7 @@ type Props = {
 
   onSave: (
     activity: Activity,
+    photo: PhotoChange,
   ) => void | Promise<void>
 
   onDelete:
@@ -97,6 +103,49 @@ function ActivityModal({
    * ESTADOS
    * ========================================
    */
+
+  /*
+   * ========================================
+   * FOTO
+   * ========================================
+   */
+
+  const [
+    photoFile,
+    setPhotoFile,
+  ] =
+    useState<File | null>(null)
+
+  const [
+    photoRemoved,
+    setPhotoRemoved,
+  ] =
+    useState(false)
+
+  const newPhotoPreview = useMemo(
+    () =>
+      photoFile
+        ? URL.createObjectURL(photoFile)
+        : null,
+    [photoFile],
+  )
+
+  useEffect(
+    () => () => {
+      if (newPhotoPreview) {
+        URL.revokeObjectURL(
+          newPhotoPreview,
+        )
+      }
+    },
+    [newPhotoPreview],
+  )
+
+  const photoPreview =
+    newPhotoPreview ??
+    (photoRemoved
+      ? null
+      : (activity?.photo_url ?? null))
 
   const [
     saving,
@@ -169,6 +218,8 @@ function ActivityModal({
     setSaving(false)
     setDeleting(false)
     setError(null)
+    setPhotoFile(null)
+    setPhotoRemoved(false)
   }, [
     open,
     activity,
@@ -228,16 +279,29 @@ function ActivityModal({
         true,
       )
 
+      const photo: PhotoChange =
+        photoFile
+          ? {
+              kind: 'replace',
+              file: photoFile,
+            }
+          : photoRemoved
+            ? { kind: 'remove' }
+            : { kind: 'keep' }
+
       try {
-        await onSave({
-          id:
-            activity?.id,
+        await onSave(
+          {
+            id:
+              activity?.id,
 
-          type:
-            selectedType,
+            type:
+              selectedType,
 
-          duration,
-        })
+            duration,
+          },
+          photo,
+        )
 
         /*
          * Si onSave no cierra
@@ -365,7 +429,7 @@ function ActivityModal({
 
             <p className="mt-1 text-sm text-zinc-500">
               {isEditing
-                ? 'Podés cambiar el tipo o la duración.'
+                ? 'Podés cambiar el tipo, la duración o la foto.'
                 : usesWildcard
                   ? `Actividad del ${formattedDate}.`
                   : isPastDay
@@ -649,6 +713,84 @@ function ActivityModal({
               )}
             </div>
           </div>
+        </section>
+
+        {/* ================================= */}
+        {/* FOTO (OPCIONAL) */}
+        {/* ================================= */}
+
+        <section className="mt-5">
+          <p className="mb-2 text-xs font-black tracking-wide text-zinc-400">
+            FOTO (OPCIONAL)
+          </p>
+
+          {photoPreview ? (
+            <div className="relative overflow-hidden rounded-2xl">
+              <img
+                src={photoPreview}
+                alt="Foto de la actividad"
+                className="h-48 w-full object-cover"
+              />
+
+              <button
+                type="button"
+                aria-label="Quitar foto"
+                disabled={
+                  saving || deleting
+                }
+                onClick={() => {
+                  setPhotoFile(null)
+                  setPhotoRemoved(true)
+                }}
+                className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          ) : (
+            <label
+              className={`flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-zinc-200 py-4 text-sm font-bold text-zinc-400 transition hover:border-violet-300 hover:text-violet-500 ${
+                saving || deleting
+                  ? 'pointer-events-none opacity-50'
+                  : ''
+              }`}
+            >
+              <Camera size={18} />
+              Sumar una foto
+
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => {
+                  const file =
+                    event.target.files?.[0]
+
+                  event.target.value = ''
+
+                  if (!file) {
+                    return
+                  }
+
+                  if (
+                    file.size >
+                    MAX_PHOTO_MB *
+                      1024 *
+                      1024
+                  ) {
+                    setError(
+                      `La foto pesa más de ${MAX_PHOTO_MB} MB.`,
+                    )
+
+                    return
+                  }
+
+                  setError(null)
+                  setPhotoFile(file)
+                }}
+              />
+            </label>
+          )}
         </section>
 
         {/* ================================= */}

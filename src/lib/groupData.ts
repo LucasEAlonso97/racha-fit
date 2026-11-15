@@ -4,6 +4,7 @@ import {
 
 import type {
   ActivitiesByDate,
+  ActivityComment,
   ActivityReaction,
   ActivityType,
   ReactionEmoji,
@@ -41,6 +42,14 @@ type ActivityRow = {
   duration: number
   recovered_with_wildcard: boolean
   reactions: ReactionRow[] | null
+
+  /*
+   * Pueden faltar si la base todavía
+   * no tiene la migración de fotos
+   * y comentarios.
+   */
+  photo_url?: string | null
+  comments?: ActivityComment[] | null
 }
 
 const avatarColors = [
@@ -73,6 +82,86 @@ export function getNameFallback(
  * ========================================
  */
 
+const ACTIVITY_COLUMNS = `
+  id,
+  user_id,
+  activity_date,
+  type,
+  duration,
+  recovered_with_wildcard,
+
+  reactions:activity_reactions (
+    user_id,
+    emoji
+  )
+`
+
+const ACTIVITY_COLUMNS_WITH_SOCIAL = `
+  ${ACTIVITY_COLUMNS},
+  photo_url,
+
+  comments:activity_comments (
+    id,
+    user_id,
+    body,
+    created_at
+  )
+`
+
+function fetchActivities(
+  groupId: string,
+  columns: string,
+) {
+  return supabase
+    .from('activities')
+    .select(columns)
+    .eq('group_id', groupId)
+    .order('created_at', {
+      ascending: true,
+    })
+}
+
+/*
+ * Si la base todavía no tiene la columna
+ * photo_url o la tabla activity_comments
+ * (migración sin correr), PostgREST
+ * devuelve 42703 / PGRST200. En ese caso
+ * cargamos sin fotos ni comentarios para
+ * que la app siga andando.
+ */
+function isMissingSocialSchema(
+  error: {
+    code?: string
+  } | null,
+) {
+  return (
+    error?.code === '42703' ||
+    error?.code === 'PGRST200'
+  )
+}
+
+async function fetchActivitiesWithFallback(
+  groupId: string,
+) {
+  const result = await fetchActivities(
+    groupId,
+    ACTIVITY_COLUMNS_WITH_SOCIAL,
+  )
+
+  if (!isMissingSocialSchema(result.error)) {
+    return result
+  }
+
+  console.warn(
+    'Fotos y comentarios no disponibles todavía (falta correr la migración). Cargando sin ellos.',
+  )
+
+  return fetchActivities(
+    groupId,
+    ACTIVITY_COLUMNS,
+  )
+}
+
 export function fetchGroupData(
   groupId: string,
 ) {
@@ -92,25 +181,7 @@ export function fetchGroupData(
       `)
       .eq('group_id', groupId),
 
-    supabase
-      .from('activities')
-      .select(`
-        id,
-        user_id,
-        activity_date,
-        type,
-        duration,
-        recovered_with_wildcard,
-
-        reactions:activity_reactions (
-          user_id,
-          emoji
-        )
-      `)
-      .eq('group_id', groupId)
-      .order('created_at', {
-        ascending: true,
-      }),
+    fetchActivitiesWithFallback(groupId),
   ])
 }
 
@@ -210,6 +281,14 @@ export function mapActivityRows(
       recovered_with_wildcard:
         row.recovered_with_wildcard,
       reactions,
+      photo_url: row.photo_url ?? null,
+      comments: [
+        ...(row.comments ?? []),
+      ].sort((a, b) =>
+        a.created_at.localeCompare(
+          b.created_at,
+        ),
+      ),
     })
   })
 
