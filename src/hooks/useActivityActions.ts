@@ -12,6 +12,10 @@ import {
 } from '../lib/activityState'
 
 import {
+  showToast,
+} from '../lib/feedback'
+
+import {
   supabase,
 } from '../lib/supabase'
 
@@ -121,7 +125,7 @@ export function useActivityActions({
         error,
       )
 
-      window.alert(
+      showToast(
         'No pudimos editar la actividad.',
       )
 
@@ -183,7 +187,7 @@ export function useActivityActions({
         error,
       )
 
-      window.alert(
+      showToast(
         getCreateActivityErrorMessage(
           error?.message,
         ),
@@ -242,7 +246,7 @@ export function useActivityActions({
         error,
       )
 
-      window.alert(
+      showToast(
         'No pudimos eliminar la actividad.',
       )
 
@@ -328,7 +332,7 @@ export function useActivityActions({
           error,
         )
 
-        window.alert(
+        showToast(
           'No pudimos sacar la reacción.',
         )
 
@@ -366,7 +370,7 @@ export function useActivityActions({
         error,
       )
 
-      window.alert(
+      showToast(
         'No pudimos guardar la reacción.',
       )
 

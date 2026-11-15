@@ -11,6 +11,10 @@ import {
 } from 'lucide-react'
 
 import {
+  confirmAction,
+} from '../lib/feedback'
+
+import {
   activityOptions,
 } from '../data/activities'
 
@@ -276,9 +280,12 @@ function ActivityModal({
       }
 
       const confirmed =
-        window.confirm(
-          '¿Querés eliminar esta actividad?',
-        )
+        await confirmAction({
+          title:
+            '¿Eliminar esta actividad?',
+          confirmLabel: 'Eliminar',
+          danger: true,
+        })
 
       if (!confirmed) {
         return

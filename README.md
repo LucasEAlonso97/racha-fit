@@ -10,33 +10,50 @@ Cada integrante tiene su propio avatar, registra su actividad diaria y comparte 
 
 ## ✨ Funcionalidades
 
-- 🔐 Registro e inicio de sesión
-- 👤 Perfiles de usuario
-- 🎨 Avatares personalizados
-- 📸 Subida de avatar propio
-- 👥 Creación de grupos privados
-- 🔗 Código de invitación para unirse a un grupo
-- 🏋️ Registro de actividad física diaria
-- ⏱️ Registro de duración de la actividad
+**Cuenta y perfil**
+
+- 🔐 Registro, inicio de sesión y recuperación de contraseña
+- 👋 Onboarding inicial
+- 🎨 Avatares personalizados y subida de avatar propio
+
+**Grupos**
+
+- 👥 Múltiples grupos por usuario, con selector para cambiar entre ellos
+- 🔗 Invitación por código o por link (`?join=CODIGO`)
+- 🛠️ Gestión del grupo: renombrar, regenerar código, quitar integrantes, abandonar o eliminar
+
+**Actividad**
+
+- 🏋️ Registro de actividad diaria con tipo y duración (se pueden registrar varias por día)
 - ✏️ Edición y eliminación de actividades
+- 🃏 Comodines para recuperar un día de los últimos 7
+- 💬 Reacciones con emoji a la actividad de otros
+
+**Rachas y motivación**
+
 - 📅 Calendario compartido del grupo
-- 🔥 Cálculo de racha actual
-- 🏆 Mejor racha histórica
-- 📊 Ranking semanal
-- 🎯 Meta semanal de actividad
-- 👀 Visualización de la actividad de otros integrantes
+- 🔥 Racha actual y mejor racha histórica, personal y grupal
+- 🎯 Objetivo semanal personal por grupo
+- 📊 Ranking semanal e historial de semanas del grupo
+- 📈 Resumen mensual y anual (días activos, minutos, actividad favorita, mejor racha)
+- 🏅 Logros
+- 🥇 Torneos dentro del grupo
+- 👉 Empujones a quien todavía no se movió
+
+**Notificaciones y app**
+
+- 🔔 Notificaciones sociales dentro de la app
+- 📲 Notificaciones push
+- ⚡ Actualización en tiempo real (Supabase Realtime)
+- 📱 PWA instalable
 
 ---
 
 ## 🏃 Actividades disponibles
 
-Actualmente se pueden registrar:
+Gym, Caminata, Correr, Bicicleta, Calistenia, Tenis, Natación, Funcional, Yoga, Pilates, Fútbol, Pádel, Boxeo, Baile, Escalada, Vóley, Básquet, Handball y Otra.
 
-- 🏋️ Gym
-- 🚶 Caminata
-- 🏃 Correr
-- 🚲 Bicicleta
-- ✨ Otra
+La lista vive en `src/data/activities.ts`.
 
 ---
 
@@ -84,44 +101,21 @@ La intención es generar esa pequeña presión social positiva de entrar y pensa
 
 ## 🗄️ Modelo de datos
 
-La aplicación utiliza las siguientes entidades principales:
+Tablas principales:
 
-### `profiles`
+| Tabla | Para qué |
+|---|---|
+| `profiles` | Datos públicos de cada usuario (`name`, `avatar_url`, `onboarding_completed`) |
+| `groups` | Grupos (`name`, `invite_code`, `created_by`) |
+| `group_members` | Usuario ↔ grupo, con `weekly_goal` y `streak_eligible_from` |
+| `activities` | Actividades (`activity_date`, `type`, `duration`, `recovered_with_wildcard`) |
+| `activity_reactions` | Reacción de un usuario a una actividad (una por usuario) |
+| `wildcard_recoveries` | Días recuperados con comodín |
+| `group_week_history` / `group_week_member_results` | Historial semanal del grupo |
+| `social_notifications` | Notificaciones dentro de la app |
+| `notification_preferences` / `push_subscriptions` | Configuración y suscripciones push |
 
-Información pública de cada usuario.
-
-- `id`
-- `name`
-- `avatar_url`
-
-### `groups`
-
-Grupos de amigos que comparten una Racha.
-
-- `id`
-- `name`
-- `invite_code`
-- `created_by`
-
-### `group_members`
-
-Relaciona usuarios con grupos.
-
-- `group_id`
-- `user_id`
-
-### `activities`
-
-Actividad diaria registrada por cada integrante.
-
-- `id`
-- `user_id`
-- `group_id`
-- `activity_date`
-- `type`
-- `duration`
-
-Cada usuario puede registrar una única actividad por día dentro de un grupo.
+Además, buena parte de la lógica vive en funciones de Postgres que la app llama con `supabase.rpc(...)`: comodines (`get_my_wildcards`), grupos (`join_group_by_code`, `leave_group`, `remove_group_member`, `delete_group`, `regenerate_group_invite_code`), objetivo semanal (`set_my_weekly_goal`), historial (`sync_group_week_history`), empujones (`send_group_nudge`) y torneos (`get_current_tournament`, `choose_tournament_card`, etc.).
 
 ---
 
@@ -220,75 +214,44 @@ VITE_SUPABASE_PUBLISHABLE_KEY
 
 ```text
 src/
-├── components/
-│   ├── ActivityModal.tsx
-│   ├── BottomNavigation.tsx
-│   ├── DayDetailModal.tsx
-│   └── UserAvatar.tsx
-│
-├── data/
-│   └── activities.ts
-│
-├── lib/
-│   └── supabase.ts
-│
-├── pages/
-│   ├── Auth.tsx
-│   ├── Calendar.tsx
-│   ├── GroupSetup.tsx
-│   ├── Home.tsx
-│   ├── Perfil.tsx
-│   └── Rachas.tsx
-│
-├── utils/
-│   ├── activityStats.ts
-│   └── date.ts
-│
-├── App.tsx
-├── RachaApp.tsx
-├── main.tsx
-├── index.css
+├── components/   # Piezas de UI: modales, header del grupo, avisos, resumen, logros…
+├── data/         # Lista de actividades
+├── hooks/        # Lógica con estado: cuenta, datos del grupo, acciones, torneos, comodines…
+├── lib/          # Cliente de Supabase, carga de datos, avisos, push
+├── pages/        # Pantallas: Home, Calendario, Rachas, Torneos, Perfil, Auth…
+├── utils/        # Fechas, rachas y estadísticas
+├── App.tsx       # Sesión y recuperación de contraseña
+├── RachaApp.tsx  # Decide qué pantalla mostrar y conecta los hooks
 └── types.ts
 ```
+
+Avisos y confirmaciones: en lugar de `window.alert` / `confirm` se usan `showToast(...)` y `await confirmAction({...})` de `src/lib/feedback.ts`.
 
 ---
 
 ## 🔥 Estado del proyecto
 
-Racha se encuentra actualmente en etapa MVP.
-
-El flujo principal ya permite:
+Racha está en uso con grupos reales. El flujo principal:
 
 ```text
 Crear cuenta
       ↓
 Crear o unirse a un grupo
       ↓
-Personalizar perfil
-      ↓
 Registrar actividad
       ↓
-Ver calendario compartido
+Ver calendario, rachas, ranking y torneos
       ↓
-Comparar rachas
+Reaccionar y empujar al resto
 ```
 
 ---
 
 ## 🔮 Próximas mejoras
 
-Algunas ideas para futuras versiones:
-
-- ⚡ Actualización en tiempo real
-- 🔔 Notificaciones
-- 💬 Reacciones entre integrantes
-- 📈 Estadísticas mensuales
-- 🏅 Logros y badges
-- 👥 Múltiples grupos por usuario
-- 📱 PWA instalable
-- 🔗 Invitaciones mediante links
-- 🎯 Metas personalizadas
-- 🥇 Desafíos entre amigos
+- 📸 Foto opcional en cada actividad
+- 💬 Comentarios en las actividades
+- 🗃️ Guardar la estructura de la base (migraciones) en el repo
 
 ---
 

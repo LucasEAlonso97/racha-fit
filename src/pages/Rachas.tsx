@@ -20,6 +20,7 @@ import type {
 
 import Achievements from '../components/Achievements'
 import GroupHistoryPanel from '../components/GroupHistoryPanel'
+import PeriodSummary from '../components/PeriodSummary'
 import UserAvatar from '../components/UserAvatar'
 
 type Props = {
@@ -42,6 +43,7 @@ type RachasTab =
   | 'history'
   | 'ranking'
   | 'achievements'
+  | 'summary'
 
 function Rachas({
   groupId,
@@ -146,7 +148,7 @@ function Rachas({
       {/* TABS */}
       {/* ================================= */}
 
-      <div className="mb-5 grid grid-cols-3 rounded-2xl bg-zinc-100 p-1">
+      <div className="mb-5 grid grid-cols-4 rounded-2xl bg-zinc-100 p-1">
         <button
           type="button"
           onClick={() =>
@@ -196,6 +198,23 @@ function Rachas({
           }`}
         >
           Logros
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            setActiveTab(
+              'summary',
+            )
+          }
+          className={`rounded-xl px-2 py-3 text-sm font-black transition ${
+            activeTab ===
+            'summary'
+              ? 'bg-white text-violet-600 shadow-sm'
+              : 'text-zinc-400'
+          }`}
+        >
+          Resumen
         </button>
       </div>
 
@@ -418,6 +437,28 @@ function Rachas({
           }
           currentUserId={
             currentUserId
+          }
+        />
+      )}
+
+      {/* ================================= */}
+      {/* RESUMEN MENSUAL / ANUAL */}
+      {/* ================================= */}
+
+      {activeTab ===
+        'summary' && (
+        <PeriodSummary
+          activities={
+            activities
+          }
+          users={
+            users
+          }
+          currentUserId={
+            currentUserId
+          }
+          today={
+            today
           }
         />
       )}
