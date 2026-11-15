@@ -219,3 +219,30 @@ export function updateActivityById(
 
   return nextActivities
 }
+
+/*
+ * Última actividad registrada por un usuario
+ * antes de una fecha (sin incluirla).
+ */
+export function getLastUserActivity(
+  activities: ActivitiesByDate,
+  userId: string,
+  beforeDateKey: string,
+) {
+  const dateKeys = Object.keys(activities)
+    .filter(
+      (dateKey) =>
+        dateKey < beforeDateKey &&
+        (activities[dateKey][userId]
+          ?.length ?? 0) > 0,
+    )
+    .sort()
+
+  const lastDate = dateKeys.at(-1)
+
+  if (!lastDate) {
+    return null
+  }
+
+  return activities[lastDate][userId].at(-1) ?? null
+}

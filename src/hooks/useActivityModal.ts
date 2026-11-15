@@ -3,6 +3,7 @@ import {
 } from 'react'
 
 import {
+  getLastUserActivity,
   getUserDayActivities,
 } from '../lib/activityState'
 
@@ -88,8 +89,21 @@ export function useActivityModal({
       editingDate,
     )
 
+  /*
+   * Para "lo mismo que la última vez":
+   * la última actividad antes del día
+   * que se está cargando.
+   */
+  const lastActivity =
+    getLastUserActivity(
+      activities,
+      currentUserId,
+      editingDate,
+    )
+
   return {
     isOpen,
+    lastActivity,
     editingDate,
     editingActivityId,
     editingActivity,

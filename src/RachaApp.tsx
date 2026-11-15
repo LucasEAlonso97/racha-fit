@@ -567,6 +567,9 @@ function RachaApp({
           activityModal.usesWildcard
         }
         wildcardBalance={wildcardBalance}
+        lastActivity={
+          activityModal.lastActivity
+        }
         onClose={activityModal.close}
         onSave={saveActivity}
         onDelete={deleteActivity}
