@@ -6,6 +6,20 @@ import './index.css'
 import App from './App'
 import FeedbackHost from './components/FeedbackHost'
 
+/*
+ * Aviso de errores: solo si está
+ * configurado (ver src/lib/monitoring.ts).
+ */
+const sentryDsn =
+  import.meta.env.VITE_SENTRY_DSN
+
+if (sentryDsn) {
+  void import('./lib/monitoring').then(
+    ({ initMonitoring }) =>
+      initMonitoring(sentryDsn),
+  )
+}
+
 createRoot(
   document.getElementById('root')!,
 ).render(

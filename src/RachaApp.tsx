@@ -1,6 +1,7 @@
 import {
   lazy,
   Suspense,
+  useEffect,
   useMemo,
   useState,
 } from 'react'
@@ -125,6 +126,21 @@ function RachaApp({
 
   const currentUserId =
     session.user.id
+
+  /*
+   * Aviso de errores: asociar el id del
+   * usuario (sin nombre ni mail).
+   */
+  useEffect(() => {
+    if (!import.meta.env.VITE_SENTRY_DSN) {
+      return
+    }
+
+    void import('./lib/monitoring').then(
+      ({ setMonitoringUser }) =>
+        setMonitoringUser(currentUserId),
+    )
+  }, [currentUserId])
 
   /*
    * ESTADO
