@@ -326,3 +326,54 @@ export function upsertActivity(
     activity,
   )
 }
+
+export type PhotoItem = {
+  url: string
+  dateKey: string
+  userId: string
+  activity: Activity
+}
+
+/*
+ * Todas las fotos, de la más nueva a la
+ * más vieja. Opcionalmente de un usuario.
+ */
+export function collectPhotos(
+  activities: ActivitiesByDate,
+  userId?: string,
+): PhotoItem[] {
+  const photos: PhotoItem[] = []
+
+  Object.keys(activities)
+    .sort()
+    .reverse()
+    .forEach((dateKey) => {
+      Object.entries(
+        activities[dateKey],
+      ).forEach(
+        ([activityUserId, userActivities]) => {
+          if (
+            userId &&
+            activityUserId !== userId
+          ) {
+            return
+          }
+
+          ;[...userActivities]
+            .reverse()
+            .forEach((activity) => {
+              if (activity.photo_url) {
+                photos.push({
+                  url: activity.photo_url,
+                  dateKey,
+                  userId: activityUserId,
+                  activity,
+                })
+              }
+            })
+        },
+      )
+    })
+
+  return photos
+}

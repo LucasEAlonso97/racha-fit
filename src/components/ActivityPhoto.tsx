@@ -9,6 +9,18 @@ import {
 type Props = {
   url: string
   alt: string
+
+  /*
+   * 'wide': foto ancha dentro de una tarjeta.
+   * 'square': miniatura cuadrada para grillas.
+   */
+  variant?: 'wide' | 'square'
+
+  /*
+   * Texto opcional debajo de la foto
+   * ampliada (quién, qué, cuándo).
+   */
+  caption?: string
 }
 
 /*
@@ -23,6 +35,8 @@ type Props = {
 function ActivityPhoto({
   url,
   alt,
+  variant = 'wide',
+  caption,
 }: Props) {
   const [expanded, setExpanded] =
     useState(false)
@@ -32,19 +46,27 @@ function ActivityPhoto({
       <button
         type="button"
         onClick={() => setExpanded(true)}
-        className="mt-3 block w-full overflow-hidden rounded-2xl"
+        className={
+          variant === 'square'
+            ? 'block aspect-square w-full overflow-hidden rounded-xl bg-zinc-100'
+            : 'mt-3 block w-full overflow-hidden rounded-2xl'
+        }
       >
         <img
           src={url}
           alt={alt}
           loading="lazy"
-          className="max-h-64 w-full object-cover"
+          className={
+            variant === 'square'
+              ? 'h-full w-full object-cover'
+              : 'max-h-64 w-full object-cover'
+          }
         />
       </button>
 
       {expanded && (
         <div
-          className="fixed inset-0 z-[85] flex items-center justify-center bg-black/90 p-4"
+          className="fixed inset-0 z-[95] flex flex-col items-center justify-center gap-3 bg-black/90 p-4"
           onClick={() =>
             setExpanded(false)
           }
@@ -60,8 +82,14 @@ function ActivityPhoto({
           <img
             src={url}
             alt={alt}
-            className="max-h-full max-w-full rounded-2xl object-contain"
+            className="max-h-[85%] max-w-full rounded-2xl object-contain"
           />
+
+          {caption && (
+            <p className="text-center text-sm font-bold text-white/80">
+              {caption}
+            </p>
+          )}
         </div>
       )}
     </>

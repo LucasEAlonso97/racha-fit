@@ -13,6 +13,7 @@ import ActivityModal from './components/ActivityModal'
 import BottomNavigation from './components/BottomNavigation'
 import DayDetailModal from './components/DayDetailModal'
 import GroupHeader from './components/GroupHeader'
+import SocialPanelsHost from './components/SocialPanelsHost'
 import {
   ErrorScreen,
   LoadingScreen,
@@ -77,6 +78,10 @@ import {
 import {
   useWildcards,
 } from './hooks/useWildcards'
+
+import {
+  closeSocialPanel,
+} from './lib/socialPanels'
 
 import {
   formatDateKey,
@@ -220,6 +225,7 @@ function RachaApp({
 
     setSelectedDate(null)
     activityModal.close()
+    closeSocialPanel()
     groupData.setError(null)
     groupData.clear()
     account.activateGroup(group)
@@ -573,6 +579,14 @@ function RachaApp({
         onClose={activityModal.close}
         onSave={saveActivity}
         onDelete={deleteActivity}
+      />
+
+      <SocialPanelsHost
+        groupName={activeGroup.name}
+        activities={activities}
+        users={users}
+        currentUserId={currentUserId}
+        today={today}
       />
     </main>
   )

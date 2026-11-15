@@ -6,7 +6,7 @@ import {
   Bell,
   ChevronDown,
   ChevronUp,
-  History,
+  Images,
   LoaderCircle,
   RotateCcw,
   Trophy,
@@ -16,6 +16,11 @@ import ActivityPhoto from '../components/ActivityPhoto'
 import GroupStreakCard from '../components/GroupStreakCard'
 import ReactionBar from '../components/ReactionBar'
 import UserAvatar from '../components/UserAvatar'
+
+import {
+  openGroupGallery,
+  openMemberProfile,
+} from '../lib/socialPanels'
 
 import {
   getActivityEmoji,
@@ -1074,13 +1079,20 @@ streakEligibleFrom:
             </h2>
           </div>
 
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
-            <History
+          <button
+            type="button"
+            onClick={
+              openGroupGallery
+            }
+            className="flex items-center gap-2 rounded-2xl bg-violet-50 px-3 py-2.5 text-xs font-black text-violet-600 transition active:scale-95"
+          >
+            <Images
               size={
-                20
+                18
               }
             />
-          </div>
+            Fotos
+          </button>
         </div>
 
         {recentActivities.length >
@@ -1111,12 +1123,23 @@ streakEligibleFrom:
                     className="rounded-[22px] bg-zinc-50 p-4"
                   >
                     <div className="flex items-start gap-3">
-                      <UserAvatar
-                        user={
-                          user
+                      <button
+                        type="button"
+                        aria-label={`Ver perfil de ${user.name}`}
+                        onClick={() =>
+                          openMemberProfile(
+                            user.id,
+                          )
                         }
-                        size="md"
-                      />
+                        className="shrink-0 transition active:scale-95"
+                      >
+                        <UserAvatar
+                          user={
+                            user
+                          }
+                          size="md"
+                        />
+                      </button>
 
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
