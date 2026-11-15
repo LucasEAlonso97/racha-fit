@@ -31,13 +31,31 @@ export type ActivityReaction = {
   emoji: ReactionEmoji
 }
 
+export type ActivityComment = {
+  id: string
+  user_id: string
+  body: string
+  created_at: string
+}
+
 export type Activity = {
   id?: string
   type: ActivityType
   duration: number
   reactions?: ActivityReaction[]
   recovered_with_wildcard?: boolean
+  photo_url?: string | null
+  comments?: ActivityComment[]
 }
+
+/*
+ * Qué hacer con la foto al guardar
+ * una actividad.
+ */
+export type PhotoChange =
+  | { kind: 'keep' }
+  | { kind: 'remove' }
+  | { kind: 'replace'; file: File }
 
 export type User = {
   id: string

@@ -12,6 +12,7 @@ import {
   Trophy,
 } from 'lucide-react'
 
+import ActivityPhoto from '../components/ActivityPhoto'
 import GroupStreakCard from '../components/GroupStreakCard'
 import ReactionBar from '../components/ReactionBar'
 import UserAvatar from '../components/UserAvatar'
@@ -1178,6 +1179,15 @@ streakEligibleFrom:
                       </button>
                     </div>
 
+                    {activity.photo_url && (
+                      <ActivityPhoto
+                        url={
+                          activity.photo_url
+                        }
+                        alt={`${activity.type} de ${user.name}`}
+                      />
+                    )}
+
                     {activity.id && (
                       <div className="mt-1">
                         <ReactionBar
@@ -1198,6 +1208,31 @@ streakEligibleFrom:
                           }
                         />
                       </div>
+                    )}
+
+                    {(activity.comments
+                      ?.length ?? 0) >
+                      0 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onSelectDate(
+                            dateKey,
+                          )
+                        }
+                        className="mt-2 text-xs font-bold text-zinc-400 hover:text-violet-500"
+                      >
+                        💬{' '}
+                        {
+                          activity
+                            .comments!
+                            .length
+                        }{' '}
+                        {activity.comments!
+                          .length === 1
+                          ? 'comentario'
+                          : 'comentarios'}
+                      </button>
                     )}
                   </article>
                 )

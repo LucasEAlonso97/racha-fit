@@ -4,11 +4,18 @@ import type {
 } from 'react'
 
 import {
+  deleteActivityPhoto,
+  uploadActivityPhoto,
+} from '../lib/activityPhotos'
+
+import {
   addActivity,
   findActivityById,
+  getUserDayActivities,
   removeActivity,
   replaceActivity,
   setActivityReactions,
+  updateActivityById,
 } from '../lib/activityState'
 
 import {
@@ -22,11 +29,15 @@ import {
 import type {
   ActivitiesByDate,
   Activity,
+  ActivityComment,
   ActivityReaction,
   ActivityType,
   Group,
+  PhotoChange,
   ReactionEmoji,
 } from '../types'
+
+const MAX_COMMENT_LENGTH = 280
 
 type Options = {
   activeGroup: Group | null
@@ -92,6 +103,43 @@ export function useActivityActions({
   refreshWildcards,
 }: Options) {
   /*
+   * FOTO
+   *
+   * Sube la foto nueva (si hay) y devuelve
+   * la URL final, o undefined si falló.
+   */
+
+  const resolvePhotoUrl = async (
+    photo: PhotoChange,
+    currentUrl: string | null,
+  ) => {
+    if (photo.kind === 'keep') {
+      return currentUrl
+    }
+
+    if (photo.kind === 'remove') {
+      return null
+    }
+
+    const url =
+      await uploadActivityPhoto(
+        photo.file,
+        activeGroup!.id,
+        currentUserId,
+      )
+
+    if (!url) {
+      showToast(
+        'No pudimos subir la foto.',
+      )
+
+      return undefined
+    }
+
+    return url
+  }
+
+  /*
    * EDITAR
    */
 
@@ -99,17 +147,50 @@ export function useActivityActions({
     dateKey: string,
     activityId: string,
     activity: Activity,
+    photo: PhotoChange = {
+      kind: 'keep',
+    },
   ) => {
     if (!activeGroup) {
       return false
     }
 
+    const previousPhotoUrl =
+      getUserDayActivities(
+        activities,
+        dateKey,
+        currentUserId,
+      ).find(
+        (current) =>
+          current.id === activityId,
+      )?.photo_url ?? null
+
+    const photoUrl =
+      await resolvePhotoUrl(
+        photo,
+        previousPhotoUrl,
+      )
+
+    if (photoUrl === undefined) {
+      return false
+    }
+
+    /*
+     * photo_url solo se manda si cambió,
+     * así editar sin tocar la foto anda
+     * aunque la migración no esté.
+     */
     const { data, error } =
       await supabase
         .from('activities')
         .update({
           type: activity.type,
           duration: activity.duration,
+          ...(photo.kind === 'keep'
+            ? {}
+            : {
+                photo_url: photoUrl,
+              }),
         })
         .eq('id', activityId)
         .eq('user_id', currentUserId)
@@ -124,6 +205,10 @@ export function useActivityActions({
         'Error editando actividad:',
         error,
       )
+
+      if (photo.kind === 'replace') {
+        void deleteActivityPhoto(photoUrl)
+      }
 
       showToast(
         'No pudimos editar la actividad.',
@@ -144,9 +229,19 @@ export function useActivityActions({
           duration: data.duration,
           recovered_with_wildcard:
             data.recovered_with_wildcard,
+          photo_url: photoUrl,
         },
       ),
     )
+
+    if (
+      photo.kind !== 'keep' &&
+      previousPhotoUrl
+    ) {
+      void deleteActivityPhoto(
+        previousPhotoUrl,
+      )
+    }
 
     return true
   }
@@ -161,8 +256,18 @@ export function useActivityActions({
   const createActivity = async (
     dateKey: string,
     activity: Activity,
+    photo: PhotoChange = {
+      kind: 'keep',
+    },
   ) => {
     if (!activeGroup) {
+      return false
+    }
+
+    const photoUrl =
+      await resolvePhotoUrl(photo, null)
+
+    if (photoUrl === undefined) {
       return false
     }
 
@@ -175,6 +280,11 @@ export function useActivityActions({
           activity_date: dateKey,
           type: activity.type,
           duration: activity.duration,
+          ...(photoUrl
+            ? {
+                photo_url: photoUrl,
+              }
+            : {}),
         })
         .select(
           'id, type, duration, recovered_with_wildcard',
@@ -186,6 +296,8 @@ export function useActivityActions({
         'Error guardando actividad:',
         error,
       )
+
+      void deleteActivityPhoto(photoUrl)
 
       showToast(
         getCreateActivityErrorMessage(
@@ -203,6 +315,8 @@ export function useActivityActions({
       recovered_with_wildcard:
         data.recovered_with_wildcard,
       reactions: [],
+      photo_url: photoUrl,
+      comments: [],
     }
 
     setActivities((currentActivities) =>
@@ -233,6 +347,12 @@ export function useActivityActions({
       return false
     }
 
+    const photoUrl =
+      findActivityById(
+        activities,
+        activityId,
+      )?.photo_url
+
     const { error } = await supabase
       .from('activities')
       .delete()
@@ -262,7 +382,111 @@ export function useActivityActions({
       ),
     )
 
+    void deleteActivityPhoto(photoUrl)
+
     return true
+  }
+
+  /*
+   * COMENTAR
+   */
+
+  const addComment = async (
+    activityId: string,
+    body: string,
+  ) => {
+    const text = body.trim()
+
+    if (
+      !text ||
+      text.length > MAX_COMMENT_LENGTH
+    ) {
+      return false
+    }
+
+    const { data, error } = await supabase
+      .from('activity_comments')
+      .insert({
+        activity_id: activityId,
+        user_id: currentUserId,
+        body: text,
+      })
+      .select(
+        'id, user_id, body, created_at',
+      )
+      .single()
+
+    if (error || !data) {
+      console.error(
+        'Error guardando comentario:',
+        error,
+      )
+
+      showToast(
+        'No pudimos guardar el comentario.',
+      )
+
+      return false
+    }
+
+    const comment =
+      data as ActivityComment
+
+    setActivities((currentActivities) =>
+      updateActivityById(
+        currentActivities,
+        activityId,
+        (activity) => ({
+          ...activity,
+          comments: [
+            ...(activity.comments ?? []),
+            comment,
+          ],
+        }),
+      ),
+    )
+
+    return true
+  }
+
+  const deleteComment = async (
+    activityId: string,
+    commentId: string,
+  ) => {
+    const { error } = await supabase
+      .from('activity_comments')
+      .delete()
+      .eq('id', commentId)
+      .eq('user_id', currentUserId)
+
+    if (error) {
+      console.error(
+        'Error borrando comentario:',
+        error,
+      )
+
+      showToast(
+        'No pudimos borrar el comentario.',
+      )
+
+      return
+    }
+
+    setActivities((currentActivities) =>
+      updateActivityById(
+        currentActivities,
+        activityId,
+        (activity) => ({
+          ...activity,
+          comments: (
+            activity.comments ?? []
+          ).filter(
+            (comment) =>
+              comment.id !== commentId,
+          ),
+        }),
+      ),
+    )
   }
 
   /*
@@ -391,5 +615,7 @@ export function useActivityActions({
     updateActivity,
     deleteActivity,
     reactToActivity,
+    addComment,
+    deleteComment,
   }
 }

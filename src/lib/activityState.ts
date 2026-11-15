@@ -177,6 +177,25 @@ export function setActivityReactions(
   activityId: string,
   reactions: ActivityReaction[],
 ): ActivitiesByDate {
+  return updateActivityById(
+    activities,
+    activityId,
+    (activity) => ({
+      ...activity,
+      reactions,
+    }),
+  )
+}
+
+/*
+ * Aplica cambios a una actividad buscándola
+ * por id (sin saber fecha ni usuario).
+ */
+export function updateActivityById(
+  activities: ActivitiesByDate,
+  activityId: string,
+  update: (activity: Activity) => Activity,
+): ActivitiesByDate {
   const nextActivities: ActivitiesByDate =
     {}
 
@@ -190,10 +209,7 @@ export function setActivityReactions(
             userActivities.map(
               (activity) =>
                 activity.id === activityId
-                  ? {
-                      ...activity,
-                      reactions,
-                    }
+                  ? update(activity)
                   : activity,
             )
         },

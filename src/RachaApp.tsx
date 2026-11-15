@@ -64,6 +64,7 @@ import {
 import type {
   Activity,
   Group,
+  PhotoChange,
   View,
 } from './types'
 
@@ -224,6 +225,7 @@ function RachaApp({
 
   const saveActivity = async (
     activity: Activity,
+    photo: PhotoChange,
   ) => {
     const {
       editingDate,
@@ -235,10 +237,12 @@ function RachaApp({
           editingDate,
           editingActivityId,
           activity,
+          photo,
         )
       : await activityActions.createActivity(
           editingDate,
           activity,
+          photo,
         )
 
     if (saved) {
@@ -494,6 +498,12 @@ function RachaApp({
         }
         onReactActivity={
           activityActions.reactToActivity
+        }
+        onAddComment={
+          activityActions.addComment
+        }
+        onDeleteComment={
+          activityActions.deleteComment
         }
       />
 

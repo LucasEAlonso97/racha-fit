@@ -20,6 +20,8 @@ import type {
   User,
 } from '../types'
 
+import ActivityPhoto from './ActivityPhoto'
+import CommentThread from './CommentThread'
 import ReactionBar from './ReactionBar'
 import UserAvatar from './UserAvatar'
 
@@ -49,6 +51,16 @@ type Props = {
     activityId: string,
     emoji: ReactionEmoji,
   ) => void | Promise<void>
+
+  onAddComment: (
+    activityId: string,
+    body: string,
+  ) => Promise<boolean>
+
+  onDeleteComment: (
+    activityId: string,
+    commentId: string,
+  ) => void | Promise<void>
 }
 
 function DayDetailModal({
@@ -62,6 +74,8 @@ function DayDetailModal({
   onClose,
   onEditActivity,
   onReactActivity,
+  onAddComment,
+  onDeleteComment,
 }: Props) {
   if (!dateKey) {
     return null
@@ -456,6 +470,17 @@ function DayDetailModal({
                                   )}
                               </div>
 
+                              {/* FOTO */}
+
+                              {activity.photo_url && (
+                                <ActivityPhoto
+                                  url={
+                                    activity.photo_url
+                                  }
+                                  alt={`${activity.type} de ${user.name}`}
+                                />
+                              )}
+
                               {/* REACCIONES */}
 
                               {activity.id && (
@@ -473,6 +498,35 @@ function DayDetailModal({
                                     onReactActivity(
                                       activity.id!,
                                       emoji,
+                                    )
+                                  }
+                                />
+                              )}
+
+                              {/* COMENTARIOS */}
+
+                              {activity.id && (
+                                <CommentThread
+                                  comments={
+                                    activity.comments ??
+                                    []
+                                  }
+                                  users={users}
+                                  currentUserId={
+                                    currentUserId
+                                  }
+                                  onAdd={(body) =>
+                                    onAddComment(
+                                      activity.id!,
+                                      body,
+                                    )
+                                  }
+                                  onDelete={(
+                                    commentId,
+                                  ) =>
+                                    onDeleteComment(
+                                      activity.id!,
+                                      commentId,
                                     )
                                   }
                                 />
