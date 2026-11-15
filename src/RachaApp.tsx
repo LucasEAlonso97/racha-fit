@@ -1,4 +1,7 @@
 import {
+  lazy,
+  Suspense,
+  useEffect,
   useMemo,
   useState,
 } from 'react'
@@ -11,19 +14,40 @@ import ActivityModal from './components/ActivityModal'
 import BottomNavigation from './components/BottomNavigation'
 import DayDetailModal from './components/DayDetailModal'
 import GroupHeader from './components/GroupHeader'
+import SocialPanelsHost from './components/SocialPanelsHost'
+import WhatsNewModal from './components/WhatsNewModal'
 import {
   ErrorScreen,
   LoadingScreen,
 } from './components/StatusScreen'
 
-import Calendar from './pages/Calendar'
-import GroupSetup from './pages/GroupSetup'
 import Home from './pages/Home'
-import InviteJoin from './pages/InviteJoin'
-import Onboarding from './pages/Onboarding'
-import Perfil from './pages/Perfil'
-import Rachas from './pages/Rachas'
-import Torneos from './pages/Torneos'
+
+/*
+ * Pantallas que no se ven al abrir la app:
+ * se descargan recién cuando hacen falta.
+ */
+const Calendar = lazy(
+  () => import('./pages/Calendar'),
+)
+const GroupSetup = lazy(
+  () => import('./pages/GroupSetup'),
+)
+const InviteJoin = lazy(
+  () => import('./pages/InviteJoin'),
+)
+const Onboarding = lazy(
+  () => import('./pages/Onboarding'),
+)
+const Perfil = lazy(
+  () => import('./pages/Perfil'),
+)
+const Rachas = lazy(
+  () => import('./pages/Rachas'),
+)
+const Torneos = lazy(
+  () => import('./pages/Torneos'),
+)
 
 import {
   useAccount,
@@ -56,6 +80,15 @@ import {
 import {
   useWildcards,
 } from './hooks/useWildcards'
+
+import {
+  closeSocialPanel,
+} from './lib/socialPanels'
+
+import {
+  markWhatsNewSeen,
+  shouldShowWhatsNew,
+} from './lib/whatsNew'
 
 import {
   formatDateKey,
@@ -99,6 +132,21 @@ function RachaApp({
 
   const currentUserId =
     session.user.id
+
+  /*
+   * Aviso de errores: asociar el id del
+   * usuario (sin nombre ni mail).
+   */
+  useEffect(() => {
+    if (!import.meta.env.VITE_SENTRY_DSN) {
+      return
+    }
+
+    void import('./lib/monitoring').then(
+      ({ setMonitoringUser }) =>
+        setMonitoringUser(currentUserId),
+    )
+  }, [currentUserId])
 
   /*
    * ESTADO
@@ -145,6 +193,14 @@ function RachaApp({
 
   const [view, setView] =
     useState<View>('home')
+
+  const [showWhatsNew, setShowWhatsNew] =
+    useState(shouldShowWhatsNew)
+
+  const closeWhatsNew = () => {
+    markWhatsNewSeen()
+    setShowWhatsNew(false)
+  }
 
   const [selectedDate, setSelectedDate] =
     useState<string | null>(null)
@@ -199,6 +255,7 @@ function RachaApp({
 
     setSelectedDate(null)
     activityModal.close()
+    closeSocialPanel()
     groupData.setError(null)
     groupData.clear()
     account.activateGroup(group)
@@ -299,11 +356,24 @@ function RachaApp({
 
   if (!profile.onboarding_completed) {
     return (
-      <Onboarding
-        onComplete={
-          profileActions.completeOnboarding
+      <Suspense
+        fallback={
+          <LoadingScreen message="Cargando..." />
         }
-      />
+      >
+        <Onboarding
+          onComplete={async () => {
+            /*
+             * Quien recién empieza no
+             * necesita ver "novedades".
+             */
+            markWhatsNewSeen()
+            setShowWhatsNew(false)
+
+            await profileActions.completeOnboarding()
+          }}
+        />
+      </Suspense>
     )
   }
 
@@ -316,28 +386,40 @@ function RachaApp({
       ) ?? null
 
     return (
-      <InviteJoin
-        inviteCode={invite.code}
-        existingGroup={
-          existingInvitedGroup
+      <Suspense
+        fallback={
+          <LoadingScreen message="Cargando..." />
         }
-        onReady={(group) => {
-          account.addOrUpdateGroup(group)
-          invite.clear()
-        }}
-        onCancel={invite.clear}
-      />
+      >
+        <InviteJoin
+          inviteCode={invite.code}
+          existingGroup={
+            existingInvitedGroup
+          }
+          onReady={(group) => {
+            account.addOrUpdateGroup(group)
+            invite.clear()
+          }}
+          onCancel={invite.clear}
+        />
+      </Suspense>
     )
   }
 
   if (!activeGroup) {
     return (
-      <GroupSetup
-        userId={currentUserId}
-        userName={profile.name}
-        onReady={account.addOrUpdateGroup}
-        onLogout={profileActions.logout}
-      />
+      <Suspense
+        fallback={
+          <LoadingScreen message="Cargando..." />
+        }
+      >
+        <GroupSetup
+          userId={currentUserId}
+          userName={profile.name}
+          onReady={account.addOrUpdateGroup}
+          onLogout={profileActions.logout}
+        />
+      </Suspense>
     )
   }
 
@@ -406,71 +488,79 @@ function RachaApp({
         />
       )}
 
-      {view === 'calendar' && (
-        <Calendar
-          activities={activities}
-          users={users}
-          currentUserId={currentUserId}
-          today={today}
-          onSelectDate={setSelectedDate}
-          onBack={() => setView('home')}
-        />
-      )}
-
-      {view === 'rachas' && (
-        <Rachas
-          groupId={activeGroup.id}
-          activities={activities}
-          users={users}
-          currentUserId={currentUserId}
-          today={today}
-        />
-      )}
-
-      {view === 'tournaments' && (
-        <Torneos
-          group={activeGroup}
-          users={users}
-          currentUserId={currentUserId}
-        />
-      )}
-
-      {view === 'profile' &&
-        currentUser && (
-          <Perfil
-            currentUser={currentUser}
-            profile={profile}
-            email={
-              session.user.email ?? ''
-            }
-            group={activeGroup}
-            members={users}
-            memberCount={users.length}
-            wildcardBalance={
-              wildcardBalance
-            }
+      <Suspense
+        fallback={
+          <p className="mt-10 text-center font-bold text-violet-400">
+            Cargando...
+          </p>
+        }
+      >
+        {view === 'calendar' && (
+          <Calendar
             activities={activities}
-            onSaveWeeklyGoal={
-              profileActions.updateWeeklyGoal
-            }
-            onLogout={
-              profileActions.logout
-            }
-            onSaveProfile={
-              profileActions.saveProfile
-            }
-            onGroupReady={
-              account.addOrUpdateGroup
-            }
-            onGroupUpdated={
-              account.updateGroup
-            }
-            onLeftGroup={handleLeftGroup}
-            onMemberRemoved={
-              groupData.removeMember
-            }
+            users={users}
+            currentUserId={currentUserId}
+            today={today}
+            onSelectDate={setSelectedDate}
+            onBack={() => setView('home')}
           />
         )}
+
+        {view === 'rachas' && (
+          <Rachas
+            groupId={activeGroup.id}
+            activities={activities}
+            users={users}
+            currentUserId={currentUserId}
+            today={today}
+          />
+        )}
+
+        {view === 'tournaments' && (
+          <Torneos
+            group={activeGroup}
+            users={users}
+            currentUserId={currentUserId}
+          />
+        )}
+
+        {view === 'profile' &&
+          currentUser && (
+            <Perfil
+              currentUser={currentUser}
+              profile={profile}
+              email={
+                session.user.email ?? ''
+              }
+              group={activeGroup}
+              members={users}
+              memberCount={users.length}
+              wildcardBalance={
+                wildcardBalance
+              }
+              activities={activities}
+              onSaveWeeklyGoal={
+                profileActions.updateWeeklyGoal
+              }
+              onLogout={
+                profileActions.logout
+              }
+              onSaveProfile={
+                profileActions.saveProfile
+              }
+              onGroupReady={
+                account.addOrUpdateGroup
+              }
+              onGroupUpdated={
+                account.updateGroup
+              }
+              onLeftGroup={handleLeftGroup}
+              onMemberRemoved={
+                groupData.removeMember
+              }
+            />
+          )}
+      </Suspense>
 
       <BottomNavigation
         view={view}
@@ -520,9 +610,26 @@ function RachaApp({
           activityModal.usesWildcard
         }
         wildcardBalance={wildcardBalance}
+        lastActivity={
+          activityModal.lastActivity
+        }
         onClose={activityModal.close}
         onSave={saveActivity}
         onDelete={deleteActivity}
+      />
+
+      {showWhatsNew && (
+        <WhatsNewModal
+          onClose={closeWhatsNew}
+        />
+      )}
+
+      <SocialPanelsHost
+        groupName={activeGroup.name}
+        activities={activities}
+        users={users}
+        currentUserId={currentUserId}
+        today={today}
       />
     </main>
   )

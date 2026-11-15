@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useEffect,
   useState,
 } from 'react'
@@ -11,8 +13,12 @@ import {
   supabase,
 } from './lib/supabase'
 
-import Auth from './pages/Auth'
-import ResetPassword from './pages/ResetPassword'
+const Auth = lazy(
+  () => import('./pages/Auth'),
+)
+const ResetPassword = lazy(
+  () => import('./pages/ResetPassword'),
+)
 import RachaApp from './RachaApp'
 
 function App() {
@@ -148,13 +154,15 @@ function App() {
     passwordRecovery
   ) {
     return (
-      <ResetPassword
-        onComplete={() =>
-          setPasswordRecovery(
-            false,
-          )
-        }
-      />
+      <Suspense fallback={null}>
+        <ResetPassword
+          onComplete={() =>
+            setPasswordRecovery(
+              false,
+            )
+          }
+        />
+      </Suspense>
     )
   }
 
@@ -163,7 +171,11 @@ function App() {
    */
 
   if (!session) {
-    return <Auth />
+    return (
+      <Suspense fallback={null}>
+        <Auth />
+      </Suspense>
+    )
   }
 
   /*

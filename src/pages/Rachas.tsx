@@ -23,6 +23,10 @@ import GroupHistoryPanel from '../components/GroupHistoryPanel'
 import PeriodSummary from '../components/PeriodSummary'
 import UserAvatar from '../components/UserAvatar'
 
+import {
+  openMemberProfile,
+} from '../lib/socialPanels'
+
 type Props = {
   groupId: string
 
@@ -299,12 +303,23 @@ function Rachas({
                           `${index + 1}.`}
                       </div>
 
-                      <UserAvatar
-                        user={
-                          item.user
+                      <button
+                        type="button"
+                        aria-label={`Ver perfil de ${item.user.name}`}
+                        onClick={() =>
+                          openMemberProfile(
+                            item.user.id,
+                          )
                         }
-                        size="md"
-                      />
+                        className="shrink-0 transition active:scale-95"
+                      >
+                        <UserAvatar
+                          user={
+                            item.user
+                          }
+                          size="md"
+                        />
+                      </button>
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
@@ -375,12 +390,23 @@ function Rachas({
                     }
                     className="flex items-center gap-4"
                   >
-                    <UserAvatar
-                      user={
-                        item.user
+                    <button
+                      type="button"
+                      aria-label={`Ver perfil de ${item.user.name}`}
+                      onClick={() =>
+                        openMemberProfile(
+                          item.user.id,
+                        )
                       }
-                      size="lg"
-                    />
+                      className="shrink-0 transition active:scale-95"
+                    >
+                      <UserAvatar
+                        user={
+                          item.user
+                        }
+                        size="lg"
+                      />
+                    </button>
 
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-black text-zinc-800">

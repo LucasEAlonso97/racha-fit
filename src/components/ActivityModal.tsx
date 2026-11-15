@@ -7,6 +7,7 @@ import {
 import {
   Camera,
   Clock,
+  Repeat2,
   LoaderCircle,
   Trash2,
   X,
@@ -55,6 +56,12 @@ type Props = {
 
   onDelete:
     () => void | Promise<void>
+
+  /*
+   * Última actividad propia, para
+   * repetirla con un toque.
+   */
+  lastActivity?: Activity | null
 }
 
 function ActivityModal({
@@ -67,6 +74,7 @@ function ActivityModal({
   onClose,
   onSave,
   onDelete,
+  lastActivity = null,
 }: Props) {
   /*
    * ========================================
@@ -250,13 +258,16 @@ function ActivityModal({
    */
 
   const handleSave =
-    async () => {
+    async (
+      type: ActivityType = selectedType,
+      minutes: number = duration,
+    ) => {
       setError(
         null,
       )
 
       if (
-        duration <= 0
+        minutes <= 0
       ) {
         setError(
           'La duración tiene que ser mayor a 0 minutos.',
@@ -266,7 +277,7 @@ function ActivityModal({
       }
 
       if (
-        duration > 1440
+        minutes > 1440
       ) {
         setError(
           'Che, más de 24 horas ya es medio sospechoso jajaj.',
@@ -295,10 +306,9 @@ function ActivityModal({
             id:
               activity?.id,
 
-            type:
-              selectedType,
+            type,
 
-            duration,
+            duration: minutes,
           },
           photo,
         )
@@ -497,6 +507,51 @@ function ActivityModal({
             </div>
           </section>
         )}
+
+        {/* ================================= */}
+        {/* REPETIR LA ÚLTIMA */}
+        {/* ================================= */}
+
+        {!isEditing &&
+          lastActivity && (
+            <button
+              type="button"
+              disabled={
+                saving || deleting
+              }
+              onClick={() =>
+                void handleSave(
+                  lastActivity.type,
+                  lastActivity.duration,
+                )
+              }
+              className="mb-5 flex w-full items-center gap-3 rounded-[24px] bg-violet-50 p-4 text-left transition active:scale-[0.98] disabled:opacity-50"
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-xl">
+                {activityOptions.find(
+                  (option) =>
+                    option.name ===
+                    lastActivity.type,
+                )?.emoji ?? '✨'}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="font-black text-violet-700">
+                  Lo mismo que la última vez
+                </p>
+
+                <p className="text-sm text-violet-500">
+                  {lastActivity.type} ·{' '}
+                  {lastActivity.duration} min
+                </p>
+              </div>
+
+              <Repeat2
+                size={20}
+                className="shrink-0 text-violet-400"
+              />
+            </button>
+          )}
 
         {/* ================================= */}
         {/* ACTIVIDAD */}
@@ -809,8 +864,8 @@ function ActivityModal({
 
         <button
           type="button"
-          onClick={
-            handleSave
+          onClick={() =>
+            void handleSave()
           }
           disabled={
             saving ||

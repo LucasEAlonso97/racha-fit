@@ -25,10 +25,12 @@ Cada integrante tiene su propio avatar, registra su actividad diaria y comparte 
 **Actividad**
 
 - 🏋️ Registro de actividad diaria con tipo y duración (se pueden registrar varias por día)
+- 🔁 "Lo mismo que la última vez" para repetir con un toque
 - ✏️ Edición y eliminación de actividades
 - 🃏 Comodines para recuperar un día de los últimos 7
 - 💬 Reacciones con emoji y comentarios en la actividad de otros
-- 📸 Foto opcional en cada actividad
+- 📸 Foto opcional en cada actividad y galería del grupo
+- 👤 Perfil de cada integrante (tocando su avatar)
 
 **Rachas y motivación**
 
@@ -43,7 +45,7 @@ Cada integrante tiene su propio avatar, registra su actividad diaria y comparte 
 
 **Notificaciones y app**
 
-- 🔔 Notificaciones sociales dentro de la app
+- 🔔 Notificaciones sociales dentro de la app (reacciones, comentarios, empujones)
 - 📲 Notificaciones push
 - ⚡ Actualización en tiempo real (Supabase Realtime)
 - 📱 PWA instalable
@@ -168,6 +170,9 @@ con las siguientes variables:
 ```env
 VITE_SUPABASE_URL=tu_supabase_url
 VITE_SUPABASE_PUBLISHABLE_KEY=tu_supabase_publishable_key
+
+# Opcional: aviso de errores con Sentry
+VITE_SENTRY_DSN=tu_dsn_de_sentry
 ```
 
 Iniciar el entorno de desarrollo:
@@ -210,7 +215,10 @@ Las variables de entorno también deben configurarse dentro de Netlify:
 ```env
 VITE_SUPABASE_URL
 VITE_SUPABASE_PUBLISHABLE_KEY
+VITE_SENTRY_DSN   # opcional
 ```
+
+Cada pull request pasa por un chequeo automático en GitHub (compila y corre el lint). Ver `.github/workflows/ci.yml`.
 
 ---
 
@@ -251,9 +259,17 @@ Reaccionar y empujar al resto
 
 ---
 
+## 🗃️ Cambios de base de datos
+
+Los cambios nuevos están en `supabase/migrations/`, numerados por fecha. Se corren en orden en Supabase → SQL Editor. Cada versión indica en el `CHANGELOG.md` cuáles hay que correr.
+
+---
+
 ## 🔮 Próximas mejoras
 
 - 🗃️ Guardar la estructura completa de la base en `supabase/migrations`
+- 📤 Compartir el resumen como imagen
+- 🔄 Aviso de "hay una versión nueva" en la app instalada
 
 ---
 

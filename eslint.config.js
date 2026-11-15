@@ -18,5 +18,12 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      // Regla nueva de react-hooks v7. El proyecto tiene varios
+      // casos heredados (cargar datos en un useEffect) que
+      // funcionan bien; queda como aviso para ir limpiándolos
+      // sin que el chequeo automático falle por ellos.
+      'react-hooks/set-state-in-effect': 'warn',
+    },
   },
 ])

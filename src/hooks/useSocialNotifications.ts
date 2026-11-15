@@ -14,6 +14,7 @@ export type SocialNotification = {
   type:
     | 'reaction'
     | 'nudge'
+    | 'comment'
 
   actorUserId:
     string
@@ -63,6 +64,7 @@ type NotificationRow = {
   type:
     | 'reaction'
     | 'nudge'
+    | 'comment'
 
   actor_user_id:
     string

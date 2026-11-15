@@ -25,6 +25,10 @@ import CommentThread from './CommentThread'
 import ReactionBar from './ReactionBar'
 import UserAvatar from './UserAvatar'
 
+import {
+  openMemberProfile,
+} from '../lib/socialPanels'
+
 type Props = {
   dateKey: string | null
   todayKey: string
@@ -348,12 +352,23 @@ function DayDetailModal({
                   {/* USER */}
 
                   <div className="flex items-center gap-3">
-                    <UserAvatar
-                      user={
-                        user
+                    <button
+                      type="button"
+                      aria-label={`Ver perfil de ${user.name}`}
+                      onClick={() =>
+                        openMemberProfile(
+                          user.id,
+                        )
                       }
-                      size="lg"
-                    />
+                      className="shrink-0 transition active:scale-95"
+                    >
+                      <UserAvatar
+                        user={
+                          user
+                        }
+                        size="lg"
+                      />
+                    </button>
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">

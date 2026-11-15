@@ -102,6 +102,12 @@ create index if not exists activity_comments_activity_id_idx
 alter table public.activity_comments
   enable row level security;
 
+-- Supabase suele dar estos permisos solo; los dejamos explícitos
+-- por las dudas. RLS (abajo) es lo que limita qué filas.
+grant select, insert, delete
+  on public.activity_comments
+  to authenticated;
+
 -- Ver: los miembros del grupo de la actividad.
 drop policy if exists "activity_comments_select_group" on public.activity_comments;
 
