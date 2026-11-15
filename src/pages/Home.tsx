@@ -937,7 +937,7 @@ streakEligibleFrom:
 
                         /*
                          * ===========================
-                         * REACCIÓN
+                         * REACCIÓN / COMENTARIO
                          * ===========================
                          */
 
@@ -981,14 +981,24 @@ streakEligibleFrom:
                                     notification.actorName
                                   }
                                 </span>{' '}
-                                reaccionó{' '}
-                                <span className="font-black">
-                                  {
-                                    notification.emoji ??
-                                    '💪'
-                                  }
-                                </span>{' '}
-                                a tu{' '}
+                                {notification.type ===
+                                'comment' ? (
+                                  <>
+                                    comentó
+                                    tu{' '}
+                                  </>
+                                ) : (
+                                  <>
+                                    reaccionó{' '}
+                                    <span className="font-black">
+                                      {
+                                        notification.emoji ??
+                                        '💪'
+                                      }
+                                    </span>{' '}
+                                    a tu{' '}
+                                  </>
+                                )}
                                 <span className="font-black text-zinc-800">
                                   {
                                     notification.activityType ??
