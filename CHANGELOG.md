@@ -23,7 +23,7 @@ Todas las versiones de Racha. La más nueva arriba.
 
 ### Para desarrollo
 
-- `RachaApp.tsx` dividido en hooks y componentes (de ~3.200 a ~550 líneas).
+- `RachaApp.tsx` dividido en hooks y componentes (de ~3.200 a ~640 líneas).
 - Chequeo automático en GitHub: compila y corre el lint en cada pull request.
 - Aviso de errores con Sentry (opcional, con `VITE_SENTRY_DSN`).
 - Cambios de base de datos versionados en `supabase/migrations/`.
