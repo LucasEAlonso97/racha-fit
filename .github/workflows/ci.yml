@@ -1,0 +1,36 @@
+name: Chequeo
+
+# Compila la app y corre el lint en cada pull request
+# y en cada push a main. Si algo falla, GitHub lo
+# marca con una ❌ en el PR antes de mezclar.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Sin estas variables Vite descarta toda la app como
+      # código muerto y el build "pasa" sin compilar nada.
+      # Son valores de prueba: no se conectan a nada.
+      - name: Compilar
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://ci.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: ci-dummy-key
+
+      - name: Lint
+        run: npm run lint
