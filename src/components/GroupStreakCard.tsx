@@ -10,6 +10,10 @@ import {
   useGroupNudges,
 } from '../hooks/useGroupNudges'
 
+import {
+  showToast,
+} from '../lib/feedback'
+
 import UserAvatar from './UserAvatar'
 
 import {
@@ -411,8 +415,9 @@ function GroupStreakCard({
         result ===
         'already_active'
       ) {
-        window.alert(
+        showToast(
           'Ya se movió hoy 💪',
+          'info',
         )
       }
 
@@ -420,7 +425,7 @@ function GroupStreakCard({
         result ===
         'error'
       ) {
-        window.alert(
+        showToast(
           'No pudimos mandar el empujón.',
         )
       }

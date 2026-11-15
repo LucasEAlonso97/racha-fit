@@ -8,6 +8,10 @@ import {
 } from '../lib/groupData'
 
 import {
+  showToast,
+} from '../lib/feedback'
+
+import {
   supabase,
 } from '../lib/supabase'
 
@@ -84,7 +88,7 @@ export function useProfileActions({
         error,
       )
 
-      window.alert(
+      showToast(
         'No pudimos cambiar tu objetivo semanal.',
       )
 
@@ -134,7 +138,7 @@ export function useProfileActions({
           uploadError,
         )
 
-        window.alert(
+        showToast(
           'No pudimos subir tu dibu.',
         )
 
@@ -174,7 +178,7 @@ export function useProfileActions({
         error,
       )
 
-      window.alert(
+      showToast(
         'No pudimos guardar tu perfil.',
       )
 
@@ -216,7 +220,7 @@ export function useProfileActions({
           error,
         )
 
-        window.alert(
+        showToast(
           'No pudimos terminar la introducción. Probá nuevamente.',
         )
 

@@ -19,6 +19,10 @@ import {
 } from 'lucide-react'
 
 import {
+  confirmAction,
+} from '../lib/feedback'
+
+import {
   supabase,
 } from '../lib/supabase'
 
@@ -257,9 +261,13 @@ const shareInviteLink =
       }
 
       const confirmed =
-        window.confirm(
-          '¿Generar un nuevo código de invitación?\n\nEl código actual dejará de funcionar.',
-        )
+        await confirmAction({
+          title:
+            '¿Generar un nuevo código?',
+          message:
+            'El código actual dejará de funcionar.',
+          confirmLabel: 'Generar',
+        })
 
       if (!confirmed) {
         return
@@ -439,9 +447,13 @@ const shareInviteLink =
       }
 
       const confirmed =
-        window.confirm(
-          `¿Querés abandonar "${group.name}"?\n\nTus actividades dentro de este grupo se eliminarán.`,
-        )
+        await confirmAction({
+          title: `¿Abandonar "${group.name}"?`,
+          message:
+            'Tus actividades dentro de este grupo se eliminarán.',
+          confirmLabel: 'Abandonar',
+          danger: true,
+        })
 
       if (!confirmed) {
         return
@@ -503,9 +515,12 @@ const shareInviteLink =
       }
 
       const confirmed =
-        window.confirm(
-          `¿Quitar a ${member.name} de "${group.name}"?\n\nSus actividades dentro de este grupo se eliminarán.`,
-        )
+        await confirmAction({
+          title: `¿Quitar a ${member.name}?`,
+          message: `Sus actividades dentro de "${group.name}" se eliminarán.`,
+          confirmLabel: 'Quitar',
+          danger: true,
+        })
 
       if (!confirmed) {
         return
@@ -566,24 +581,17 @@ const shareInviteLink =
         return
       }
 
-      const confirmation =
-        window.prompt(
-          `Esta acción no se puede deshacer.\n\nPara eliminar "${group.name}", escribí el nombre del grupo:`,
-        )
+      const confirmed =
+        await confirmAction({
+          title: `¿Eliminar "${group.name}"?`,
+          message:
+            'Esta acción no se puede deshacer. Para confirmar, escribí el nombre del grupo:',
+          confirmLabel: 'Eliminar grupo',
+          danger: true,
+          requireText: group.name,
+        })
 
-      if (
-        confirmation?.trim() !==
-        group.name
-      ) {
-        if (
-          confirmation !==
-          null
-        ) {
-          window.alert(
-            'El nombre no coincide. No eliminamos nada.',
-          )
-        }
-
+      if (!confirmed) {
         return
       }
 
