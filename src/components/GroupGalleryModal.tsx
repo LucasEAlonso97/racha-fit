@@ -170,7 +170,7 @@ function GroupGalleryModal({
 
                     return (
                       <ActivityPhoto
-                        key={photo.url}
+                        key={photo.activity.id ?? photo.url}
                         url={photo.url}
                         variant="square"
                         alt={`${photo.activity.type} de ${getUserName(photo.userId)}`}

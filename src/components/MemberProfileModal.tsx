@@ -269,7 +269,7 @@ function MemberProfileModal({
               {stats.photos.map(
                 (photo) => (
                   <ActivityPhoto
-                    key={photo.url}
+                    key={photo.activity.id ?? photo.url}
                     url={photo.url}
                     variant="square"
                     alt={`${photo.activity.type} de ${user.name}`}
