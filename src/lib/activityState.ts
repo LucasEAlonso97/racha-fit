@@ -246,3 +246,83 @@ export function getLastUserActivity(
 
   return activities[lastDate][userId].at(-1) ?? null
 }
+
+/*
+ * Saca una actividad por id, esté donde esté.
+ * Limpia usuarios y días que queden vacíos.
+ */
+export function removeActivityById(
+  activities: ActivitiesByDate,
+  activityId: string,
+): ActivitiesByDate {
+  const nextActivities: ActivitiesByDate =
+    {}
+
+  Object.entries(activities).forEach(
+    ([dateKey, day]) => {
+      const nextDay: ActivitiesByDate[string] =
+        {}
+
+      Object.entries(day).forEach(
+        ([userId, userActivities]) => {
+          const remaining =
+            userActivities.filter(
+              (activity) =>
+                activity.id !== activityId,
+            )
+
+          if (remaining.length > 0) {
+            nextDay[userId] = remaining
+          }
+        },
+      )
+
+      if (
+        Object.keys(nextDay).length > 0
+      ) {
+        nextActivities[dateKey] = nextDay
+      }
+    },
+  )
+
+  return nextActivities
+}
+
+/*
+ * Inserta o reemplaza una actividad.
+ * Si ya estaba, mantiene su posición.
+ */
+export function upsertActivity(
+  activities: ActivitiesByDate,
+  dateKey: string,
+  userId: string,
+  activity: Activity,
+): ActivitiesByDate {
+  const existing =
+    activities[dateKey]?.[userId]?.some(
+      (current) =>
+        current.id === activity.id,
+    ) ?? false
+
+  if (existing) {
+    return replaceActivity(
+      activities,
+      dateKey,
+      userId,
+      activity.id!,
+      activity,
+    )
+  }
+
+  return addActivity(
+    activity.id
+      ? removeActivityById(
+          activities,
+          activity.id,
+        )
+      : activities,
+    dateKey,
+    userId,
+    activity,
+  )
+}

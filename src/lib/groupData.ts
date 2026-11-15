@@ -4,6 +4,7 @@ import {
 
 import type {
   ActivitiesByDate,
+  Activity,
   ActivityComment,
   ActivityReaction,
   ActivityType,
@@ -248,6 +249,36 @@ export function mapMembersToUsers(
  * ========================================
  */
 
+function mapActivityRow(
+  row: ActivityRow,
+): Activity {
+  const reactions: ActivityReaction[] =
+    (row.reactions ?? []).map(
+      (reaction) => ({
+        user_id: reaction.user_id,
+        emoji:
+          reaction.emoji as ReactionEmoji,
+      }),
+    )
+
+  return {
+    id: row.id,
+    type: row.type as ActivityType,
+    duration: row.duration,
+    recovered_with_wildcard:
+      row.recovered_with_wildcard,
+    reactions,
+    photo_url: row.photo_url ?? null,
+    comments: [
+      ...(row.comments ?? []),
+    ].sort((a, b) =>
+      a.created_at.localeCompare(
+        b.created_at,
+      ),
+    ),
+  }
+}
+
 export function mapActivityRows(
   data: unknown[] | null,
 ): ActivitiesByDate {
@@ -265,32 +296,72 @@ export function mapActivityRows(
     const userActivities =
       (day[row.user_id] ??= [])
 
-    const reactions: ActivityReaction[] =
-      (row.reactions ?? []).map(
-        (reaction) => ({
-          user_id: reaction.user_id,
-          emoji:
-            reaction.emoji as ReactionEmoji,
-        }),
-      )
-
-    userActivities.push({
-      id: row.id,
-      type: row.type as ActivityType,
-      duration: row.duration,
-      recovered_with_wildcard:
-        row.recovered_with_wildcard,
-      reactions,
-      photo_url: row.photo_url ?? null,
-      comments: [
-        ...(row.comments ?? []),
-      ].sort((a, b) =>
-        a.created_at.localeCompare(
-          b.created_at,
-        ),
-      ),
-    })
+    userActivities.push(
+      mapActivityRow(row),
+    )
   })
 
   return activityMap
+}
+
+/*
+ * ========================================
+ * UNA SOLA ACTIVIDAD
+ * ========================================
+ *
+ * Para el refresco en tiempo real: en vez
+ * de recargar todo el historial, se trae
+ * solo la actividad que cambió.
+ *
+ * Devuelve:
+ *   { status: 'found', ... }   -> existe
+ *   { status: 'missing' }      -> se borró o no es de este grupo
+ *   { status: 'error' }        -> falló la consulta
+ */
+export async function fetchActivityById(
+  groupId: string,
+  activityId: string,
+) {
+  const query = (columns: string) =>
+    supabase
+      .from('activities')
+      .select(columns)
+      .eq('id', activityId)
+      .eq('group_id', groupId)
+      .maybeSingle()
+
+  let result = await query(
+    ACTIVITY_COLUMNS_WITH_SOCIAL,
+  )
+
+  if (isMissingSocialSchema(result.error)) {
+    result = await query(ACTIVITY_COLUMNS)
+  }
+
+  if (result.error) {
+    console.error(
+      'Error refrescando actividad:',
+      result.error,
+    )
+
+    return {
+      status: 'error' as const,
+    }
+  }
+
+  if (!result.data) {
+    return {
+      status: 'missing' as const,
+    }
+  }
+
+  const row =
+    result.data as unknown as ActivityRow
+
+  return {
+    status: 'found' as const,
+    dateKey: row.activity_date,
+    userId: row.user_id,
+    activity: mapActivityRow(row),
+  }
 }

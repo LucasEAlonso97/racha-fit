@@ -4,10 +4,13 @@ import {
 } from 'react'
 
 import {
+  removeActivityById,
   removeUserActivities,
+  upsertActivity,
 } from '../lib/activityState'
 
 import {
+  fetchActivityById,
   fetchGroupData,
   mapActivityRows,
   mapMembersToUsers,
@@ -52,7 +55,20 @@ export function useGroupData(
   const [loading, setLoading] =
     useState(false)
 
+  /*
+   * refreshKey: recarga completa
+   * (miembros + todo el historial).
+   * Solo al entrar al grupo o ante cambios
+   * de integrantes.
+   *
+   * syncKey: re-sincroniza el historial
+   * semanal en la base cuando cambia
+   * alguna actividad.
+   */
   const [refreshKey, setRefreshKey] =
+    useState(0)
+
+  const [syncKey, setSyncKey] =
     useState(0)
 
   const [error, setError] =
@@ -167,6 +183,121 @@ export function useGroupData(
       )
     }
 
+    const bumpSync = () => {
+      setSyncKey(
+        (current) => current + 1,
+      )
+    }
+
+    /*
+     * Trae solo la actividad que cambió.
+     * Si algo falla, recarga todo.
+     */
+    const refreshActivity = async (
+      activityId: string,
+    ) => {
+      const result =
+        await fetchActivityById(
+          groupId,
+          activityId,
+        )
+
+      if (result.status === 'error') {
+        refreshGroup()
+
+        return
+      }
+
+      setActivities((current) =>
+        result.status === 'missing'
+          ? removeActivityById(
+              current,
+              activityId,
+            )
+          : upsertActivity(
+              current,
+              result.dateKey,
+              result.userId,
+              result.activity,
+            ),
+      )
+    }
+
+    type ChangePayload = {
+      eventType: string
+      new: Record<string, unknown>
+      old: Record<string, unknown>
+    }
+
+    const getField = (
+      payload: ChangePayload,
+      field: string,
+    ) => {
+      const value =
+        payload.new?.[field] ??
+        payload.old?.[field]
+
+      return typeof value === 'string'
+        ? value
+        : null
+    }
+
+    /*
+     * Cambio en una actividad del grupo.
+     */
+    const handleActivityChange = (
+      payload: ChangePayload,
+    ) => {
+      bumpSync()
+
+      const activityId = getField(
+        payload,
+        'id',
+      )
+
+      if (!activityId) {
+        refreshGroup()
+
+        return
+      }
+
+      if (payload.eventType === 'DELETE') {
+        setActivities((current) =>
+          removeActivityById(
+            current,
+            activityId,
+          ),
+        )
+
+        return
+      }
+
+      void refreshActivity(activityId)
+    }
+
+    /*
+     * Reacción o comentario: se refresca
+     * la actividad a la que pertenece.
+     * (Si es de otro grupo, la consulta
+     * no la encuentra y no pasa nada.)
+     */
+    const handleChildChange = (
+      payload: ChangePayload,
+    ) => {
+      const activityId = getField(
+        payload,
+        'activity_id',
+      )
+
+      if (!activityId) {
+        refreshGroup()
+
+        return
+      }
+
+      void refreshActivity(activityId)
+    }
+
     const channel = supabase
       .channel(`racha-group-${groupId}`)
 
@@ -181,15 +312,14 @@ export function useGroupData(
           table: 'activities',
           filter: `group_id=eq.${groupId}`,
         },
-        refreshGroup,
+        handleActivityChange,
       )
 
       /*
        * MIEMBROS
        *
-       * Esto también hace que un cambio
-       * de weekly_goal se refresque
-       * automáticamente.
+       * Recarga completa: es raro y cambia
+       * nombres, objetivos y quién está.
        */
       .on(
         'postgres_changes',
@@ -211,7 +341,7 @@ export function useGroupData(
           schema: 'public',
           table: 'activity_reactions',
         },
-        refreshGroup,
+        handleChildChange,
       )
 
       .subscribe((status) => {
@@ -239,7 +369,7 @@ export function useGroupData(
           schema: 'public',
           table: 'activity_comments',
         },
-        refreshGroup,
+        handleChildChange,
       )
       .subscribe()
 
@@ -287,6 +417,7 @@ export function useGroupData(
   }, [
     groupId,
     refreshKey,
+    syncKey,
   ])
 
   /*
