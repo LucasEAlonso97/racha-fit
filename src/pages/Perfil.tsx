@@ -1711,6 +1711,10 @@ function Perfil({
         Racha · Un día más cuenta 🏋️‍♀️
       </p>
 
+      <p className="mt-1 text-center text-[11px] font-semibold text-zinc-300">
+        Versión {__APP_VERSION__}
+      </p>
+
       {/* ================================= */}
       {/* MODALES */}
       {/* ================================= */}

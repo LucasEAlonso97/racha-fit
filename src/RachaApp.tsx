@@ -15,6 +15,7 @@ import BottomNavigation from './components/BottomNavigation'
 import DayDetailModal from './components/DayDetailModal'
 import GroupHeader from './components/GroupHeader'
 import SocialPanelsHost from './components/SocialPanelsHost'
+import WhatsNewModal from './components/WhatsNewModal'
 import {
   ErrorScreen,
   LoadingScreen,
@@ -83,6 +84,11 @@ import {
 import {
   closeSocialPanel,
 } from './lib/socialPanels'
+
+import {
+  markWhatsNewSeen,
+  shouldShowWhatsNew,
+} from './lib/whatsNew'
 
 import {
   formatDateKey,
@@ -187,6 +193,14 @@ function RachaApp({
 
   const [view, setView] =
     useState<View>('home')
+
+  const [showWhatsNew, setShowWhatsNew] =
+    useState(shouldShowWhatsNew)
+
+  const closeWhatsNew = () => {
+    markWhatsNewSeen()
+    setShowWhatsNew(false)
+  }
 
   const [selectedDate, setSelectedDate] =
     useState<string | null>(null)
@@ -348,9 +362,16 @@ function RachaApp({
         }
       >
         <Onboarding
-          onComplete={
-            profileActions.completeOnboarding
-          }
+          onComplete={async () => {
+            /*
+             * Quien recién empieza no
+             * necesita ver "novedades".
+             */
+            markWhatsNewSeen()
+            setShowWhatsNew(false)
+
+            await profileActions.completeOnboarding()
+          }}
         />
       </Suspense>
     )
@@ -596,6 +617,12 @@ function RachaApp({
         onSave={saveActivity}
         onDelete={deleteActivity}
       />
+
+      {showWhatsNew && (
+        <WhatsNewModal
+          onClose={closeWhatsNew}
+        />
+      )}
 
       <SocialPanelsHost
         groupName={activeGroup.name}
