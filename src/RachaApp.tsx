@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useMemo,
   useState,
 } from 'react'
@@ -16,14 +18,33 @@ import {
   LoadingScreen,
 } from './components/StatusScreen'
 
-import Calendar from './pages/Calendar'
-import GroupSetup from './pages/GroupSetup'
 import Home from './pages/Home'
-import InviteJoin from './pages/InviteJoin'
-import Onboarding from './pages/Onboarding'
-import Perfil from './pages/Perfil'
-import Rachas from './pages/Rachas'
-import Torneos from './pages/Torneos'
+
+/*
+ * Pantallas que no se ven al abrir la app:
+ * se descargan recién cuando hacen falta.
+ */
+const Calendar = lazy(
+  () => import('./pages/Calendar'),
+)
+const GroupSetup = lazy(
+  () => import('./pages/GroupSetup'),
+)
+const InviteJoin = lazy(
+  () => import('./pages/InviteJoin'),
+)
+const Onboarding = lazy(
+  () => import('./pages/Onboarding'),
+)
+const Perfil = lazy(
+  () => import('./pages/Perfil'),
+)
+const Rachas = lazy(
+  () => import('./pages/Rachas'),
+)
+const Torneos = lazy(
+  () => import('./pages/Torneos'),
+)
 
 import {
   useAccount,
@@ -299,11 +320,17 @@ function RachaApp({
 
   if (!profile.onboarding_completed) {
     return (
-      <Onboarding
-        onComplete={
-          profileActions.completeOnboarding
+      <Suspense
+        fallback={
+          <LoadingScreen message="Cargando..." />
         }
-      />
+      >
+        <Onboarding
+          onComplete={
+            profileActions.completeOnboarding
+          }
+        />
+      </Suspense>
     )
   }
 
@@ -316,28 +343,40 @@ function RachaApp({
       ) ?? null
 
     return (
-      <InviteJoin
-        inviteCode={invite.code}
-        existingGroup={
-          existingInvitedGroup
+      <Suspense
+        fallback={
+          <LoadingScreen message="Cargando..." />
         }
-        onReady={(group) => {
-          account.addOrUpdateGroup(group)
-          invite.clear()
-        }}
-        onCancel={invite.clear}
-      />
+      >
+        <InviteJoin
+          inviteCode={invite.code}
+          existingGroup={
+            existingInvitedGroup
+          }
+          onReady={(group) => {
+            account.addOrUpdateGroup(group)
+            invite.clear()
+          }}
+          onCancel={invite.clear}
+        />
+      </Suspense>
     )
   }
 
   if (!activeGroup) {
     return (
-      <GroupSetup
-        userId={currentUserId}
-        userName={profile.name}
-        onReady={account.addOrUpdateGroup}
-        onLogout={profileActions.logout}
-      />
+      <Suspense
+        fallback={
+          <LoadingScreen message="Cargando..." />
+        }
+      >
+        <GroupSetup
+          userId={currentUserId}
+          userName={profile.name}
+          onReady={account.addOrUpdateGroup}
+          onLogout={profileActions.logout}
+        />
+      </Suspense>
     )
   }
 
@@ -406,71 +445,79 @@ function RachaApp({
         />
       )}
 
-      {view === 'calendar' && (
-        <Calendar
-          activities={activities}
-          users={users}
-          currentUserId={currentUserId}
-          today={today}
-          onSelectDate={setSelectedDate}
-          onBack={() => setView('home')}
-        />
-      )}
-
-      {view === 'rachas' && (
-        <Rachas
-          groupId={activeGroup.id}
-          activities={activities}
-          users={users}
-          currentUserId={currentUserId}
-          today={today}
-        />
-      )}
-
-      {view === 'tournaments' && (
-        <Torneos
-          group={activeGroup}
-          users={users}
-          currentUserId={currentUserId}
-        />
-      )}
-
-      {view === 'profile' &&
-        currentUser && (
-          <Perfil
-            currentUser={currentUser}
-            profile={profile}
-            email={
-              session.user.email ?? ''
-            }
-            group={activeGroup}
-            members={users}
-            memberCount={users.length}
-            wildcardBalance={
-              wildcardBalance
-            }
+      <Suspense
+        fallback={
+          <p className="mt-10 text-center font-bold text-violet-400">
+            Cargando...
+          </p>
+        }
+      >
+        {view === 'calendar' && (
+          <Calendar
             activities={activities}
-            onSaveWeeklyGoal={
-              profileActions.updateWeeklyGoal
-            }
-            onLogout={
-              profileActions.logout
-            }
-            onSaveProfile={
-              profileActions.saveProfile
-            }
-            onGroupReady={
-              account.addOrUpdateGroup
-            }
-            onGroupUpdated={
-              account.updateGroup
-            }
-            onLeftGroup={handleLeftGroup}
-            onMemberRemoved={
-              groupData.removeMember
-            }
+            users={users}
+            currentUserId={currentUserId}
+            today={today}
+            onSelectDate={setSelectedDate}
+            onBack={() => setView('home')}
           />
         )}
+
+        {view === 'rachas' && (
+          <Rachas
+            groupId={activeGroup.id}
+            activities={activities}
+            users={users}
+            currentUserId={currentUserId}
+            today={today}
+          />
+        )}
+
+        {view === 'tournaments' && (
+          <Torneos
+            group={activeGroup}
+            users={users}
+            currentUserId={currentUserId}
+          />
+        )}
+
+        {view === 'profile' &&
+          currentUser && (
+            <Perfil
+              currentUser={currentUser}
+              profile={profile}
+              email={
+                session.user.email ?? ''
+              }
+              group={activeGroup}
+              members={users}
+              memberCount={users.length}
+              wildcardBalance={
+                wildcardBalance
+              }
+              activities={activities}
+              onSaveWeeklyGoal={
+                profileActions.updateWeeklyGoal
+              }
+              onLogout={
+                profileActions.logout
+              }
+              onSaveProfile={
+                profileActions.saveProfile
+              }
+              onGroupReady={
+                account.addOrUpdateGroup
+              }
+              onGroupUpdated={
+                account.updateGroup
+              }
+              onLeftGroup={handleLeftGroup}
+              onMemberRemoved={
+                groupData.removeMember
+              }
+            />
+          )}
+      </Suspense>
 
       <BottomNavigation
         view={view}
