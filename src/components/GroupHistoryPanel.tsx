@@ -1,13 +1,18 @@
 import {
+  useState,
+} from 'react'
+
+import {
   Check,
   Clock3,
   Flame,
   ShieldCheck,
   Skull,
   Sparkles,
-  Trophy,
   Users,
 } from 'lucide-react'
+
+import ShowMoreButton from './ShowMoreButton'
 
 import {
   useGroupStreakHistory,
@@ -21,6 +26,18 @@ import type {
 type Props = {
   groupId: string
 }
+
+/*
+ * Semanas visibles antes de "Ver más"
+ * (la actual + 3 anteriores).
+ */
+const WEEKS_PREVIEW = 4
+
+/*
+ * Semanas en la tira de colores
+ * del balance.
+ */
+const STRIP_WEEKS = 12
 
 /*
  * ========================================
@@ -318,6 +335,39 @@ function getEpicText(
 
 /*
  * ========================================
+ * FRASE DEL BALANCE
+ * ========================================
+ */
+
+function getBalanceText(
+  savedPercent: number,
+  currentStreak: number,
+  bestStreak: number,
+) {
+  if (
+    currentStreak > 0 &&
+    currentStreak >= bestStreak
+  ) {
+    return '🔥 Están en su mejor racha. ¡No la suelten!'
+  }
+
+  if (savedPercent >= 75) {
+    return '💪 La banda casi nunca afloja.'
+  }
+
+  if (savedPercent >= 50) {
+    return '⚖️ Más salvadas que cortadas. Vamos por más.'
+  }
+
+  if (savedPercent > 0) {
+    return '😤 Toca dar vuelta la historia.'
+  }
+
+  return '🌱 La primera semana salvada está por llegar.'
+}
+
+/*
+ * ========================================
  * COMPONENTE
  * ========================================
  */
@@ -333,6 +383,12 @@ function GroupHistoryPanel({
     useGroupStreakHistory(
       groupId,
     )
+
+  const [
+    showAllWeeks,
+    setShowAllWeeks,
+  ] =
+    useState(false)
 
   /*
    * ========================================
@@ -605,6 +661,29 @@ function GroupHistoryPanel({
 
   /*
    * ========================================
+   * BALANCE
+   * ========================================
+   */
+
+  const savedPercent =
+    finalizedWeeks.length > 0
+      ? Math.round(
+          (savedWeeks.length /
+            finalizedWeeks.length) *
+            100,
+        )
+      : 0
+
+  /*
+   * weeks viene de la más nueva a la
+   * más vieja; la tira va al revés.
+   */
+  const stripWeeks = weeks
+    .slice(0, STRIP_WEEKS)
+    .reverse()
+
+  /*
+   * ========================================
    * UI
    * ========================================
    */
@@ -693,86 +772,132 @@ function GroupHistoryPanel({
       </section>
 
       {/* ================================= */}
-      {/* NÚMEROS */}
+      {/* BALANCE DE LA BANDA */}
       {/* ================================= */}
 
-      <section className="grid grid-cols-4 gap-2">
-        <div className="rounded-[20px] bg-white p-3 text-center shadow-sm">
-          <Flame
-            size={
-              18
-            }
-            className="mx-auto text-orange-500"
-          />
+      {finalizedWeeks.length > 0 && (
+        <section className="rounded-[28px] bg-white p-5 shadow-sm">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-black tracking-[0.12em] text-zinc-400">
+                BALANCE DE LA BANDA
+              </p>
 
-          <p className="mt-2 text-lg font-black text-zinc-800">
-            {
-              currentStreak
-            }
+              <p className="mt-1 text-sm font-semibold text-zinc-500">
+                {finalizedWeeks.length}{' '}
+                {finalizedWeeks.length ===
+                1
+                  ? 'semana jugada'
+                  : 'semanas jugadas'}
+              </p>
+            </div>
+
+            <div className="text-right">
+              <p className="text-3xl font-black leading-none tracking-tight text-zinc-800">
+                {savedPercent}%
+              </p>
+
+              <p className="mt-1 text-[10px] font-black tracking-wide text-zinc-400">
+                SALVADAS
+              </p>
+            </div>
+          </div>
+
+          {/* TIRA DE SEMANAS (vieja → nueva) */}
+
+          <div className="mt-4 flex gap-1.5">
+            {stripWeeks.map((week) => (
+              <div
+                key={week.id}
+                title={`${formatWeek(week.weekStart)} · ${
+                  week.status === 'saved'
+                    ? 'salvada'
+                    : week.status === 'failed'
+                      ? 'cortada'
+                      : 'en juego'
+                }`}
+                className={`flex h-9 flex-1 items-center justify-center rounded-lg ${
+                  week.status === 'saved'
+                    ? 'bg-gradient-to-b from-emerald-400 to-emerald-500 text-white'
+                    : week.status === 'failed'
+                      ? 'bg-zinc-800 text-zinc-500'
+                      : currentWeekSecured
+                        ? 'bg-gradient-to-b from-orange-300 to-orange-400 text-white'
+                        : 'animate-pulse border-2 border-dashed border-violet-300 bg-violet-50 text-violet-400'
+                }`}
+              >
+                {week.status === 'saved' ? (
+                  <Check
+                    size={14}
+                    strokeWidth={3}
+                  />
+                ) : week.status ===
+                  'failed' ? (
+                  <Skull size={13} />
+                ) : (
+                  <Flame size={13} />
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-1.5 flex justify-between text-[10px] font-bold text-zinc-300">
+            <span>
+              {stripWeeks.length > 1
+                ? `hace ${stripWeeks.length - 1} sem.`
+                : ''}
+            </span>
+            <span>esta semana</span>
+          </div>
+
+          {/* TOTALES */}
+
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 p-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-sm shadow-emerald-200">
+                <Check
+                  size={20}
+                  strokeWidth={3}
+                />
+              </div>
+
+              <div>
+                <p className="text-2xl font-black leading-none text-emerald-700">
+                  {savedWeeks.length}
+                </p>
+
+                <p className="mt-1 text-[10px] font-black tracking-wide text-emerald-600/70">
+                  SALVADAS
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-2xl bg-zinc-800 p-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-700 text-zinc-300">
+                <Skull size={20} />
+              </div>
+
+              <div>
+                <p className="text-2xl font-black leading-none text-white">
+                  {failedWeeks.length}
+                </p>
+
+                <p className="mt-1 text-[10px] font-black tracking-wide text-zinc-400">
+                  CORTADAS
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p className="mt-3 text-center text-xs font-bold text-zinc-400">
+            {getBalanceText(
+              savedPercent,
+              currentStreak,
+              bestStreak,
+            )}
           </p>
-
-          <p className="mt-0.5 text-[9px] font-black text-zinc-400">
-            ACTUAL
-          </p>
-        </div>
-
-        <div className="rounded-[20px] bg-white p-3 text-center shadow-sm">
-          <Trophy
-            size={
-              18
-            }
-            className="mx-auto text-yellow-500"
-          />
-
-          <p className="mt-2 text-lg font-black text-zinc-800">
-            {
-              bestStreak
-            }
-          </p>
-
-          <p className="mt-0.5 text-[9px] font-black text-zinc-400">
-            MEJOR
-          </p>
-        </div>
-
-        <div className="rounded-[20px] bg-white p-3 text-center shadow-sm">
-          <Check
-            size={
-              18
-            }
-            className="mx-auto text-green-500"
-          />
-
-          <p className="mt-2 text-lg font-black text-zinc-800">
-            {
-              savedWeeks.length
-            }
-          </p>
-
-          <p className="mt-0.5 text-[9px] font-black text-zinc-400">
-            SALVADAS
-          </p>
-        </div>
-
-        <div className="rounded-[20px] bg-white p-3 text-center shadow-sm">
-          <Skull
-            size={
-              18
-            }
-            className="mx-auto text-zinc-400"
-          />
-
-          <p className="mt-2 text-lg font-black text-zinc-800">
-            {
-              failedWeeks.length
-            }
-          </p>
-
-          <p className="mt-0.5 text-[9px] font-black text-zinc-400">
-            CORTADAS
-          </p>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ================================= */}
       {/* QUIÉN SALVÓ LA ÚLTIMA */}
@@ -844,11 +969,13 @@ function GroupHistoryPanel({
 
         {weeks.length >
         0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {weeks
               .slice(
                 0,
-                12,
+                showAllWeeks
+                  ? weeks.length
+                  : WEEKS_PREVIEW,
               )
               .map(
                 week => {
@@ -876,7 +1003,7 @@ function GroupHistoryPanel({
                       key={
                         week.id
                       }
-                      className={`rounded-[20px] border p-4 ${
+                      className={`rounded-2xl border px-4 py-3 ${
                         week.status ===
                         'saved'
                           ? 'border-green-100 bg-green-50/60'
@@ -939,15 +1066,15 @@ function GroupHistoryPanel({
                         'saved' &&
                         saviors.length >
                           0 && (
-                          <div className="mt-3 flex items-center gap-2 rounded-xl bg-white/80 px-3 py-2">
+                          <div className="mt-2 flex items-center gap-1.5">
                             <ShieldCheck
                               size={
-                                15
+                                13
                               }
                               className="shrink-0 text-violet-500"
                             />
 
-                            <p className="text-xs font-semibold text-zinc-500">
+                            <p className="truncate text-xs font-semibold text-zinc-500">
                               <span className="font-black text-violet-600">
                                 {
                                   saviorNames
@@ -965,6 +1092,26 @@ function GroupHistoryPanel({
                   )
                 },
               )}
+
+            <ShowMoreButton
+              expanded={showAllWeeks}
+              hiddenCount={
+                weeks.length -
+                WEEKS_PREVIEW
+              }
+              noun={
+                weeks.length -
+                  WEEKS_PREVIEW ===
+                1
+                  ? 'semana'
+                  : 'semanas'
+              }
+              onToggle={() =>
+                setShowAllWeeks(
+                  (current) => !current,
+                )
+              }
+            />
           </div>
         ) : (
           <div className="rounded-2xl bg-zinc-50 px-4 py-7 text-center">

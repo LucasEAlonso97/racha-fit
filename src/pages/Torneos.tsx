@@ -6,6 +6,7 @@ import {
 
 import {
   ArrowRight,
+  ChevronDown,
   Gift,
   History,
   RefreshCw,
@@ -16,6 +17,7 @@ import {
   Users,
 } from 'lucide-react'
 
+import ShowMoreButton from '../components/ShowMoreButton'
 import UserAvatar from '../components/UserAvatar'
 
 import {
@@ -106,6 +108,38 @@ function formatDate(
   ] = date.split('-')
 
   return `${day}/${month}/${year}`
+}
+
+const SHORT_MONTHS = [
+  'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+  'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
+]
+
+/*
+ * "4 sep → 14 sep" (con año solo si
+ * no es el actual).
+ */
+function formatShortRange(
+  from: string | null,
+  to: string | null,
+) {
+  const format = (date: string | null) => {
+    if (!date) {
+      return ''
+    }
+
+    const [year, month, day] =
+      date.split('-').map(Number)
+
+    const yearSuffix =
+      year === new Date().getFullYear()
+        ? ''
+        : ` ${String(year).slice(2)}`
+
+    return `${day} ${SHORT_MONTHS[month - 1]}${yearSuffix}`
+  }
+
+  return `${format(from)} → ${format(to)}`
 }
 
 function getPositionLabel(
@@ -291,6 +325,184 @@ function ParticipantAvatar({
  * ========================================
  */
 
+/*
+ * Ganador / empate de un torneo terminado.
+ */
+function getTournamentResult(
+  item: TournamentHistoryItem,
+) {
+  const ranking = [
+    ...item.participants,
+  ].sort(
+    (
+      a,
+      b,
+    ) => {
+      if (
+        b.score !==
+        a.score
+      ) {
+        return (
+          b.score -
+          a.score
+        )
+      }
+
+      return a.name.localeCompare(
+        b.name,
+      )
+    },
+  )
+
+  const teamOne =
+    ranking.filter(
+      participant =>
+        participant.team_number ===
+        1,
+    )
+
+  const teamTwo =
+    ranking.filter(
+      participant =>
+        participant.team_number ===
+        2,
+    )
+
+  const teamOneScore =
+    teamOne.reduce(
+      (
+        total,
+        participant,
+      ) =>
+        total +
+        participant.score,
+      0,
+    )
+
+  const teamTwoScore =
+    teamTwo.reduce(
+      (
+        total,
+        participant,
+      ) =>
+        total +
+        participant.score,
+      0,
+    )
+
+  let resultTitle =
+    'Sin resultado'
+
+  let resultSubtitle =
+    ''
+
+  let resultEmoji =
+    '🏆'
+
+  if (
+    item.mode ===
+    'two_vs_two'
+  ) {
+    if (
+      teamOneScore ===
+      teamTwoScore
+    ) {
+      resultTitle =
+        'Empate entre equipos'
+
+      resultSubtitle =
+        `${teamOneScore} pts por equipo`
+
+      resultEmoji =
+        '🤝'
+    } else {
+      const winningTeam =
+        teamOneScore >
+        teamTwoScore
+          ? teamOne
+          : teamTwo
+
+      const winningScore =
+        Math.max(
+          teamOneScore,
+          teamTwoScore,
+        )
+
+      resultTitle =
+        winningTeam
+          .map(
+            participant =>
+              participant.name,
+          )
+          .join(' + ')
+
+      resultSubtitle =
+        `${winningScore} pts`
+
+      resultEmoji =
+        '🏆'
+    }
+  }
+
+  if (
+    item.mode ===
+    'free_for_all'
+  ) {
+    const topScore =
+      ranking[0]?.score ??
+      0
+
+    const leaders =
+      ranking.filter(
+        participant =>
+          participant.score ===
+          topScore,
+      )
+
+    if (
+      leaders.length >
+      1
+    ) {
+      resultTitle =
+        `Empate: ${leaders
+          .map(
+            participant =>
+              participant.name,
+          )
+          .join(' · ')}`
+
+      resultSubtitle =
+        `${topScore} pts`
+
+      resultEmoji =
+        '🤝'
+    } else if (
+      leaders.length ===
+      1
+    ) {
+      resultTitle =
+        leaders[0].name
+
+      resultSubtitle =
+        `${topScore} pts`
+
+      resultEmoji =
+        '🏆'
+    }
+  }
+
+  return {
+    resultTitle,
+    resultSubtitle,
+    resultEmoji,
+  }
+}
+
+/*
+ * Torneos visibles antes de "Ver más".
+ */
+const HISTORY_PREVIEW = 3
+
 function TournamentHistory({
   history,
   loading,
@@ -298,6 +510,17 @@ function TournamentHistory({
   history: TournamentHistoryItem[]
   loading: boolean
 }) {
+  const [showAll, setShowAll] =
+    useState(false)
+
+  const [openId, setOpenId] = useState<
+    string | null
+  >(null)
+
+  const visible = showAll
+    ? history
+    : history.slice(0, HISTORY_PREVIEW)
+
   return (
     <section className="mt-6 rounded-[28px] bg-white p-5 shadow-sm">
       <div className="flex items-center gap-3">
@@ -307,7 +530,7 @@ function TournamentHistory({
           />
         </div>
 
-        <div>
+        <div className="flex-1">
           <p className="text-[10px] font-black tracking-wider text-violet-500">
             HISTORIAL
           </p>
@@ -316,6 +539,12 @@ function TournamentHistory({
             Torneos anteriores
           </h3>
         </div>
+
+        {history.length > 0 && (
+          <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-black text-zinc-500">
+            {history.length}
+          </span>
+        )}
       </div>
 
       {loading ? (
@@ -342,263 +571,142 @@ function TournamentHistory({
           </p>
         </div>
       ) : (
-        <div className="mt-5 space-y-4">
-          {history.map(
-            item => {
-              const ranking = [
-                ...item.participants,
-              ].sort(
-                (
-                  a,
-                  b,
-                ) => {
-                  if (
-                    b.score !==
-                    a.score
-                  ) {
-                    return (
-                      b.score -
-                      a.score
-                    )
-                  }
+        <div className="mt-4">
+          <ul className="divide-y divide-zinc-100">
+            {visible.map((item) => {
+              const {
+                resultTitle,
+                resultSubtitle,
+                resultEmoji,
+              } = getTournamentResult(item)
 
-                  return a.name.localeCompare(
-                    b.name,
-                  )
-                },
-              )
-
-              const teamOne =
-                ranking.filter(
-                  participant =>
-                    participant.team_number ===
-                    1,
-                )
-
-              const teamTwo =
-                ranking.filter(
-                  participant =>
-                    participant.team_number ===
-                    2,
-                )
-
-              const teamOneScore =
-                teamOne.reduce(
-                  (
-                    total,
-                    participant,
-                  ) =>
-                    total +
-                    participant.score,
-                  0,
-                )
-
-              const teamTwoScore =
-                teamTwo.reduce(
-                  (
-                    total,
-                    participant,
-                  ) =>
-                    total +
-                    participant.score,
-                  0,
-                )
-
-              let resultTitle =
-                'Sin resultado'
-
-              let resultSubtitle =
-                ''
-
-              let resultEmoji =
-                '🏆'
-
-              if (
-                item.mode ===
-                'two_vs_two'
-              ) {
-                if (
-                  teamOneScore ===
-                  teamTwoScore
-                ) {
-                  resultTitle =
-                    'Empate entre equipos'
-
-                  resultSubtitle =
-                    `${teamOneScore} pts por equipo`
-
-                  resultEmoji =
-                    '🤝'
-                } else {
-                  const winningTeam =
-                    teamOneScore >
-                    teamTwoScore
-                      ? teamOne
-                      : teamTwo
-
-                  const winningScore =
-                    Math.max(
-                      teamOneScore,
-                      teamTwoScore,
-                    )
-
-                  resultTitle =
-                    winningTeam
-                      .map(
-                        participant =>
-                          participant.name,
-                      )
-                      .join(' + ')
-
-                  resultSubtitle =
-                    `${winningScore} pts`
-
-                  resultEmoji =
-                    '🏆'
-                }
-              }
-
-              if (
-                item.mode ===
-                'free_for_all'
-              ) {
-                const topScore =
-                  ranking[0]?.score ??
-                  0
-
-                const leaders =
-                  ranking.filter(
-                    participant =>
-                      participant.score ===
-                      topScore,
-                  )
-
-                if (
-                  leaders.length >
-                  1
-                ) {
-                  resultTitle =
-                    `Empate: ${leaders
-                      .map(
-                        participant =>
-                          participant.name,
-                      )
-                      .join(' · ')}`
-
-                  resultSubtitle =
-                    `${topScore} pts`
-
-                  resultEmoji =
-                    '🤝'
-                } else if (
-                  leaders.length ===
-                  1
-                ) {
-                  resultTitle =
-                    leaders[0].name
-
-                  resultSubtitle =
-                    `${topScore} pts`
-
-                  resultEmoji =
-                    '🏆'
-                }
-              }
+              const open =
+                openId === item.id
 
               return (
-                <article
-                  key={
-                    item.id
-                  }
-                  className="overflow-hidden rounded-[24px] border border-zinc-100 bg-zinc-50"
-                >
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    onClick={() =>
+                      setOpenId(
+                        open
+                          ? null
+                          : item.id,
+                      )
+                    }
+                    className="flex w-full items-center gap-3 py-3 text-left"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-xl">
+                      {item.challenge
+                        ?.emoji ?? '🏆'}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-black text-zinc-800">
+                        {item.challenge
+                          ?.name ??
+                          'Torneo'}
+                      </p>
+
+                      <p className="truncate text-xs font-semibold text-zinc-400">
+                        {formatShortRange(
+                          item.starts_on,
+                          item.ends_on,
+                        )}
+                      </p>
+                    </div>
+
+                    <div className="min-w-0 max-w-[40%] text-right">
+                      <p className="truncate text-xs font-black text-zinc-700">
+                        {resultEmoji}{' '}
+                        {resultTitle}
+                      </p>
+
+                      <p className="text-[11px] font-bold text-zinc-400">
+                        {resultSubtitle}
+                      </p>
+                    </div>
+
+                    <ChevronDown
+                      size={16}
+                      className={`shrink-0 text-zinc-300 transition-transform ${
+                        open
+                          ? 'rotate-180'
+                          : ''
+                      }`}
+                    />
+                  </button>
+
+                  {open && (
+                    <div className="mb-3 space-y-2 rounded-2xl bg-zinc-50 p-3">
+                      <div className="flex flex-wrap gap-2">
+                        <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black text-zinc-500">
                           {item.mode ===
                           'two_vs_two'
                             ? '2 VS 2'
                             : 'TODOS VS TODOS'}
-                        </p>
-
-                        <h4 className="mt-1 truncate text-base font-black text-zinc-800">
-                          {item.challenge
-                            ? `${item.challenge.emoji} ${item.challenge.name}`
-                            : '🏆 Torneo'}
-                        </h4>
-                      </div>
-
-                      {item.selected_card && (
-                        <div className="shrink-0 rounded-full bg-violet-100 px-3 py-1 text-[10px] font-black text-violet-600">
-                          Carta #
-                          {
-                            item.selected_card
-                          }
-                        </div>
-                      )}
-                    </div>
-
-                    <p className="mt-2 text-xs font-semibold text-zinc-400">
-                      {formatDate(
-                        item.starts_on,
-                      )}{' '}
-                      →{' '}
-                      {formatDate(
-                        item.ends_on,
-                      )}
-                    </p>
-
-                    <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white px-4 py-3">
-                      <div className="text-2xl">
-                        {
-                          resultEmoji
-                        }
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-black text-zinc-700">
-                          {
-                            resultTitle
-                          }
-                        </p>
-
-                        <p className="mt-0.5 text-xs font-bold text-zinc-400">
-                          {
-                            resultSubtitle
-                          }
-                        </p>
-                      </div>
-                    </div>
-
-                    {item.prize && (
-                      <div className="mt-3 flex items-start gap-3 rounded-2xl bg-amber-50 px-4 py-3">
-                        <span className="text-xl">
-                          {
-                            item.prize
-                              .emoji
-                          }
                         </span>
 
-                        <div>
-                          <p className="text-[9px] font-black uppercase tracking-wider text-amber-600">
-                            Premio
-                          </p>
+                        {item.selected_card && (
+                          <span className="rounded-full bg-violet-100 px-3 py-1 text-[10px] font-black text-violet-600">
+                            Carta #
+                            {
+                              item.selected_card
+                            }
+                          </span>
+                        )}
+                      </div>
 
-                          <p className="mt-0.5 text-xs font-black text-zinc-700">
+                      {item.prize && (
+                        <div className="flex items-start gap-3 rounded-xl bg-amber-50 px-3 py-2.5">
+                          <span className="text-xl">
                             {
                               item.prize
-                                .title
+                                .emoji
                             }
-                          </p>
+                          </span>
+
+                          <div>
+                            <p className="text-[9px] font-black uppercase tracking-wider text-amber-600">
+                              Premio
+                            </p>
+
+                            <p className="mt-0.5 text-xs font-black text-zinc-700">
+                              {
+                                item.prize
+                                  .title
+                              }
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </article>
+                      )}
+                    </div>
+                  )}
+                </li>
               )
-            },
-          )}
+            })}
+          </ul>
+
+          <ShowMoreButton
+            expanded={showAll}
+            hiddenCount={
+              history.length -
+              HISTORY_PREVIEW
+            }
+            noun={
+              history.length -
+                HISTORY_PREVIEW ===
+              1
+                ? 'torneo'
+                : 'torneos'
+            }
+            onToggle={() =>
+              setShowAll(
+                (current) => !current,
+              )
+            }
+          />
         </div>
       )}
     </section>
