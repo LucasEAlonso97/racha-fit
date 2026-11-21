@@ -10,29 +10,24 @@
 
 export const WHATS_NEW = [
   {
-    emoji: '📸',
-    title: 'Fotos',
-    text: 'Sumá una foto a tu actividad. Se ve en el inicio y en la galería del grupo.',
+    emoji: '🏁',
+    title: 'Desafíos',
+    text: 'Armá un desafío con fecha para todo el grupo: "20 días en diciembre". Está en el inicio.',
   },
   {
-    emoji: '💬',
-    title: 'Comentarios',
-    text: 'Comentá la actividad de los demás. Si te comentan, te avisamos.',
+    emoji: '🔥',
+    title: 'Festejá tus rachas',
+    text: 'Al llegar a 7, 14, 30 o 100 días seguidos, festejo y una imagen para compartir.',
   },
   {
-    emoji: '👤',
-    title: 'Perfiles',
-    text: 'Tocá el avatar de alguien para ver su racha, récord, fotos y últimas actividades.',
+    emoji: '📲',
+    title: 'Compartí en historias',
+    text: 'En Rachas → Resumen podés compartir tu mes o tu año como imagen.',
   },
   {
-    emoji: '📈',
-    title: 'Tu mes y tu año',
-    text: 'En Rachas → Resumen: días activos, minutos, tu favorita y el ranking del período.',
-  },
-  {
-    emoji: '🔁',
-    title: 'Lo mismo que la última vez',
-    text: 'Repetí tu última actividad con un solo toque.',
+    emoji: '📱',
+    title: 'Instalala',
+    text: 'Si la usás desde el navegador, ahora te explicamos cómo tenerla como app.',
   },
 ]
 
