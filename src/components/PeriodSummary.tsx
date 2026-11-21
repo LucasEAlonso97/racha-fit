@@ -6,6 +6,8 @@ import {
 import {
   ChevronLeft,
   ChevronRight,
+  LoaderCircle,
+  Share2,
 } from 'lucide-react'
 
 import UserAvatar from './UserAvatar'
@@ -13,6 +15,15 @@ import UserAvatar from './UserAvatar'
 import {
   activityOptions,
 } from '../data/activities'
+
+import {
+  showToast,
+} from '../lib/feedback'
+
+import {
+  drawSummaryCard,
+  shareImage,
+} from '../lib/shareCards'
 
 import {
   monthNames,
@@ -107,6 +118,80 @@ function PeriodSummary({
       (member) =>
         member.user.id === currentUserId,
     )
+
+  const [sharing, setSharing] =
+    useState(false)
+
+  const shareSummary = async () => {
+    if (!mySummary || sharing) {
+      return
+    }
+
+    setSharing(true)
+
+    try {
+      const blob = await drawSummaryCard({
+        subtitle:
+          period.kind === 'year'
+            ? 'Mi año en Racha'
+            : 'Mi mes en Racha',
+        title: periodLabel,
+        stats: [
+          {
+            value: String(
+              mySummary.activeDays,
+            ),
+            label:
+              mySummary.activeDays === 1
+                ? 'día activo'
+                : 'días activos',
+          },
+          {
+            value: formatMinutes(
+              mySummary.totalMinutes,
+            ),
+            label: 'en movimiento',
+          },
+          {
+            value: getActivityEmoji(
+              mySummary.favoriteType,
+            ),
+            label:
+              mySummary.favoriteType ??
+              'favorita',
+          },
+          {
+            value: `🔥 ${mySummary.bestStreak}`,
+            label: 'mejor racha',
+          },
+        ],
+      })
+
+      const result = await shareImage(
+        blob,
+        `racha-${periodLabel.toLowerCase().replace(/\s+/g, '-')}.png`,
+        `Mi ${period.kind === 'year' ? 'año' : 'mes'} en Racha 🔥`,
+      )
+
+      if (result === 'downloaded') {
+        showToast(
+          'Imagen descargada. Subila a tu historia 📲',
+          'success',
+        )
+      }
+    } catch (error) {
+      console.error(
+        'Error compartiendo resumen:',
+        error,
+      )
+
+      showToast(
+        'No pudimos generar la imagen.',
+      )
+    } finally {
+      setSharing(false)
+    }
+  }
 
   const changeKind = (
     kind: PeriodKind,
@@ -226,6 +311,27 @@ function PeriodSummary({
                 label="mejor racha"
               />
             </div>
+          )}
+
+          {mySummary.activeDays > 0 && (
+            <button
+              type="button"
+              disabled={sharing}
+              onClick={() =>
+                void shareSummary()
+              }
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-3 text-sm font-black text-violet-600 transition active:scale-[0.98] disabled:opacity-70"
+            >
+              {sharing ? (
+                <LoaderCircle
+                  size={18}
+                  className="animate-spin"
+                />
+              ) : (
+                <Share2 size={18} />
+              )}
+              Compartir en historias
+            </button>
           )}
         </section>
       )}
