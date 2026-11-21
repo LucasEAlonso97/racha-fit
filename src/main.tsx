@@ -7,6 +7,12 @@ import App from './App'
 import FeedbackHost from './components/FeedbackHost'
 
 /*
+ * Escucha "se puede instalar" lo antes
+ * posible (ver lib/installPrompt.ts).
+ */
+import './lib/installPrompt'
+
+/*
  * Aviso de errores: solo si está
  * configurado (ver src/lib/monitoring.ts).
  */

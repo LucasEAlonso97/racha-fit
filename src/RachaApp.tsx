@@ -14,6 +14,7 @@ import ActivityModal from './components/ActivityModal'
 import BottomNavigation from './components/BottomNavigation'
 import DayDetailModal from './components/DayDetailModal'
 import GroupHeader from './components/GroupHeader'
+import InstallBanner from './components/InstallBanner'
 import SocialPanelsHost from './components/SocialPanelsHost'
 import WhatsNewModal from './components/WhatsNewModal'
 import {
@@ -458,6 +459,10 @@ function RachaApp({
         onSelectGroup={selectGroup}
         onLogout={profileActions.logout}
       />
+
+      {view === 'home' && (
+        <InstallBanner />
+      )}
 
       {view === 'home' && (
         <Home
