@@ -12,6 +12,7 @@ import type {
 
 import ActivityModal from './components/ActivityModal'
 import BottomNavigation from './components/BottomNavigation'
+import ChallengesSection from './components/ChallengesSection'
 import DayDetailModal from './components/DayDetailModal'
 import GroupHeader from './components/GroupHeader'
 import InstallBanner from './components/InstallBanner'
@@ -62,6 +63,10 @@ import {
 import {
   useActivityModal,
 } from './hooks/useActivityModal'
+
+import {
+  useChallenges,
+} from './hooks/useChallenges'
 
 import {
   useGroupData,
@@ -174,6 +179,12 @@ function RachaApp({
     users,
     activities,
   } = groupData
+
+  const groupChallenges =
+    useChallenges(
+      activeGroup?.id ?? null,
+      currentUserId,
+    )
 
   const {
     balance: wildcardBalance,
@@ -464,6 +475,25 @@ function RachaApp({
       {view === 'home' && (
         <InstallBanner />
       )}
+
+      {view === 'home' &&
+        groupChallenges.available && (
+          <ChallengesSection
+            challenges={
+              groupChallenges.challenges
+            }
+            activities={activities}
+            users={users}
+            currentUserId={currentUserId}
+            today={today}
+            onCreate={
+              groupChallenges.createChallenge
+            }
+            onDelete={
+              groupChallenges.deleteChallenge
+            }
+          />
+        )}
 
       {view === 'home' && (
         <Home
