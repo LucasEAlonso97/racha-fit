@@ -17,6 +17,7 @@ import {
   Users,
 } from 'lucide-react'
 
+import PrizeClaim from '../components/PrizeClaim'
 import ShowMoreButton from '../components/ShowMoreButton'
 import UserAvatar from '../components/UserAvatar'
 
@@ -24,9 +25,18 @@ import {
   useTournament,
 } from '../hooks/useTournament'
 
+import type {
+  TournamentParticipant,
+} from '../hooks/useTournament'
+
 import {
   supabase,
 } from '../lib/supabase'
+
+import {
+  formatTimeLeft,
+  getTimeLeft,
+} from '../lib/tournamentTime'
 
 import type {
   Group,
@@ -61,6 +71,7 @@ type HistoryPrize = {
   emoji: string
   description: string
   category: string
+  prize_type?: string | null
 }
 
 type TournamentHistoryItem = {
@@ -84,6 +95,11 @@ type TournamentHistoryItem = {
   prize: HistoryPrize | null
 
   participants: HistoryParticipant[]
+
+  /* Campos nuevos (migración de premios). */
+  winner_ids?: string[]
+  claims?: string[]
+  auto_selected?: boolean
 }
 
 
@@ -506,9 +522,15 @@ const HISTORY_PREVIEW = 3
 function TournamentHistory({
   history,
   loading,
+  users,
+  currentUserId,
+  onClaimed,
 }: {
   history: TournamentHistoryItem[]
   loading: boolean
+  users: User[]
+  currentUserId: string
+  onClaimed: () => void
 }) {
   const [showAll, setShowAll] =
     useState(false)
@@ -628,6 +650,22 @@ function TournamentHistory({
                       </p>
                     </div>
 
+                    {(item.winner_ids ??
+                      []).includes(
+                      currentUserId,
+                    ) &&
+                      !(item.claims ??
+                        []).includes(
+                        currentUserId,
+                      ) &&
+                      item.prize
+                        ?.prize_type && (
+                        <span
+                          title="Tenés un premio para reclamar"
+                          className="h-2.5 w-2.5 shrink-0 rounded-full bg-fuchsia-500"
+                        />
+                      )}
+
                     <ChevronDown
                       size={16}
                       className={`shrink-0 text-zinc-300 transition-transform ${
@@ -659,27 +697,32 @@ function TournamentHistory({
                       </div>
 
                       {item.prize && (
-                        <div className="flex items-start gap-3 rounded-xl bg-amber-50 px-3 py-2.5">
-                          <span className="text-xl">
-                            {
-                              item.prize
-                                .emoji
-                            }
-                          </span>
-
-                          <div>
-                            <p className="text-[9px] font-black uppercase tracking-wider text-amber-600">
-                              Premio
-                            </p>
-
-                            <p className="mt-0.5 text-xs font-black text-zinc-700">
-                              {
-                                item.prize
-                                  .title
-                              }
-                            </p>
-                          </div>
-                        </div>
+                        <PrizeClaim
+                          variant="compact"
+                          tournamentId={item.id}
+                          prize={item.prize}
+                          winnerIds={
+                            item.winner_ids ??
+                            []
+                          }
+                          claims={
+                            item.claims ?? []
+                          }
+                          users={users}
+                          currentUserId={
+                            currentUserId
+                          }
+                          vacant={
+                            item.mode ===
+                              'two_vs_two' &&
+                            (item.winner_ids
+                              ?.length ?? 0) ===
+                              0
+                          }
+                          onClaimed={
+                            onClaimed
+                          }
+                        />
                       )}
                     </div>
                   )}
@@ -710,6 +753,134 @@ function TournamentHistory({
         </div>
       )}
     </section>
+  )
+}
+
+/*
+ * ========================================
+ * PODIO (todos contra todos)
+ * ========================================
+ */
+
+function Podium({
+  ranking,
+  users,
+}: {
+  ranking: TournamentParticipant[]
+  users: User[]
+}) {
+  const top = ranking.slice(0, 3)
+
+  if (top.length === 0) {
+    return null
+  }
+
+  /*
+   * Orden visual: 2º · 1º · 3º
+   */
+  const columns = [
+    {
+      participant: top[1],
+      medal: '🥈',
+      height: 'h-16',
+      color: 'from-violet-200 to-violet-300',
+    },
+    {
+      participant: top[0],
+      medal: '🥇',
+      height: 'h-24',
+      color: 'from-fuchsia-400 to-violet-500',
+    },
+    {
+      participant: top[2],
+      medal: '🥉',
+      height: 'h-12',
+      color: 'from-orange-200 to-orange-300',
+    },
+  ]
+
+  return (
+    <div className="flex items-end justify-center gap-2 rounded-2xl bg-gradient-to-b from-violet-50/60 to-white px-2 pb-1 pt-4">
+      {columns.map(
+        ({
+          participant,
+          medal,
+          height,
+          color,
+        }, index) =>
+          participant ? (
+            <div
+              key={participant.user_id}
+              className="flex w-1/3 max-w-[110px] flex-col items-center"
+            >
+              <ParticipantAvatar
+                participant={participant}
+                user={users.find(
+                  (user) =>
+                    user.id ===
+                    participant.user_id,
+                )}
+                size={
+                  index === 1
+                    ? 'lg'
+                    : undefined
+                }
+              />
+
+              <p className="mt-1.5 w-full truncate text-center text-xs font-black text-zinc-700">
+                {participant.name}
+              </p>
+
+              <p className="text-[11px] font-bold text-zinc-400">
+                {participant.score} pts
+              </p>
+
+              <div
+                className={`mt-1.5 flex w-full items-start justify-center rounded-t-2xl bg-gradient-to-b pt-1.5 text-xl ${height} ${color}`}
+              >
+                {medal}
+              </div>
+            </div>
+          ) : (
+            <div
+              key={`empty-${index}`}
+              className="w-1/3 max-w-[110px]"
+            />
+          ),
+      )}
+    </div>
+  )
+}
+
+/*
+ * ========================================
+ * PLAZO PARA ELEGIR / CONTINUAR
+ * ========================================
+ */
+
+function DeadlineNote({
+  deadline,
+  mine,
+}: {
+  deadline?: string | null
+  mine: boolean
+}) {
+  const timeLeft =
+    getTimeLeft(deadline)
+
+  if (timeLeft === null) {
+    return null
+  }
+
+  return (
+    <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-black text-violet-600">
+      ⏳{' '}
+      {timeLeft === 0
+        ? 'Se elige solo en cualquier momento'
+        : mine
+          ? `Tenés ${formatTimeLeft(timeLeft)}; si no, se elige solo`
+          : `Si no elige en ${formatTimeLeft(timeLeft)}, se elige solo`}
+    </p>
   )
 }
 
@@ -958,6 +1129,13 @@ function Torneos({
           loading={
             historyLoading
           }
+          users={users}
+          currentUserId={
+            currentUserId
+          }
+          onClaimed={() =>
+            void loadHistory()
+          }
         />
       </div>
     )
@@ -1013,6 +1191,13 @@ function Torneos({
           history={history}
           loading={
             historyLoading
+          }
+          users={users}
+          currentUserId={
+            currentUserId
+          }
+          onClaimed={() =>
+            void loadHistory()
           }
         />
       </div>
@@ -1181,14 +1366,23 @@ function Torneos({
           </div>
         </header>
 
-        <section className="overflow-hidden rounded-[30px] bg-zinc-900 p-6 text-center shadow-lg">
+        <section className="relative overflow-hidden rounded-[30px] bg-gradient-to-br from-violet-500 via-fuchsia-500 to-orange-400 p-6 text-center shadow-lg shadow-fuchsia-200">
+          {/* Confeti */}
+          <span className="pointer-events-none absolute left-5 top-4 rotate-[-18deg] text-xl opacity-80">🎉</span>
+          <span className="pointer-events-none absolute right-6 top-6 rotate-12 text-lg opacity-80">✨</span>
+          <span className="pointer-events-none absolute bottom-24 left-6 text-base opacity-70">⭐</span>
+          <span className="pointer-events-none absolute bottom-28 right-5 rotate-[20deg] text-lg opacity-70">🎊</span>
+          <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/15" />
+          <div className="pointer-events-none absolute -bottom-20 -left-14 h-48 w-48 rounded-full bg-white/10" />
+
+          <div className="relative">
           {isTie ? (
             <>
               <div className="text-5xl">
                 🤝
               </div>
 
-              <p className="mt-4 text-xs font-black tracking-[0.16em] text-violet-300">
+              <p className="mt-4 text-xs font-black tracking-[0.16em] text-white/80">
                 EMPATE
               </p>
 
@@ -1198,7 +1392,7 @@ function Torneos({
 
               {tournament.mode ===
               'free_for_all' ? (
-                <p className="mt-2 text-sm font-semibold text-zinc-300">
+                <p className="mt-2 text-sm font-semibold text-white/85">
                   {leaders
                     .map(
                       leader =>
@@ -1214,7 +1408,7 @@ function Torneos({
                   </span>
                 </p>
               ) : (
-                <p className="mt-2 text-sm font-semibold text-zinc-300">
+                <p className="mt-2 text-sm font-semibold text-white/85">
                   Los dos equipos
                   terminaron con{' '}
                   <span className="font-black text-white">
@@ -1229,11 +1423,11 @@ function Torneos({
           ) : tournament.mode ===
             'two_vs_two' ? (
             <>
-              <div className="text-5xl">
+              <div className="text-6xl drop-shadow-lg">
                 🏆
               </div>
 
-              <p className="mt-4 text-xs font-black tracking-[0.16em] text-amber-300">
+              <p className="mt-4 text-xs font-black tracking-[0.16em] text-white/80">
                 CAMPEONES
               </p>
 
@@ -1259,7 +1453,7 @@ function Torneos({
                         key={
                           participant.user_id
                         }
-                        className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-2"
+                        className="flex items-center gap-2 rounded-full bg-white/20 px-3 py-2 backdrop-blur-sm"
                       >
                         <ParticipantAvatar
                           participant={
@@ -1279,7 +1473,7 @@ function Torneos({
                 )}
               </div>
 
-              <p className="mt-4 text-3xl font-black text-white">
+              <p className="mx-auto mt-4 w-fit rounded-full bg-white px-5 py-1.5 text-2xl font-black text-fuchsia-600 shadow-sm">
                 {winningTeamNumber ===
                 1
                   ? teamOneScore
@@ -1289,11 +1483,11 @@ function Torneos({
             </>
           ) : (
             <>
-              <div className="text-5xl">
+              <div className="text-6xl drop-shadow-lg">
                 🏆
               </div>
 
-              <p className="mt-4 text-xs font-black tracking-[0.16em] text-amber-300">
+              <p className="mt-4 text-xs font-black tracking-[0.16em] text-white/80">
                 CAMPEÓN
               </p>
 
@@ -1319,7 +1513,7 @@ function Torneos({
                   'Ganador'}
               </h2>
 
-              <p className="mt-2 text-3xl font-black text-amber-300">
+              <p className="mx-auto mt-3 w-fit rounded-full bg-white px-5 py-1.5 text-2xl font-black text-fuchsia-600 shadow-sm">
                 {topScore}{' '}
                 pts
               </p>
@@ -1327,8 +1521,8 @@ function Torneos({
           )}
 
           {tournament.challenge && (
-            <div className="mt-6 rounded-2xl bg-white/10 px-4 py-3">
-              <p className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+            <div className="mt-6 rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-sm">
+              <p className="text-[10px] font-black uppercase tracking-wider text-white/70">
                 TORNEO
               </p>
 
@@ -1346,68 +1540,27 @@ function Torneos({
               </p>
             </div>
           )}
+          </div>
         </section>
 
         {tournament.prize && (
-          <section className="mt-5 rounded-[28px] bg-amber-50 p-5 shadow-sm">
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-2xl">
-                {
-                  tournament
-                    .prize
-                    .emoji
-                }
-              </div>
-
-              <div>
-                <div className="flex items-center gap-2">
-                  <Gift
-                    size={14}
-                    className="text-amber-600"
-                  />
-
-                  <p className="text-[10px] font-black tracking-wider text-amber-600">
-                    PREMIO
-                  </p>
-                </div>
-
-                <h3 className="mt-1 text-lg font-black text-zinc-800">
-                  {
-                    tournament
-                      .prize
-                      .title
-                  }
-                </h3>
-
-                {isTie ? (
-                  tournament.mode ===
-                  'two_vs_two' ? (
-                    <p className="mt-1 text-sm font-semibold leading-relaxed text-zinc-500">
-                      Como hubo empate
-                      entre equipos,
-                      esta vez el premio
-                      queda vacante 🤝
-                    </p>
-                  ) : (
-                    <p className="mt-1 text-sm font-semibold leading-relaxed text-zinc-500">
-                      Hubo empate en el
-                      primer puesto. Los
-                      campeones comparten
-                      el premio 🤝
-                    </p>
-                  )
-                ) : (
-                  <p className="mt-1 text-sm font-semibold leading-relaxed text-zinc-500">
-                    {
-                      tournament
-                        .prize
-                        .description
-                    }
-                  </p>
-                )}
-              </div>
-            </div>
-          </section>
+          <PrizeClaim
+            tournamentId={tournament.id}
+            prize={tournament.prize}
+            winnerIds={
+              tournament.winner_ids ?? []
+            }
+            claims={
+              tournament.claims ?? []
+            }
+            users={users}
+            currentUserId={currentUserId}
+            vacant={teamTie}
+            onClaimed={() => {
+              void refresh()
+              void loadHistory()
+            }}
+          />
         )}
 
         <section className="mt-5 rounded-[28px] bg-white p-5 shadow-sm">
@@ -1439,7 +1592,9 @@ function Torneos({
                   score:
                     teamOneScore,
                   classes:
-                    'bg-violet-50 text-violet-700',
+                    winningTeamNumber === 1
+                      ? 'bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-md shadow-violet-200'
+                      : 'bg-violet-50 text-violet-700',
                 },
                 {
                   number: 2,
@@ -1448,7 +1603,9 @@ function Torneos({
                   score:
                     teamTwoScore,
                   classes:
-                    'bg-orange-50 text-orange-600',
+                    winningTeamNumber === 2
+                      ? 'bg-gradient-to-br from-orange-400 to-fuchsia-500 text-white shadow-md shadow-orange-200'
+                      : 'bg-orange-50 text-orange-600',
                 },
               ].map(
                 team => (
@@ -1460,6 +1617,9 @@ function Torneos({
                   >
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-black">
+                        {winningTeamNumber ===
+                          team.number &&
+                          '🏆 '}
                         Equipo{' '}
                         {
                           team.number
@@ -1483,13 +1643,27 @@ function Torneos({
                             }
                             className="flex items-center justify-between text-xs"
                           >
-                            <span className="font-bold text-zinc-600">
+                            <span
+                              className={`font-bold ${
+                                winningTeamNumber ===
+                                team.number
+                                  ? 'text-white/90'
+                                  : 'text-zinc-600'
+                              }`}
+                            >
                               {
                                 participant.name
                               }
                             </span>
 
-                            <span className="font-black text-zinc-700">
+                            <span
+                              className={`font-black ${
+                                winningTeamNumber ===
+                                team.number
+                                  ? 'text-white'
+                                  : 'text-zinc-700'
+                              }`}
+                            >
                               {
                                 participant.score
                               }
@@ -1504,7 +1678,12 @@ function Torneos({
             </div>
           ) : (
             <div className="mt-4 space-y-2">
-              {ranking.map(
+              <Podium
+                ranking={ranking}
+                users={users}
+              />
+
+              {ranking.slice(3).map(
                 (
                   participant,
                   index,
@@ -1519,7 +1698,7 @@ function Torneos({
                   const position =
                     getRankingPosition(
                       ranking,
-                      index,
+                      index + 3,
                     )
 
                   return (
@@ -1600,6 +1779,13 @@ function Torneos({
                   va a elegir la
                   próxima carta.
                 </p>
+
+                <DeadlineNote
+                  deadline={
+                    tournament.selection_deadline
+                  }
+                  mine={isMyNextTurn}
+                />
               </div>
             </div>
 
@@ -1660,6 +1846,13 @@ function Torneos({
           loading={
             historyLoading
           }
+          users={users}
+          currentUserId={
+            currentUserId
+          }
+          onClaimed={() =>
+            void loadHistory()
+          }
         />
       </div>
     )
@@ -1719,11 +1912,11 @@ function Torneos({
           </div>
         </header>
 
-        <section className="overflow-hidden rounded-[30px] bg-zinc-900 shadow-lg">
+        <section className="relative overflow-hidden rounded-[30px] bg-gradient-to-br from-violet-500 via-fuchsia-500 to-orange-400 shadow-lg shadow-fuchsia-200">
           <div className="p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-black tracking-[0.16em] text-violet-300">
+                <p className="text-xs font-black tracking-[0.16em] text-white/80">
                   DESAFÍO REVELADO
                 </p>
 
@@ -1736,7 +1929,7 @@ function Torneos({
                 </div>
               </div>
 
-              <div className="rounded-full bg-white/10 px-3 py-2 text-[10px] font-black text-white">
+              <div className="rounded-full bg-white/20 px-3 py-2 text-[10px] font-black text-white">
                 {tournament.mode ===
                 'two_vs_two'
                   ? '2 VS 2'
@@ -1752,7 +1945,14 @@ function Torneos({
               }
             </h2>
 
-            <p className="mt-2 text-sm font-semibold leading-relaxed text-zinc-300">
+            {tournament.auto_selected && (
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-[11px] font-black text-white">
+                ⏳ La carta se eligió sola
+                (pasaron 48 h)
+              </p>
+            )}
+
+            <p className="mt-2 text-sm font-semibold leading-relaxed text-white/90">
               {
                 tournament
                   .challenge
@@ -1760,9 +1960,9 @@ function Torneos({
               }
             </p>
 
-            <div className="mt-5 flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3">
+            <div className="mt-5 flex items-center justify-between rounded-2xl bg-white/20 px-4 py-3">
               <div>
-                <p className="text-[10px] font-black uppercase text-zinc-400">
+                <p className="text-[10px] font-black uppercase text-white/70">
                   Empieza
                 </p>
 
@@ -1773,10 +1973,10 @@ function Torneos({
                 </p>
               </div>
 
-              <div className="h-8 w-px bg-white/10" />
+              <div className="h-8 w-px bg-white/20" />
 
               <div className="text-right">
-                <p className="text-[10px] font-black uppercase text-zinc-400">
+                <p className="text-[10px] font-black uppercase text-white/70">
                   Termina
                 </p>
 
@@ -2146,6 +2346,13 @@ function Torneos({
           loading={
             historyLoading
           }
+          users={users}
+          currentUserId={
+            currentUserId
+          }
+          onClaimed={() =>
+            void loadHistory()
+          }
         />
       </div>
     )
@@ -2219,6 +2426,13 @@ function Torneos({
                 El turno rota entre
                 todos los integrantes.
               </p>
+
+              <DeadlineNote
+                deadline={
+                  tournament.selection_deadline
+                }
+                mine={isMyTurn}
+              />
             </div>
           </div>
         ) : (
@@ -2457,6 +2671,13 @@ function Torneos({
         history={history}
         loading={
           historyLoading
+        }
+        users={users}
+        currentUserId={
+          currentUserId
+        }
+        onClaimed={() =>
+          void loadHistory()
         }
       />
     </div>

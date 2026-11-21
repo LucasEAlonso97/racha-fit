@@ -14,6 +14,7 @@ import {
 
 import ActivityPhoto from '../components/ActivityPhoto'
 import GroupStreakCard from '../components/GroupStreakCard'
+import Nickname from '../components/Nickname'
 import ReactionBar from '../components/ReactionBar'
 import UserAvatar from '../components/UserAvatar'
 
@@ -1216,6 +1217,12 @@ streakEligibleFrom:
                               ? 'Vos'
                               : user.name}
                           </p>
+
+                          <Nickname
+                            userId={
+                              user.id
+                            }
+                          />
 
                           <span className="text-xs font-bold capitalize text-zinc-400">
                             {

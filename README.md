@@ -40,7 +40,7 @@ Cada integrante tiene su propio avatar, registra su actividad diaria y comparte 
 - 📊 Ranking semanal e historial de semanas del grupo
 - 📈 Resumen mensual y anual (días activos, minutos, actividad favorita, mejor racha)
 - 🏅 Logros
-- 🥇 Torneos dentro del grupo
+- 🥇 Torneos dentro del grupo, con premios que se reclaman (comodín, corona, apodo, elegir el próximo, megáfono) y vitrina de trofeos
 - 🏁 Desafíos con fecha para todo el grupo
 - 🔥 Festejo de hitos de racha y tarjetas para compartir en historias
 - 👉 Empujones a quien todavía no se movió
@@ -119,6 +119,10 @@ Tablas principales:
 | `user_wildcards` | Saldo de comodines por usuario y última recarga mensual |
 | `wildcard_recoveries` | Días recuperados con comodín |
 | `referrals` | Quién invitó a quién y si ya se entregó el premio |
+| `tournaments` / `tournament_*` | Torneos, participantes, desafíos, premios, rueda de turnos |
+| `tournament_prize_claims` | Premios de torneo reclamados |
+| `group_member_perks` | Coronas y apodos activos (vencen solos) |
+| `group_banners` | Mensajes del megáfono (24 h) |
 | `group_week_history` / `group_week_member_results` | Historial semanal del grupo |
 | `social_notifications` | Notificaciones dentro de la app |
 | `notification_preferences` / `push_subscriptions` | Configuración y suscripciones push |
