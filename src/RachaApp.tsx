@@ -14,6 +14,8 @@ import ActivityModal from './components/ActivityModal'
 import BottomNavigation from './components/BottomNavigation'
 import DayDetailModal from './components/DayDetailModal'
 import GroupHeader from './components/GroupHeader'
+import InstallBanner from './components/InstallBanner'
+import MilestoneCelebration from './components/MilestoneCelebration'
 import SocialPanelsHost from './components/SocialPanelsHost'
 import WhatsNewModal from './components/WhatsNewModal'
 import {
@@ -460,6 +462,10 @@ function RachaApp({
       />
 
       {view === 'home' && (
+        <InstallBanner />
+      )}
+
+      {view === 'home' && (
         <Home
           groupId={activeGroup.id}
           activities={activities}
@@ -621,6 +627,16 @@ function RachaApp({
       {showWhatsNew && (
         <WhatsNewModal
           onClose={closeWhatsNew}
+        />
+      )}
+
+      {!showWhatsNew && currentUser && (
+        <MilestoneCelebration
+          user={currentUser}
+          groupId={activeGroup.id}
+          groupName={activeGroup.name}
+          activities={activities}
+          today={today}
         />
       )}
 
