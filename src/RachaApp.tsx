@@ -16,6 +16,7 @@ import ChallengesSection from './components/ChallengesSection'
 import DayDetailModal from './components/DayDetailModal'
 import GroupHeader from './components/GroupHeader'
 import InstallBanner from './components/InstallBanner'
+import MegaphoneBanner from './components/MegaphoneBanner'
 import MilestoneCelebration from './components/MilestoneCelebration'
 import SocialPanelsHost from './components/SocialPanelsHost'
 import WhatsNewModal from './components/WhatsNewModal'
@@ -71,6 +72,10 @@ import {
 import {
   useGroupData,
 } from './hooks/useGroupData'
+
+import {
+  useLoadGroupPerks,
+} from './hooks/useGroupPerks'
 
 import {
   useInviteLink,
@@ -183,6 +188,10 @@ function RachaApp({
     users,
     activities,
   } = groupData
+
+  useLoadGroupPerks(
+    activeGroup?.id ?? null,
+  )
 
   const groupChallenges =
     useChallenges(
@@ -492,6 +501,13 @@ function RachaApp({
       />
 
       {view === 'home' && (
+        <MegaphoneBanner
+          users={users}
+          currentUserId={currentUserId}
+        />
+      )}
+
+      {view === 'home' && (
         <InstallBanner />
       )}
 
@@ -690,6 +706,7 @@ function RachaApp({
       )}
 
       <SocialPanelsHost
+        groupId={activeGroup.id}
         groupName={activeGroup.name}
         activities={activities}
         users={users}

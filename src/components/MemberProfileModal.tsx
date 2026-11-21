@@ -7,7 +7,12 @@ import {
 } from 'lucide-react'
 
 import ActivityPhoto from './ActivityPhoto'
+import Nickname from './Nickname'
 import UserAvatar from './UserAvatar'
+
+import {
+  useTrophyCabinet,
+} from '../hooks/useTrophyCabinet'
 
 import {
   activityOptions,
@@ -40,6 +45,7 @@ import type {
 } from '../types'
 
 type Props = {
+  groupId: string
   user: User
   activities: ActivitiesByDate
   users: User[]
@@ -76,6 +82,7 @@ function formatShortDate(
  */
 
 function MemberProfileModal({
+  groupId,
   user,
   activities,
   users,
@@ -84,6 +91,13 @@ function MemberProfileModal({
   onClose,
 }: Props) {
   const isMe = user.id === currentUserId
+
+  const cabinet =
+    useTrophyCabinet(groupId)
+
+  const shelf = cabinet?.find(
+    (item) => item.user_id === user.id,
+  )
 
   const stats = useMemo(() => {
     const monthSummary =
@@ -220,6 +234,11 @@ function MemberProfileModal({
             {isMe ? 'Vos' : user.name}
           </h2>
 
+          <Nickname
+            userId={user.id}
+            className="mt-1.5"
+          />
+
           {stats.favorite && (
             <p className="mt-1 text-sm font-semibold text-zinc-500">
               {getActivityEmoji(
@@ -256,6 +275,50 @@ function MemberProfileModal({
             label={`este mes · ${stats.monthDays} ${stats.monthDays === 1 ? 'día' : 'días'}`}
           />
         </div>
+
+        {/* VITRINA DE TROFEOS */}
+
+        {cabinet !== null && (
+          <section className="mt-6 overflow-hidden rounded-[24px] bg-gradient-to-br from-amber-50 via-orange-50 to-fuchsia-50 p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black tracking-wider text-amber-700">
+                VITRINA DE TROFEOS
+              </h3>
+
+              <span className="rounded-full bg-white px-2.5 py-1 text-xs font-black text-amber-600 shadow-sm">
+                🏆 {shelf?.count ?? 0}
+              </span>
+            </div>
+
+            {shelf && shelf.trophies.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {shelf.trophies.map(
+                  (trophy) => (
+                    <span
+                      key={trophy.tournament_id}
+                      title={formatShortDate(
+                        trophy.finished_at.slice(
+                          0,
+                          10,
+                        ),
+                      )}
+                      className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-black text-zinc-700 shadow-sm"
+                    >
+                      <span>{trophy.emoji}</span>
+                      {trophy.name}
+                    </span>
+                  ),
+                )}
+              </div>
+            ) : (
+              <p className="mt-2 text-sm font-semibold text-amber-700/70">
+                {isMe
+                  ? 'Todavía no ganaste torneos. ¡El próximo es tuyo!'
+                  : 'Todavía no ganó ningún torneo.'}
+              </p>
+            )}
+          </section>
+        )}
 
         {/* FOTOS */}
 
