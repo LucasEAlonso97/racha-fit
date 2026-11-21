@@ -16,8 +16,10 @@ import ChallengesSection from './components/ChallengesSection'
 import DayDetailModal from './components/DayDetailModal'
 import GroupHeader from './components/GroupHeader'
 import InstallBanner from './components/InstallBanner'
+import MegaphoneBanner from './components/MegaphoneBanner'
 import MilestoneCelebration from './components/MilestoneCelebration'
 import SocialPanelsHost from './components/SocialPanelsHost'
+import TurnReminderModal from './components/TurnReminderModal'
 import WhatsNewModal from './components/WhatsNewModal'
 import {
   ErrorScreen,
@@ -71,6 +73,10 @@ import {
 import {
   useGroupData,
 } from './hooks/useGroupData'
+
+import {
+  useLoadGroupPerks,
+} from './hooks/useGroupPerks'
 
 import {
   useInviteLink,
@@ -183,6 +189,10 @@ function RachaApp({
     users,
     activities,
   } = groupData
+
+  useLoadGroupPerks(
+    activeGroup?.id ?? null,
+  )
 
   const groupChallenges =
     useChallenges(
@@ -492,6 +502,13 @@ function RachaApp({
       />
 
       {view === 'home' && (
+        <MegaphoneBanner
+          users={users}
+          currentUserId={currentUserId}
+        />
+      )}
+
+      {view === 'home' && (
         <InstallBanner />
       )}
 
@@ -679,6 +696,18 @@ function RachaApp({
         />
       )}
 
+      {!showWhatsNew &&
+        view !== 'tournaments' && (
+          <TurnReminderModal
+            key={activeGroup.id}
+            groupId={activeGroup.id}
+            currentUserId={currentUserId}
+            onGoToTournaments={() =>
+              setView('tournaments')
+            }
+          />
+        )}
+
       {!showWhatsNew && currentUser && (
         <MilestoneCelebration
           user={currentUser}
@@ -690,6 +719,7 @@ function RachaApp({
       )}
 
       <SocialPanelsHost
+        groupId={activeGroup.id}
         groupName={activeGroup.name}
         activities={activities}
         users={users}

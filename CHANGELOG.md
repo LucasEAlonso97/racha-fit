@@ -2,6 +2,30 @@
 
 Todas las versiones de Racha. La más nueva arriba.
 
+## 2.3.0 — Noviembre 2026
+
+### Torneos
+
+- ⏳ **Arranque automático:** si quien tiene que elegir carta (o preparar el próximo torneo) no lo hace en 48 h, se elige una carta al azar. La rueda de turnos sigue igual.
+- 🎴 **Aviso de turno:** al abrir la app, si te toca elegir, aparece una ventana con el tiempo que queda. Una sola vez por torneo.
+- 🏆 **Premios reales**, que se reclaman con un botón:
+  - 🃏 Un comodín por ganador (hasta 6) — 45%
+  - 👑 Corona en el avatar por 7 días — 30%
+  - 🏷️ Apodo para alguien del grupo por 7 días (de una lista) — 15%
+  - 🎴 Elegís el próximo torneo — 7%
+  - 📣 Megáfono: mensaje fijo en el inicio de todos por 24 h (de una lista) — 3%
+- Los premios simbólicos de antes quedan desactivados.
+- En equipos, cada integrante reclama su premio. "Elegís el próximo" lo usa el primero que reclama, y el otro se lleva un comodín.
+- Con 0 puntos no se gana.
+- 🗄️ **Vitrina de trofeos** en el perfil de cada integrante, con todos los torneos ganados (también los de antes).
+- 🎨 **Pantallas de torneo rediseñadas** con la paleta de la app: campeones, premio, podio y equipos.
+
+### Base de datos
+
+Correr en Supabase → SQL Editor:
+
+1. `supabase/migrations/20261121200000_torneos_premios.sql`
+
 ## 2.2.0 — Noviembre 2026
 
 ### Nuevo

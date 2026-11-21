@@ -32,6 +32,12 @@ export type TournamentPrize = {
   emoji: string
   description: string
   category: string
+
+  /*
+   * null = premio viejo (simbólico),
+   * no se reclama en la app.
+   */
+  prize_type?: string | null
 }
 
 export type TournamentParticipant = {
@@ -82,6 +88,24 @@ export type Tournament = {
 
   participants:
     TournamentParticipant[]
+
+  /*
+   * Campos nuevos (migración de premios).
+   * Opcionales para que la app siga
+   * andando si todavía no se corrió.
+   */
+
+  /* Se eligió solo por vencer el plazo. */
+  auto_selected?: boolean
+
+  /* Hasta cuándo hay para elegir / continuar. */
+  selection_deadline?: string | null
+
+  /* Quiénes ganaron (si terminó). */
+  winner_ids?: string[]
+
+  /* Quiénes ya reclamaron el premio. */
+  claims?: string[]
 }
 
 type UseTournamentResult = {

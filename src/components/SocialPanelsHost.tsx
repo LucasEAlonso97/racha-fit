@@ -17,6 +17,7 @@ import type {
 } from '../types'
 
 type Props = {
+  groupId: string
   groupName: string
   activities: ActivitiesByDate
   users: User[]
@@ -30,6 +31,7 @@ type Props = {
  * openMemberProfile / openGroupGallery.
  */
 function SocialPanelsHost({
+  groupId,
   groupName,
   activities,
   users,
@@ -68,6 +70,7 @@ function SocialPanelsHost({
 
   return (
     <MemberProfileModal
+      groupId={groupId}
       user={user}
       activities={activities}
       users={users}

@@ -20,6 +20,7 @@ import type {
 
 import Achievements from '../components/Achievements'
 import GroupHistoryPanel from '../components/GroupHistoryPanel'
+import Nickname from '../components/Nickname'
 import PeriodSummary from '../components/PeriodSummary'
 import UserAvatar from '../components/UserAvatar'
 
@@ -336,6 +337,13 @@ function Rachas({
                             </span>
                           )}
                         </div>
+
+                        <Nickname
+                          userId={
+                            item.user.id
+                          }
+                          className="mt-1"
+                        />
 
                         <p className="mt-0.5 text-xs text-zinc-500">
                           {
