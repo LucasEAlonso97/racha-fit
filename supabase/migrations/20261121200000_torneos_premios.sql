@@ -38,7 +38,7 @@ begin
     and is_nullable = 'NO'
     and column_default is null
     and column_name not in (
-      'id', 'title', 'emoji', 'description', 'category', 'active',
+      'id', 'code', 'title', 'emoji', 'description', 'category', 'active',
       'prize_type', 'weight'
     );
 
@@ -108,9 +108,16 @@ set active = false
 where prize_type is null;
 
 insert into public.tournament_prizes (
-  title, emoji, description, category, active, prize_type, weight
+  code, title, emoji, description, category, active, prize_type, weight
 )
-select v.title, v.emoji, v.description, 'app', true, v.prize_type, v.weight
+select 'app_' || v.prize_type, v.title, v.emoji, v.description,
+       -- Una categoría que ya exista, por si la columna tiene valores fijos.
+       coalesce(
+         (select tp.category from public.tournament_prizes tp
+          order by tp.category limit 1),
+         'app'
+       ),
+       true, v.prize_type, v.weight
 from (
   values
     ('Un comodín', '🃏',
@@ -132,6 +139,7 @@ from (
 where not exists (
   select 1 from public.tournament_prizes tp
   where tp.prize_type = v.prize_type
+     or tp.code = 'app_' || v.prize_type
 );
 
 
