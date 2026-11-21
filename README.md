@@ -41,6 +41,8 @@ Cada integrante tiene su propio avatar, registra su actividad diaria y comparte 
 - 📈 Resumen mensual y anual (días activos, minutos, actividad favorita, mejor racha)
 - 🏅 Logros
 - 🥇 Torneos dentro del grupo
+- 🏁 Desafíos con fecha para todo el grupo
+- 🔥 Festejo de hitos de racha y tarjetas para compartir en historias
 - 👉 Empujones a quien todavía no se movió
 
 **Notificaciones y app**
@@ -268,7 +270,6 @@ Los cambios nuevos están en `supabase/migrations/`, numerados por fecha. Se cor
 ## 🔮 Próximas mejoras
 
 - 🗃️ Guardar la estructura completa de la base en `supabase/migrations`
-- 📤 Compartir el resumen como imagen
 - 🔄 Aviso de "hay una versión nueva" en la app instalada
 
 ---

@@ -2,6 +2,23 @@
 
 Todas las versiones de Racha. La más nueva arriba.
 
+## 2.1.0 — Noviembre 2026
+
+### Nuevo
+
+- 🏁 **Desafíos con fecha** para todo el grupo ("20 días en diciembre"), con progreso y ranking.
+- 🔥 **Festejo de hitos**: al llegar a 7, 14, 30, 50, 100, 150, 200 y 365 días seguidos.
+- 📲 **Compartir en historias**: el resumen del mes o del año y los hitos como imagen 1080×1920.
+- 📱 **Cartel para instalar la app** (Android) y guía paso a paso para iPhone.
+- 🔗 **Vista previa** con imagen y texto al compartir el link por WhatsApp e Instagram.
+- Ícono adaptable para Android.
+
+### Base de datos
+
+Correr en Supabase → SQL Editor:
+
+1. `supabase/migrations/20261121120000_desafios.sql`
+
 ## 2.0.0 — Noviembre 2026
 
 ### Nuevo
