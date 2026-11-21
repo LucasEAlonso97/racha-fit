@@ -10,24 +10,14 @@
 
 export const WHATS_NEW = [
   {
-    emoji: '🏁',
-    title: 'Desafíos',
-    text: 'Armá un desafío con fecha para todo el grupo: "20 días en diciembre". Está en el inicio.',
+    emoji: '🃏',
+    title: 'Invitá y ganá comodines',
+    text: 'Compartí tu link desde Perfil → Grupo. Si alguien nuevo se suma y registra su primera actividad, ganás un comodín.',
   },
   {
-    emoji: '🔥',
-    title: 'Festejá tus rachas',
-    text: 'Al llegar a 7, 14, 30 o 100 días seguidos, festejo y una imagen para compartir.',
-  },
-  {
-    emoji: '📲',
-    title: 'Compartí en historias',
-    text: 'En Rachas → Resumen podés compartir tu mes o tu año como imagen.',
-  },
-  {
-    emoji: '📱',
-    title: 'Instalala',
-    text: 'Si la usás desde el navegador, ahora te explicamos cómo tenerla como app.',
+    emoji: '💼',
+    title: 'Hasta 6 comodines',
+    text: 'Los que ganes invitando se suman a los del mes y no se pierden con la recarga mensual.',
   },
 ]
 

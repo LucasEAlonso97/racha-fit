@@ -27,7 +27,7 @@ Cada integrante tiene su propio avatar, registra su actividad diaria y comparte 
 - 🏋️ Registro de actividad diaria con tipo y duración (se pueden registrar varias por día)
 - 🔁 "Lo mismo que la última vez" para repetir con un toque
 - ✏️ Edición y eliminación de actividades
-- 🃏 Comodines para recuperar un día de los últimos 7
+- 🃏 Comodines para recuperar un día de los últimos 7 (2 por mes, hasta 3; se ganan más invitando, hasta 6)
 - 💬 Reacciones con emoji y comentarios en la actividad de otros
 - 📸 Foto opcional en cada actividad y galería del grupo
 - 👤 Perfil de cada integrante (tocando su avatar)
@@ -116,7 +116,9 @@ Tablas principales:
 | `activities` | Actividades (`activity_date`, `type`, `duration`, `recovered_with_wildcard`, `photo_url`) |
 | `activity_reactions` | Reacción de un usuario a una actividad (una por usuario) |
 | `activity_comments` | Comentarios en las actividades (hasta 280 caracteres) |
+| `user_wildcards` | Saldo de comodines por usuario y última recarga mensual |
 | `wildcard_recoveries` | Días recuperados con comodín |
+| `referrals` | Quién invitó a quién y si ya se entregó el premio |
 | `group_week_history` / `group_week_member_results` | Historial semanal del grupo |
 | `social_notifications` | Notificaciones dentro de la app |
 | `notification_preferences` / `push_subscriptions` | Configuración y suscripciones push |

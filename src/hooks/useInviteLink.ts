@@ -2,50 +2,37 @@ import {
   useState,
 } from 'react'
 
+import {
+  clearPendingInvite,
+  readPendingInvite,
+} from '../lib/pendingInvite'
+
 /*
  * ========================================
- * INVITACIÓN POR LINK (?join=CODIGO)
+ * INVITACIÓN POR LINK
  * ========================================
+ *
+ * ?join=CODIGO&ref=ID_DE_QUIEN_INVITA
+ *
+ * Se guarda también en el navegador (ver
+ * lib/pendingInvite.ts), así no se pierde
+ * si el invitado se registra y confirma
+ * el mail antes de entrar.
  */
 
-function readInviteCodeFromUrl() {
-  const code = new URLSearchParams(
-    window.location.search,
-  )
-    .get('join')
-    ?.trim()
-    .toUpperCase()
-
-  return code || null
-}
-
 export function useInviteLink() {
-  const [code, setCode] =
-    useState<string | null>(
-      readInviteCodeFromUrl,
-    )
+  const [invite, setInvite] = useState(
+    readPendingInvite,
+  )
 
-  /*
-   * Saca ?join= de la URL sin recargar.
-   */
   const clear = () => {
-    const url = new URL(
-      window.location.href,
-    )
-
-    url.searchParams.delete('join')
-
-    window.history.replaceState(
-      {},
-      '',
-      `${url.pathname}${url.search}${url.hash}`,
-    )
-
-    setCode(null)
+    clearPendingInvite()
+    setInvite(null)
   }
 
   return {
-    code,
+    code: invite?.code ?? null,
+    ref: invite?.ref ?? null,
     clear,
   }
 }

@@ -20,6 +20,10 @@ import {
 } from 'lucide-react'
 
 import {
+  inviteRedirectUrl,
+} from '../lib/pendingInvite'
+
+import {
   supabase,
 } from '../lib/supabase'
 
@@ -374,6 +378,13 @@ function Auth() {
                 name:
                   cleanName,
               },
+
+              /*
+               * Al confirmar el mail vuelve
+               * con la invitación (si hay).
+               */
+              emailRedirectTo:
+                inviteRedirectUrl(),
             },
           },
         )
