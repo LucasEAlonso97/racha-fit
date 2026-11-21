@@ -937,6 +937,64 @@ streakEligibleFrom:
 
                         /*
                          * ===========================
+                         * PREMIO POR INVITAR
+                         * ===========================
+                         */
+
+                        if (
+                          notification.type ===
+                          'referral'
+                        ) {
+                          return (
+                            <div
+                              key={
+                                notification.id
+                              }
+                              className="flex w-full items-center gap-3 py-4 text-left"
+                            >
+                              <div className="relative">
+                                <UserAvatar
+                                  user={
+                                    actor
+                                  }
+                                  size="md"
+                                />
+
+                                <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-amber-100 text-xs">
+                                  🃏
+                                </div>
+                              </div>
+
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm leading-relaxed text-zinc-600">
+                                  <span className="font-black text-zinc-800">
+                                    {
+                                      notification.actorName
+                                    }
+                                  </span>{' '}
+                                  se sumó con tu
+                                  invitación.{' '}
+                                  <span className="font-black text-zinc-800">
+                                    ¡Ganaste un
+                                    comodín!
+                                  </span>
+                                </p>
+
+                                <p className="mt-1 text-xs font-bold text-zinc-400">
+                                  Gracias por
+                                  sumar gente 🙌
+                                </p>
+                              </div>
+
+                              {!notification.isRead && (
+                                <div className="h-2.5 w-2.5 shrink-0 rounded-full bg-violet-500" />
+                              )}
+                            </div>
+                          )
+                        }
+
+                        /*
+                         * ===========================
                          * REACCIÓN / COMENTARIO
                          * ===========================
                          */

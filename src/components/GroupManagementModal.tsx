@@ -19,6 +19,10 @@ import {
 } from 'lucide-react'
 
 import {
+  buildInviteLink,
+} from '../lib/pendingInvite'
+
+import {
   confirmAction,
 } from '../lib/feedback'
 
@@ -192,10 +196,17 @@ function GroupManagementModal({
 
 const shareInviteLink =
   async () => {
+    /*
+     * Lleva tu id (&ref=): si alguien
+     * nuevo entra con este link y registra
+     * su primera actividad, ganás un
+     * comodín.
+     */
     const inviteLink =
-      `${window.location.origin}/?join=${encodeURIComponent(
+      buildInviteLink(
         group.invite_code,
-      )}`
+        currentUserId,
+      )
 
     const shareText =
       `Sumate a "${group.name}" en Racha 💪`
@@ -993,6 +1004,12 @@ const shareInviteLink =
     </>
   )}
 </button>
+
+          <p className="mt-2 text-center text-xs font-semibold text-zinc-400">
+            🃏 Si alguien nuevo se suma con
+            tu link y registra su primera
+            actividad, ganás un comodín.
+          </p>
 
           {/* REGENERAR CÓDIGO */}
 

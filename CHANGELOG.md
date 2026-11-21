@@ -2,6 +2,23 @@
 
 Todas las versiones de Racha. La más nueva arriba.
 
+## 2.2.0 — Noviembre 2026
+
+### Nuevo
+
+- 🃏 **Premio por invitar**: el link de invitación lleva tu id. Si alguien nuevo se suma con él y registra su primera actividad, ganás 1 comodín (hasta 6) y te llega una notificación.
+- La invitación ya no se pierde si el invitado tiene que confirmar el mail antes de entrar.
+
+### Cambiado
+
+- La recarga mensual de comodines ya no recorta el saldo a 3: si tenés más por premios, los conservás. Con 3 o menos funciona igual que antes.
+
+### Base de datos
+
+Correr en Supabase → SQL Editor:
+
+1. `supabase/migrations/20261121160000_premio_por_invitar.sql`
+
 ## 2.1.0 — Noviembre 2026
 
 ### Nuevo

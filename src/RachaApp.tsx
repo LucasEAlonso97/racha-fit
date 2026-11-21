@@ -89,6 +89,10 @@ import {
 } from './hooks/useWildcards'
 
 import {
+  claimReferral,
+} from './lib/referrals'
+
+import {
   closeSocialPanel,
 } from './lib/socialPanels'
 
@@ -411,6 +415,21 @@ function RachaApp({
           }
           onReady={(group) => {
             account.addOrUpdateGroup(group)
+
+            /*
+             * Premio por invitar: anota
+             * quién te invitó. La base
+             * decide si corresponde
+             * (cuenta nueva, sin
+             * actividades...).
+             */
+            if (invite.ref) {
+              void claimReferral(
+                invite.ref,
+                group.id,
+              )
+            }
+
             invite.clear()
           }}
           onCancel={invite.clear}
