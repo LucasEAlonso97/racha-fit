@@ -19,6 +19,7 @@ import InstallBanner from './components/InstallBanner'
 import MegaphoneBanner from './components/MegaphoneBanner'
 import MilestoneCelebration from './components/MilestoneCelebration'
 import SocialPanelsHost from './components/SocialPanelsHost'
+import TurnReminderModal from './components/TurnReminderModal'
 import WhatsNewModal from './components/WhatsNewModal'
 import {
   ErrorScreen,
@@ -694,6 +695,18 @@ function RachaApp({
           onClose={closeWhatsNew}
         />
       )}
+
+      {!showWhatsNew &&
+        view !== 'tournaments' && (
+          <TurnReminderModal
+            key={activeGroup.id}
+            groupId={activeGroup.id}
+            currentUserId={currentUserId}
+            onGoToTournaments={() =>
+              setView('tournaments')
+            }
+          />
+        )}
 
       {!showWhatsNew && currentUser && (
         <MilestoneCelebration
