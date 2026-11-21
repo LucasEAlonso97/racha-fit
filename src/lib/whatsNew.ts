@@ -10,14 +10,19 @@
 
 export const WHATS_NEW = [
   {
-    emoji: '🃏',
-    title: 'Invitá y ganá comodines',
-    text: 'Compartí tu link desde Perfil → Grupo. Si alguien nuevo se suma y registra su primera actividad, ganás un comodín.',
+    emoji: '🏆',
+    title: 'Premios de verdad en los torneos',
+    text: 'Comodines, corona por una semana, ponerle un apodo a alguien, elegir el próximo torneo… y el raro megáfono. El premio se reclama con un botón.',
   },
   {
-    emoji: '💼',
-    title: 'Hasta 6 comodines',
-    text: 'Los que ganes invitando se suman a los del mes y no se pierden con la recarga mensual.',
+    emoji: '🗄️',
+    title: 'Vitrina de trofeos',
+    text: 'Cada torneo que ganás queda en tu perfil. Tocá el avatar de alguien para ver la suya.',
+  },
+  {
+    emoji: '⏳',
+    title: 'Los torneos ya no se traban',
+    text: 'Si a quien le toca no elige en 48 horas, se elige una carta al azar. Te avisamos cuando es tu turno.',
   },
 ]
 
