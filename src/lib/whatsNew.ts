@@ -10,19 +10,19 @@
 
 export const WHATS_NEW = [
   {
-    emoji: '📶',
-    title: 'Funciona sin señal',
-    text: '¿Sin internet en el gimnasio? Cargá tu actividad igual: se guarda en el celu y se envía sola cuando vuelve la conexión.',
+    emoji: '⚡',
+    title: 'Abre al toque',
+    text: 'Racha muestra al instante lo último que viste y trae lo nuevo de fondo. Y ahora abre aunque no tengas señal.',
   },
   {
-    emoji: '↩️',
-    title: 'Deshacer',
-    text: 'Si borrás una actividad o un comentario por error, tocá "Deshacer" y vuelve.',
+    emoji: '🟪',
+    title: 'Tu año día por día',
+    text: 'En tu perfil hay un mapa con un cuadradito por día: más oscuro, más entrenaste. Tocá uno para ver qué hiciste.',
   },
   {
-    emoji: '🔥',
-    title: 'Más festejo',
-    text: 'Fueguitos cada vez que cargás el día. Y la app te avisa cuando hay una versión nueva.',
+    emoji: '👇',
+    title: 'Deslizá para cerrar',
+    text: 'Las ventanas que suben desde abajo se cierran arrastrándolas hacia abajo.',
   },
 ]
 

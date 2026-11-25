@@ -4,6 +4,10 @@ import type {
 } from 'react'
 
 import {
+  clearAllCaches,
+} from '../lib/localCache'
+
+import {
   getNameFallback,
 } from '../lib/groupData'
 
@@ -242,6 +246,12 @@ export function useProfileActions({
    */
 
   const logout = async () => {
+    /*
+     * Lo guardado en el celu es de esta
+     * cuenta: se borra al salir.
+     */
+    clearAllCaches()
+
     const { error } =
       await supabase.auth.signOut()
 

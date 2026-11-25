@@ -1,4 +1,7 @@
 import {
+  useSwipeToClose,
+} from '../hooks/useSwipeToClose'
+import {
   Check,
   ChevronDown,
   Users,
@@ -30,6 +33,9 @@ function GroupSwitcher({
     open,
     setOpen,
   ] = useState(false)
+
+  const sheetRef =
+    useSwipeToClose(() => setOpen(false))
 
   const handleSelect = (
     group: Group,
@@ -76,7 +82,7 @@ function GroupSwitcher({
             className="absolute inset-0"
           />
 
-          <section className="relative z-10 w-full max-w-md rounded-[30px] bg-white p-5 shadow-2xl">
+          <section ref={sheetRef} className="relative z-10 w-full max-w-md rounded-[30px] bg-white p-5 shadow-2xl">
             <div className="mb-5 flex items-start justify-between">
               <div>
                 <p className="text-xs font-black tracking-wider text-violet-500">

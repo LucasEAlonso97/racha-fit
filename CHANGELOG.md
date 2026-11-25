@@ -2,6 +2,29 @@
 
 Todas las versiones de Racha. La más nueva arriba.
 
+## 2.6.0 — Noviembre 2026
+
+### Más rápida y liviana
+
+- ⚡ **Abre al toque:** la app guarda en el celu lo último que viste (perfil, grupos, actividades) y lo muestra apenas abrís, mientras trae lo nuevo de fondo.
+- 🐛 **Arreglo importante:** Supabase devuelve como máximo 1000 filas por consulta. Cuando un grupo pasaba las 1000 actividades, las **más nuevas** dejaban de aparecer. Ahora se piden de a páginas.
+- 📉 El historial de más de 4 meses se trae sin comentarios (lo que más pesa). Los comentarios de un día viejo se cargan cuando lo abrís. Las rachas se siguen calculando con todo el historial.
+- 🖼️ Íconos e imágenes optimizados (de ~750 KB a ~300 KB).
+
+### Sin señal
+
+- 📶 **La app abre aunque no haya internet**, con lo último guardado. Con señal débil, entra a los 4 segundos en vez de quedarse "Cargando...".
+- Junto con lo de la 2.5.0 (cargar actividades sin señal), ya se puede usar Racha en un subsuelo.
+
+### Diseño
+
+- 👇 **Cerrar ventanas deslizando hacia abajo**, como en Instagram o WhatsApp.
+- 🟪 **Mapa de calor del año** en el perfil: un cuadradito por día, más oscuro cuanto más entrenaste. Tocá un día para ver qué hiciste; con las flechas ves años anteriores.
+
+### Base de datos
+
+No hay que correr nada.
+
 ## 2.5.0 — Noviembre 2026
 
 ### Sin señal

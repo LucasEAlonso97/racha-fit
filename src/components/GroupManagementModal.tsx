@@ -1,4 +1,7 @@
 import {
+  useSwipeToClose,
+} from '../hooks/useSwipeToClose'
+import {
   useEffect,
   useState,
 } from 'react'
@@ -68,6 +71,9 @@ function GroupManagementModal({
   onLeftGroup,
   onMemberRemoved,
 }: Props) {
+  const sheetRef =
+    useSwipeToClose(onClose)
+
   const isOwner =
     group.created_by ===
     currentUserId
@@ -663,7 +669,7 @@ const shareInviteLink =
 
       {/* MODAL */}
 
-      <section className="relative z-10 max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[30px] bg-zinc-50 p-5 shadow-2xl">
+      <section ref={sheetRef} className="relative z-10 max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[30px] bg-zinc-50 p-5 shadow-2xl">
         {/* ================================= */}
         {/* HEADER */}
         {/* ================================= */}

@@ -1,4 +1,7 @@
 import {
+  useSwipeToClose,
+} from '../hooks/useSwipeToClose'
+import {
   useMemo,
   useState,
 } from 'react'
@@ -55,6 +58,9 @@ function CreateChallengeModal({
   onClose,
   onCreate,
 }: Props) {
+  const sheetRef =
+    useSwipeToClose(onClose)
+
   const presets = useMemo(
     () => getChallengePresets(today),
     [today],
@@ -132,6 +138,7 @@ function CreateChallengeModal({
       onClick={onClose}
     >
       <div
+        ref={sheetRef}
         role="dialog"
         aria-modal="true"
         onClick={(event) =>

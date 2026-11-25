@@ -1,4 +1,7 @@
 import {
+  useSwipeToClose,
+} from '../hooks/useSwipeToClose'
+import {
   useState,
 } from 'react'
 
@@ -74,10 +77,6 @@ function AddGroupModal({
       string | null
     >(null)
 
-  if (!open) {
-    return null
-  }
-
   const resetAndClose =
     () => {
       setGroupName('')
@@ -88,6 +87,13 @@ function AddGroupModal({
 
       onClose()
     }
+
+  const sheetRef =
+    useSwipeToClose(resetAndClose)
+
+  if (!open) {
+    return null
+  }
 
   const changeMode = (
     newMode: Mode,
@@ -275,7 +281,7 @@ function AddGroupModal({
 
       {/* MODAL */}
 
-      <section className="relative z-10 w-full max-w-md rounded-[30px] bg-white p-5 shadow-2xl">
+      <section ref={sheetRef} className="relative z-10 w-full max-w-md rounded-[30px] bg-white p-5 shadow-2xl">
         {/* HEADER */}
 
         <div className="mb-6 flex items-start justify-between gap-4">

@@ -52,6 +52,13 @@ export type Activity = {
    * envió (ver lib/offlineQueue.ts).
    */
   pending?: boolean
+
+  /*
+   * Del historial viejo: los comentarios
+   * todavía no se cargaron (se cargan al
+   * abrir el día).
+   */
+  partial?: boolean
 }
 
 /*

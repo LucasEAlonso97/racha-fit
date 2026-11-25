@@ -1,4 +1,7 @@
 import {
+  useSwipeToClose,
+} from '../hooks/useSwipeToClose'
+import {
   useState,
   useSyncExternalStore,
 } from 'react'
@@ -54,6 +57,9 @@ function InstallBanner() {
 
   const [showIosSteps, setShowIosSteps] =
     useState(false)
+
+  const sheetRef =
+    useSwipeToClose(() => setShowIosSteps(false))
 
   const ios = isIos()
 
@@ -134,6 +140,7 @@ function InstallBanner() {
           }
         >
           <div
+            ref={sheetRef}
             role="dialog"
             aria-modal="true"
             onClick={(event) =>

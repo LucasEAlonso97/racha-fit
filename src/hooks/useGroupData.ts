@@ -1,5 +1,7 @@
 import {
+  useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react'
 
@@ -11,6 +13,7 @@ import {
 
 import {
   fetchActivityById,
+  fetchDayDetails,
   fetchGroupData,
   mapActivityRows,
   mapMembersToUsers,
@@ -19,6 +22,29 @@ import {
 import {
   supabase,
 } from '../lib/supabase'
+
+import {
+  readCache,
+  writeCache,
+} from '../lib/localCache'
+
+import {
+  isNetworkError,
+  mergePendingActivities,
+  withoutPendingActivities,
+} from '../lib/offlineQueue'
+
+type GroupCache = {
+  users: User[]
+  activities: ActivitiesByDate
+}
+
+function groupCacheKey(
+  groupId: string,
+  userId: string,
+) {
+  return `group:${groupId}:${userId}`
+}
 
 import type {
   ActivitiesByDate,
@@ -103,6 +129,32 @@ export function useGroupData(
     const loadGroupData = async () => {
       setError(null)
 
+      /*
+       * Primero lo guardado en el celu (se
+       * ve al toque); después lo nuevo.
+       */
+      const cached =
+        refreshKey === 0
+          ? readCache<GroupCache>(
+              groupCacheKey(
+                groupId,
+                currentUserId,
+              ),
+            )
+          : null
+
+      if (cached) {
+        setUsers(cached.users)
+        setActivities(
+          mergePendingActivities(
+            cached.activities,
+            currentUserId,
+            groupId,
+          ),
+        )
+        setLoading(false)
+      }
+
       const [
         membersResult,
         activitiesResult,
@@ -110,6 +162,26 @@ export function useGroupData(
         await fetchGroupData(groupId)
 
       if (cancelled) {
+        return
+      }
+
+      /*
+       * Sin señal pero con lo guardado: nos
+       * quedamos con eso.
+       */
+      if (
+        cached &&
+        (membersResult.error ||
+          activitiesResult.error) &&
+        isNetworkError(
+          membersResult.error ??
+            activitiesResult.error,
+        )
+      ) {
+        console.warn(
+          'Sin conexión: mostrando lo último guardado.',
+        )
+
         return
       }
 
@@ -149,8 +221,12 @@ export function useGroupData(
       )
 
       setActivities(
-        mapActivityRows(
-          activitiesResult.data,
+        mergePendingActivities(
+          mapActivityRows(
+            activitiesResult.data,
+          ),
+          currentUserId,
+          groupId,
         ),
       )
 
@@ -450,7 +526,115 @@ export function useGroupData(
     )
   }
 
+  /*
+   * GUARDAR EN EL CELU
+   *
+   * Cada vez que cambian los datos (con un
+   * segundo de espera para no escribir a
+   * cada rato).
+   */
+
+  useEffect(() => {
+    if (
+      !groupId ||
+      loading ||
+      error ||
+      users.length === 0
+    ) {
+      return
+    }
+
+    const timer = window.setTimeout(
+      () => {
+        writeCache(
+          groupCacheKey(
+            groupId,
+            currentUserId,
+          ),
+          {
+            users,
+            activities:
+              withoutPendingActivities(
+                activities,
+              ),
+          } satisfies GroupCache,
+        )
+      },
+      1000,
+    )
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [
+    groupId,
+    currentUserId,
+    users,
+    activities,
+    loading,
+    error,
+  ])
+
+  /*
+   * DÍA VIEJO: COMPLETAR COMENTARIOS
+   */
+
+  const activitiesRef =
+    useRef(activities)
+
+  useEffect(() => {
+    activitiesRef.current = activities
+  }, [activities])
+
+  const loadDayDetails = useCallback(
+    async (dateKey: string) => {
+      if (!groupId) {
+        return
+      }
+
+      const day =
+        activitiesRef.current[dateKey]
+
+      const hasPartial = Object.values(
+        day ?? {},
+      ).some((list) =>
+        list.some(
+          (activity) => activity.partial,
+        ),
+      )
+
+      if (!hasPartial) {
+        return
+      }
+
+      const rows =
+        await fetchDayDetails(
+          groupId,
+          dateKey,
+        )
+
+      if (!rows) {
+        return
+      }
+
+      setActivities((current) =>
+        rows.reduce(
+          (next, row) =>
+            upsertActivity(
+              next,
+              dateKey,
+              row.userId,
+              row.activity,
+            ),
+          current,
+        ),
+      )
+    },
+    [groupId],
+  )
+
   return {
+    loadDayDetails,
     users,
     setUsers,
     activities,

@@ -5,6 +5,10 @@ import {
 } from 'react'
 
 import {
+  useSwipeToClose,
+} from '../hooks/useSwipeToClose'
+
+import {
   Camera,
   Clock,
   Repeat2,
@@ -72,6 +76,9 @@ function ActivityModal({
   onDelete,
   lastActivity = null,
 }: Props) {
+  const sheetRef =
+    useSwipeToClose(onClose)
+
   /*
    * ========================================
    * ACTIVIDAD
@@ -394,7 +401,7 @@ function ActivityModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/30 backdrop-blur-[2px]">
-      <div className="max-h-[calc(100dvh-20px)] w-full max-w-md overflow-y-auto overscroll-contain rounded-t-[34px] bg-white px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-5 shadow-2xl">
+      <div ref={sheetRef} className="max-h-[calc(100dvh-20px)] w-full max-w-md overflow-y-auto overscroll-contain rounded-t-[34px] bg-white px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-5 shadow-2xl">
         {/* ================================= */}
         {/* HEADER */}
         {/* ================================= */}

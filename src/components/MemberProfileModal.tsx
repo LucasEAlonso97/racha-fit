@@ -1,4 +1,7 @@
 import {
+  useSwipeToClose,
+} from '../hooks/useSwipeToClose'
+import {
   useMemo,
 } from 'react'
 
@@ -90,6 +93,9 @@ function MemberProfileModal({
   today,
   onClose,
 }: Props) {
+  const sheetRef =
+    useSwipeToClose(onClose)
+
   const isMe = user.id === currentUserId
 
   const cabinet =
@@ -204,6 +210,7 @@ function MemberProfileModal({
       onClick={onClose}
     >
       <div
+        ref={sheetRef}
         role="dialog"
         aria-modal="true"
         onClick={(event) =>

@@ -19,6 +19,7 @@ import {
 import {
   getQueue,
   isNetworkError,
+  mergePendingActivities,
   removeQueuedActivity,
 } from '../lib/offlineQueue'
 
@@ -86,40 +87,11 @@ export function useOfflineSync({
       return
     }
 
-    const pending = getQueue(
-      userId,
-    ).filter(
-      (item) =>
-        item.groupId === activeGroupId,
-    )
-
-    if (pending.length === 0) {
-      return
-    }
-
     setActivities((current) =>
-      pending.reduce(
-        (next, item) =>
-          findActivityById(
-            next,
-            item.pendingId,
-          )
-            ? next
-            : addActivity(
-                next,
-                item.dateKey,
-                userId,
-                {
-                  id: item.pendingId,
-                  type: item.type,
-                  duration: item.duration,
-                  reactions: [],
-                  comments: [],
-                  photo_url: null,
-                  pending: true,
-                },
-              ),
+      mergePendingActivities(
         current,
+        userId,
+        activeGroupId,
       ),
     )
   }, [
