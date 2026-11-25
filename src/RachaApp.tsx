@@ -20,6 +20,7 @@ import MegaphoneBanner from './components/MegaphoneBanner'
 import MilestoneCelebration from './components/MilestoneCelebration'
 import SocialPanelsHost from './components/SocialPanelsHost'
 import TurnReminderModal from './components/TurnReminderModal'
+import ConsistencyRewardModal from './components/ConsistencyRewardModal'
 import WhatsNewModal from './components/WhatsNewModal'
 import {
   ErrorScreen,
@@ -202,6 +203,11 @@ function RachaApp({
 
   const {
     balance: wildcardBalance,
+    consistencyRun,
+    consistencyAtCap,
+    justEarned: consistencyEarned,
+    dismissJustEarned:
+      dismissConsistencyEarned,
     recoveredDates:
       wildcardRecoveryDates,
     refresh: refreshWildcards,
@@ -610,6 +616,12 @@ function RachaApp({
               wildcardBalance={
                 wildcardBalance
               }
+              consistencyRun={
+                consistencyRun
+              }
+              consistencyAtCap={
+                consistencyAtCap
+              }
               activities={activities}
               onSaveWeeklyGoal={
                 profileActions.updateWeeklyGoal
@@ -704,6 +716,16 @@ function RachaApp({
             currentUserId={currentUserId}
             onGoToTournaments={() =>
               setView('tournaments')
+            }
+          />
+        )}
+
+      {!showWhatsNew &&
+        consistencyEarned > 0 && (
+          <ConsistencyRewardModal
+            count={consistencyEarned}
+            onClose={
+              dismissConsistencyEarned
             }
           />
         )}

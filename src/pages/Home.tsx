@@ -17,6 +17,7 @@ import GroupStreakCard from '../components/GroupStreakCard'
 import Nickname from '../components/Nickname'
 import ReactionBar from '../components/ReactionBar'
 import UserAvatar from '../components/UserAvatar'
+import WrappedBanner from '../components/WrappedBanner'
 
 import {
   openGroupGallery,
@@ -465,6 +466,11 @@ streakEligibleFrom:
           Un día más cuenta 🏋️‍♀️
         </p>
       </header>
+
+      <WrappedBanner
+        today={today}
+        place="home"
+      />
 
       {/* ================================= */}
       {/* RACHA DEL GRUPO */}

@@ -10,19 +10,19 @@
 
 export const WHATS_NEW = [
   {
-    emoji: '🏆',
-    title: 'Premios de verdad en los torneos',
-    text: 'Comodines, corona por una semana, ponerle un apodo a alguien, elegir el próximo torneo… y el raro megáfono. El premio se reclama con un botón.',
+    emoji: '🎁',
+    title: 'Racha Wrapped',
+    text: 'Tu año en Racha en formato historias: días, horas, deporte del año, tu compañero de racha y más. Está en tu perfil, y en diciembre también en el inicio.',
   },
   {
-    emoji: '🗄️',
-    title: 'Vitrina de trofeos',
-    text: 'Cada torneo que ganás queda en tu perfil. Tocá el avatar de alguien para ver la suya.',
+    emoji: '🃏',
+    title: 'Comodines por constancia',
+    text: 'Cumplí tu meta semanal 4 semanas seguidas y ganás un comodín. Mirá tu progreso en el perfil.',
   },
   {
-    emoji: '⏳',
-    title: 'Los torneos ya no se traban',
-    text: 'Si a quien le toca no elige en 48 horas, se elige una carta al azar. Te avisamos cuando es tu turno.',
+    emoji: '📱',
+    title: 'Adiós al zoom raro',
+    text: 'En el celu la app ya no se agranda cuando escribís un comentario.',
   },
 ]
 
