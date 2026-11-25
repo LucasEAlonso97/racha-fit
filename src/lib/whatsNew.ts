@@ -17,7 +17,7 @@ export const WHATS_NEW = [
   {
     emoji: '➕',
     title: 'Barra de abajo renovada',
-    text: 'El botón + tiene su lugar y ya no tapa Rachas. Y los textos se leen mejor.',
+    text: 'El botón + es más chico y ya no tapa Rachas. Y los textos se leen mejor.',
   },
 ]
 

@@ -32,11 +32,11 @@ type Tab = {
 }
 
 /*
- * 3 a la izquierda y 2 a la derecha del
- * botón "+", que queda en el centro con su
- * propio espacio (antes tapaba Rachas).
+ * Las 5 pestañas con el mismo ancho. El +
+ * flota arriba de Rachas, más chico y más
+ * alto, para no taparla.
  */
-const LEFT_TABS: Tab[] = [
+const TABS: Tab[] = [
   {
     view: 'home',
     label: 'Inicio',
@@ -52,9 +52,6 @@ const LEFT_TABS: Tab[] = [
     label: 'Rachas',
     Icon: Flame,
   },
-]
-
-const RIGHT_TABS: Tab[] = [
   {
     view: 'tournaments',
     label: 'Torneos',
@@ -95,11 +92,7 @@ function NavTab({
     >
       <Icon size={22} />
 
-      {/*
-        * 11px (antes 9). "Calendario" puede
-        * ocupar un poquito del espacio de sus
-        * vecinas, que tienen nombres cortos.
-        */}
+      {/* 11px (antes 9). */}
       <span
         className={`whitespace-nowrap text-[11px] leading-none tracking-tight ${
           active
@@ -129,44 +122,25 @@ function BottomNavigation({
           onClick={
             onAddActivity
           }
-          className="absolute left-1/2 top-0 z-20 flex h-14 w-14 -translate-x-1/2 -translate-y-7 items-center justify-center rounded-full bg-violet-500 text-white shadow-lg shadow-violet-200 ring-4 ring-white transition active:scale-95"
+          className="absolute left-1/2 top-0 z-20 flex h-12 w-12 -translate-x-1/2 -translate-y-[38px] items-center justify-center rounded-full bg-violet-500 text-white shadow-lg shadow-violet-300 ring-4 ring-white transition active:scale-95"
         >
           <Plus
-            size={29}
+            size={25}
             strokeWidth={3}
           />
         </button>
 
         {/* NAV */}
 
-        <div className="flex items-center py-2">
-          <div className="grid flex-1 grid-cols-3">
-            {LEFT_TABS.map((tab) => (
-              <NavTab
-                key={tab.view}
-                tab={tab}
-                active={view === tab.view}
-                onSelect={onChangeView}
-              />
-            ))}
-          </div>
-
-          {/* Lugar del + */}
-          <div
-            aria-hidden="true"
-            className="w-14 shrink-0"
-          />
-
-          <div className="grid flex-1 grid-cols-2">
-            {RIGHT_TABS.map((tab) => (
-              <NavTab
-                key={tab.view}
-                tab={tab}
-                active={view === tab.view}
-                onSelect={onChangeView}
-              />
-            ))}
-          </div>
+        <div className="grid grid-cols-5 items-center px-2 py-2">
+          {TABS.map((tab) => (
+            <NavTab
+              key={tab.view}
+              tab={tab}
+              active={view === tab.view}
+              onSelect={onChangeView}
+            />
+          ))}
         </div>
       </div>
     </nav>
