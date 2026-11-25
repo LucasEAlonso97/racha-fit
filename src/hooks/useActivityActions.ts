@@ -24,6 +24,10 @@ import {
 } from '../lib/feedback'
 
 import {
+  isMoodSupported,
+} from '../lib/groupData'
+
+import {
   celebrate,
   tapFeedback,
 } from '../lib/celebrate'
@@ -74,6 +78,31 @@ type Options = {
  * Traduce los errores de la base al crear
  * una actividad a un mensaje para el usuario.
  */
+/*
+ * mood + note, solo si la base ya tiene
+ * esas columnas (migración "cómo te
+ * sentiste").
+ */
+export function moodPayload(
+  activity: Pick<
+    Activity,
+    'mood' | 'note'
+  >,
+) {
+  if (!isMoodSupported()) {
+    return {}
+  }
+
+  const note =
+    activity.note?.trim().slice(0, 140) ||
+    null
+
+  return {
+    mood: activity.mood ?? null,
+    note,
+  }
+}
+
 export function getCreateActivityErrorMessage(
   message: string | undefined,
 ) {
@@ -184,6 +213,9 @@ export function useActivityActions({
       updateQueuedActivity(activityId, {
         type: activity.type,
         duration: activity.duration,
+        mood: activity.mood ?? null,
+        note:
+          activity.note?.trim() || null,
       })
 
       setActivities((currentActivities) =>
@@ -194,6 +226,9 @@ export function useActivityActions({
             ...current,
             type: activity.type,
             duration: activity.duration,
+            mood: activity.mood ?? null,
+            note:
+              activity.note?.trim() || null,
           }),
         ),
       )
@@ -239,6 +274,7 @@ export function useActivityActions({
         .update({
           type: activity.type,
           duration: activity.duration,
+          ...moodPayload(activity),
           ...(photo.kind === 'keep'
             ? {}
             : {
@@ -283,6 +319,7 @@ export function useActivityActions({
           recovered_with_wildcard:
             data.recovered_with_wildcard,
           photo_url: photoUrl,
+          ...moodPayload(activity),
         },
       ),
     )
@@ -341,6 +378,7 @@ export function useActivityActions({
           activity_date: dateKey,
           type: activity.type,
           duration: activity.duration,
+          ...moodPayload(activity),
           ...(photoUrl
             ? {
                 photo_url: photoUrl,
@@ -386,6 +424,7 @@ export function useActivityActions({
       reactions: [],
       photo_url: photoUrl,
       comments: [],
+      ...moodPayload(activity),
     }
 
     setActivities((currentActivities) =>
@@ -439,6 +478,9 @@ export function useActivityActions({
       dateKey,
       type: activity.type,
       duration: activity.duration,
+      mood: activity.mood ?? null,
+      note:
+        activity.note?.trim() || null,
     })
 
     setActivities((currentActivities) =>
@@ -454,6 +496,8 @@ export function useActivityActions({
           comments: [],
           photo_url: null,
           pending: true,
+          mood: queued.mood,
+          note: queued.note,
         },
       ),
     )

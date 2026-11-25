@@ -88,6 +88,15 @@ import {
   useAchievementClaims,
 } from './hooks/useAchievementClaims'
 
+import WeeklyRecap from './components/WeeklyRecap'
+
+import {
+  computeWeekRecap,
+  getLastWeekStart,
+  markRecapSeen,
+  wasRecapSeen,
+} from './utils/weeklyRecap'
+
 import {
   getAchievements,
   getClaimableAchievements,
@@ -405,6 +414,79 @@ function RachaApp({
   const currentUser = users.find(
     (user) => user.id === currentUserId,
   )
+
+  /*
+   * TU SEMANA EN 10 SEGUNDOS
+   *
+   * Una vez por semana y por grupo, si
+   * alguien del grupo se movió la semana
+   * pasada.
+   */
+  const lastWeekStart = useMemo(
+    () => getLastWeekStart(today),
+    [today],
+  )
+
+  const lastWeekKey =
+    formatDateKey(lastWeekStart)
+
+  const [recapClosed, setRecapClosed] =
+    useState<string | null>(null)
+
+  const recapId = activeGroup
+    ? `${activeGroup.id}:${lastWeekKey}`
+    : null
+
+  const shouldShowRecap = (() => {
+    if (
+      !activeGroup ||
+      !currentUser ||
+      groupData.loading ||
+      groupData.error ||
+      recapClosed === recapId ||
+      wasRecapSeen(
+        currentUserId,
+        activeGroup.id,
+        lastWeekKey,
+      )
+    ) {
+      return false
+    }
+
+    const recap = computeWeekRecap(
+      activities,
+      users,
+      currentUserId,
+      lastWeekStart,
+    )
+
+    if (recap.group.totalDays === 0) {
+      return false
+    }
+
+    /*
+     * Recién llegado al grupo y sin nada
+     * la semana pasada: no tiene sentido.
+     */
+    return (
+      recap.days > 0 ||
+      !currentUser.streakEligibleFrom ||
+      currentUser.streakEligibleFrom <=
+        lastWeekKey
+    )
+  })()
+
+  const closeRecap = () => {
+    if (activeGroup) {
+      markRecapSeen(
+        currentUserId,
+        activeGroup.id,
+        lastWeekKey,
+      )
+    }
+
+    setRecapClosed(recapId)
+  }
 
   /*
    * ========================================
@@ -872,6 +954,20 @@ function RachaApp({
             onGoToTournaments={() =>
               setView('tournaments')
             }
+          />
+        )}
+
+      {!showWhatsNew &&
+        consistencyEarned === 0 &&
+        shouldShowRecap &&
+        activeGroup && (
+          <WeeklyRecap
+            weekStart={lastWeekStart}
+            groupName={activeGroup.name}
+            activities={activities}
+            users={users}
+            currentUserId={currentUserId}
+            onClose={closeRecap}
           />
         )}
 

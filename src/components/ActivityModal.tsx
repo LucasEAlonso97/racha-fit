@@ -5,6 +5,15 @@ import {
 } from 'react'
 
 import {
+  MOODS,
+  NOTE_MAX_LENGTH,
+} from '../lib/moods'
+
+import {
+  isMoodSupported,
+} from '../lib/groupData'
+
+import {
   useSwipeToClose,
 } from '../hooks/useSwipeToClose'
 
@@ -30,6 +39,7 @@ import type {
   Activity,
   ActivityType,
   PhotoChange,
+  Mood,
 } from '../types'
 
 const MAX_PHOTO_MB = 15
@@ -114,6 +124,21 @@ function ActivityModal({
    * ESTADOS
    * ========================================
    */
+
+  /*
+   * ========================================
+   * CÓMO TE SENTISTE (OPCIONAL)
+   * ========================================
+   */
+
+  const [mood, setMood] =
+    useState<Mood | null>(
+      activity?.mood ?? null,
+    )
+
+  const [note, setNote] = useState(
+    activity?.note ?? '',
+  )
 
   /*
    * ========================================
@@ -226,6 +251,8 @@ function ActivityModal({
         60,
     )
 
+    setMood(activity?.mood ?? null)
+    setNote(activity?.note ?? '')
     setSaving(false)
     setDeleting(false)
     setError(null)
@@ -312,6 +339,11 @@ function ActivityModal({
             type,
 
             duration: minutes,
+
+            mood,
+
+            note:
+              note.trim() || null,
           },
           photo,
         )
@@ -765,6 +797,83 @@ function ActivityModal({
             </div>
           </div>
         </section>
+
+        {/* ================================= */}
+        {/* CÓMO TE SENTISTE (OPCIONAL) */}
+        {/* ================================= */}
+
+        {isMoodSupported() && (
+          <section className="mt-5">
+            <p className="mb-2 text-xs font-black tracking-wide text-zinc-400">
+              ¿CÓMO TE SENTISTE? (OPCIONAL)
+            </p>
+
+            <div className="grid grid-cols-4 gap-2">
+              {MOODS.map((option) => {
+                const selected =
+                  mood === option.id
+
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    aria-pressed={selected}
+                    disabled={
+                      saving || deleting
+                    }
+                    onClick={() =>
+                      setMood(
+                        selected
+                          ? null
+                          : option.id,
+                      )
+                    }
+                    className={`flex flex-col items-center gap-1 rounded-2xl py-2.5 transition active:scale-95 ${
+                      selected
+                        ? 'bg-violet-500 text-white shadow-md shadow-violet-200'
+                        : 'bg-zinc-50 text-zinc-500'
+                    }`}
+                  >
+                    <span className="text-2xl leading-none">
+                      {option.emoji}
+                    </span>
+
+                    <span className="text-[10px] font-black">
+                      {option.label}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="relative mt-3">
+              <input
+                type="text"
+                value={note}
+                maxLength={
+                  NOTE_MAX_LENGTH
+                }
+                disabled={
+                  saving || deleting
+                }
+                onChange={(event) =>
+                  setNote(
+                    event.target.value,
+                  )
+                }
+                placeholder="Una nota: «primera vez que corro 5 km»"
+                className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 py-3 pl-4 pr-12 text-sm font-semibold text-zinc-700 outline-none transition placeholder:font-medium placeholder:text-zinc-400 focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+              />
+
+              {note.length > 0 && (
+                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-400">
+                  {NOTE_MAX_LENGTH -
+                    note.length}
+                </span>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* ================================= */}
         {/* FOTO (OPCIONAL) */}
