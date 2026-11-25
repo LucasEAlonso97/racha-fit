@@ -47,3 +47,15 @@ button {
 button:disabled {
   cursor: default;
 }
+/*
+ * En celulares (sobre todo iPhone), si un campo de texto tiene letra
+ * menor a 16px el navegador hace zoom al tocarlo y la app queda
+ * agrandada. Con 16px en pantallas táctiles el zoom no se dispara.
+ */
+@media (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
