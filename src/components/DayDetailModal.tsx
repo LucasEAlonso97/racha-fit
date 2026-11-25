@@ -24,6 +24,7 @@ import ActivityPhoto from './ActivityPhoto'
 import CommentThread from './CommentThread'
 import ReactionBar from './ReactionBar'
 import PendingBadge from './PendingBadge'
+import ActivityMoodNote from './ActivityMoodNote'
 import UserAvatar from './UserAvatar'
 
 import {
@@ -453,6 +454,11 @@ function DayDetailModal({
                                     }{' '}
                                     min
                                   </p>
+
+                                  <ActivityMoodNote
+                                    mood={activity.mood}
+                                    note={activity.note}
+                                  />
 
                                   {activity.recovered_with_wildcard && (
                                     <p className="mt-1 text-[11px] font-black text-amber-600">

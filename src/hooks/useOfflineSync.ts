@@ -29,6 +29,7 @@ import {
 
 import {
   getCreateActivityErrorMessage,
+  moodPayload,
 } from './useActivityActions'
 
 import type {
@@ -131,6 +132,7 @@ export function useOfflineSync({
               activity_date: item.dateKey,
               type: item.type,
               duration: item.duration,
+              ...moodPayload(item),
             })
             .select(
               'id, type, duration, recovered_with_wildcard',
@@ -215,6 +217,7 @@ export function useOfflineSync({
                 reactions: [],
                 comments: [],
                 photo_url: null,
+                ...moodPayload(item),
               },
             )
           })

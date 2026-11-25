@@ -13,6 +13,7 @@ import type {
   ActivityComment,
   ActivityReaction,
   ActivityType,
+  Mood,
   ReactionEmoji,
   User,
 } from '../types'
@@ -56,6 +57,8 @@ type ActivityRow = {
    */
   photo_url?: string | null
   comments?: ActivityComment[] | null
+  mood?: string | null
+  note?: string | null
 
   /*
    * Fila del historial viejo, traída sin
@@ -108,9 +111,73 @@ const ACTIVITY_COLUMNS = `
   )
 `
 
-const ACTIVITY_COLUMNS_WITH_SOCIAL = `
+/*
+ * ¿Cómo te sentiste? (mood + note). Si la
+ * migración todavía no se corrió, la
+ * primera consulta falla por esas columnas:
+ * se marca como no disponible y se sigue
+ * sin ellas.
+ */
+let moodSupported = true
+
+export function isMoodSupported() {
+  return moodSupported
+}
+
+function moodColumns() {
+  return moodSupported
+    ? `,
+  mood,
+  note`
+    : ''
+}
+
+function isMissingMoodColumns(
+  error: {
+    code?: string
+    message?: string
+  } | null,
+) {
+  return Boolean(
+    error &&
+      (error.code === '42703' ||
+        error.code === 'PGRST204') &&
+      /mood|note/.test(
+        error.message ?? '',
+      ),
+  )
+}
+
+/*
+ * Corre la consulta; si falló por las
+ * columnas de ánimo, la repite sin ellas.
+ */
+async function withMoodFallback<
+  T extends {
+    error: {
+      code?: string
+      message?: string
+    } | null
+  },
+>(run: () => PromiseLike<T>): Promise<T> {
+  const result = await run()
+
+  if (
+    moodSupported &&
+    isMissingMoodColumns(result.error)
+  ) {
+    moodSupported = false
+
+    return run()
+  }
+
+  return result
+}
+
+function socialColumns() {
+  return `
   ${ACTIVITY_COLUMNS},
-  photo_url,
+  photo_url${moodColumns()},
 
   comments:activity_comments (
     id,
@@ -119,15 +186,18 @@ const ACTIVITY_COLUMNS_WITH_SOCIAL = `
     created_at
   )
 `
+}
 
 /*
  * Sin comentarios, para el historial viejo:
  * es lo que más pesa y casi nunca se mira.
  */
-const ACTIVITY_COLUMNS_LIGHT = `
+function lightColumns() {
+  return `
   ${ACTIVITY_COLUMNS},
-  photo_url
+  photo_url${moodColumns()}
 `
+}
 
 /*
  * Los últimos ~4 meses se traen completos.
@@ -266,19 +336,23 @@ async function fetchGroupActivities(
 
   const [recent, old] =
     await Promise.all([
-      fetchActivities(
-        groupId,
-        ACTIVITY_COLUMNS_WITH_SOCIAL,
-        {
-          since: cutoff,
-        },
+      withMoodFallback(() =>
+        fetchActivities(
+          groupId,
+          socialColumns(),
+          {
+            since: cutoff,
+          },
+        ),
       ),
-      fetchActivities(
-        groupId,
-        ACTIVITY_COLUMNS_LIGHT,
-        {
-          before: cutoff,
-        },
+      withMoodFallback(() =>
+        fetchActivities(
+          groupId,
+          lightColumns(),
+          {
+            before: cutoff,
+          },
+        ),
       ),
     ])
 
@@ -324,16 +398,16 @@ export async function fetchDayDetails(
   dateKey: string,
 ) {
   const { data, error } =
-    await supabase
-      .from('activities')
-      .select(
-        ACTIVITY_COLUMNS_WITH_SOCIAL,
-      )
-      .eq('group_id', groupId)
-      .eq('activity_date', dateKey)
-      .order('created_at', {
-        ascending: true,
-      })
+    await withMoodFallback(() =>
+      supabase
+        .from('activities')
+        .select(socialColumns())
+        .eq('group_id', groupId)
+        .eq('activity_date', dateKey)
+        .order('created_at', {
+          ascending: true,
+        }),
+    )
 
   if (error) {
     return null
@@ -453,6 +527,8 @@ function mapActivityRow(
       row.recovered_with_wildcard,
     reactions,
     photo_url: row.photo_url ?? null,
+    mood: (row.mood ?? null) as Mood | null,
+    note: row.note ?? null,
     ...(row.partial
       ? {
           partial: true,
@@ -519,8 +595,8 @@ export async function fetchActivityById(
       .eq('group_id', groupId)
       .maybeSingle()
 
-  let result = await query(
-    ACTIVITY_COLUMNS_WITH_SOCIAL,
+  let result = await withMoodFallback(
+    () => query(socialColumns()),
   )
 
   if (isMissingSocialSchema(result.error)) {

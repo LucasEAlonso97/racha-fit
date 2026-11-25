@@ -38,6 +38,15 @@ export type ActivityComment = {
   created_at: string
 }
 
+/*
+ * ¿Cómo te sentiste? 😫 😐 💪 🔥
+ */
+export type Mood =
+  | 'tired'
+  | 'ok'
+  | 'strong'
+  | 'fire'
+
 export type Activity = {
   id?: string
   type: ActivityType
@@ -46,6 +55,8 @@ export type Activity = {
   recovered_with_wildcard?: boolean
   photo_url?: string | null
   comments?: ActivityComment[]
+  mood?: Mood | null
+  note?: string | null
 
   /*
    * Guardada sin señal: todavía no se

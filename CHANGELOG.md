@@ -2,6 +2,36 @@
 
 Todas las versiones de Racha. La más nueva arriba.
 
+## 2.8.0 — Noviembre 2026
+
+### Tu semana en 10 segundos
+
+- ⚡ Una vez por semana, al abrir la app, un resumen en historias de la semana que pasó: días (y si cumpliste la meta), minutos, comparación con la semana anterior, tu mejor día, cómo te sentiste, cuántos del grupo cumplieron y quién más se movió.
+- Al final, botón para compartir la imagen en historias.
+- Sale si alguien del grupo entrenó la semana pasada. No sale a quien recién se sumó y no entrenó.
+
+### ¿Cómo te sentiste?
+
+- 😫 😐 💪 🔥 Al cargar una actividad podés elegir cómo te sentiste y sumar una nota corta (hasta 140 caracteres). Las dos cosas son opcionales.
+- Se ven en el inicio y en el detalle del día. También funciona sin señal.
+
+### Invitar con QR
+
+- 📷 En la gestión del grupo, "Mostrar QR": tu amigo lo escanea con la cámara y entra directo. El comodín por invitar también vale.
+
+### Por dentro
+
+- El marco de historias (barras, tocar para avanzar) ahora es un componente común del Wrapped y del resumen semanal.
+- Nueva dependencia: `qrcode` (se baja solo al abrir el QR). Localmente: `npm install`.
+
+### Base de datos
+
+Correr en Supabase → SQL Editor:
+
+1. `supabase/migrations/20261125200000_como_te_sentiste.sql`
+
+Si no se corre, la app anda igual y no muestra "¿Cómo te sentiste?".
+
 ## 2.7.0 — Noviembre 2026
 
 ### Logros con regalos

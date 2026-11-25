@@ -16,6 +16,7 @@
 import type {
   ActivitiesByDate,
   ActivityType,
+  Mood,
 } from '../types'
 
 import {
@@ -31,6 +32,8 @@ export type QueuedActivity = {
   type: ActivityType
   duration: number
   queuedAt: string
+  mood?: Mood | null
+  note?: string | null
 }
 
 const PREFIX = 'pending-'
@@ -116,7 +119,7 @@ export function updateQueuedActivity(
   pendingId: string,
   changes: Pick<
     QueuedActivity,
-    'type' | 'duration'
+    'type' | 'duration' | 'mood' | 'note'
   >,
 ) {
   write(
@@ -203,6 +206,8 @@ export function mergePendingActivities(
                 comments: [],
                 photo_url: null,
                 pending: true,
+                mood: item.mood ?? null,
+                note: item.note ?? null,
               },
             ),
       activities,

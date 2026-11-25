@@ -10,14 +10,19 @@
 
 export const WHATS_NEW = [
   {
-    emoji: '🎁',
-    title: 'Logros con regalos',
-    text: 'Tus logros ahora dan comodines, y los más difíciles también una corona 👑 por 7 días. Andá a Rachas → Logros y reclamalos.',
+    emoji: '⚡',
+    title: 'Tu semana en 10 segundos',
+    text: 'Cada semana, al abrir la app, un resumen de la semana que pasó: tus días, tu mejor día y cómo le fue al grupo. Y lo podés compartir.',
   },
   {
-    emoji: '🏅',
-    title: 'También los que ya tenías',
-    text: 'Los logros que ya habías cumplido también tienen su regalo esperando.',
+    emoji: '🔥',
+    title: '¿Cómo te sentiste?',
+    text: 'Al cargar una actividad elegí un emoji (😫 😐 💪 🔥) y, si querés, sumá una nota corta. Tus amigos lo ven en el inicio.',
+  },
+  {
+    emoji: '📷',
+    title: 'Invitar con QR',
+    text: 'En la gestión del grupo tocá "Mostrar QR": tu amigo lo escanea y entra directo.',
   },
 ]
 

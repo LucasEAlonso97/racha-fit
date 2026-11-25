@@ -19,6 +19,7 @@ import ReactionBar from '../components/ReactionBar'
 import UserAvatar from '../components/UserAvatar'
 import WrappedBanner from '../components/WrappedBanner'
 import PendingBadge from '../components/PendingBadge'
+import ActivityMoodNote from '../components/ActivityMoodNote'
 
 import {
   openGroupGallery,
@@ -1253,6 +1254,11 @@ streakEligibleFrom:
                           }{' '}
                           min
                         </p>
+
+                        <ActivityMoodNote
+                          mood={activity.mood}
+                          note={activity.note}
+                        />
 
                         {activity.pending && (
                           <PendingBadge />

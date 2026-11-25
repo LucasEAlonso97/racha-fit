@@ -1,6 +1,7 @@
 import {
   useSwipeToClose,
 } from '../hooks/useSwipeToClose'
+import InviteQrModal from './InviteQrModal'
 import {
   useEffect,
   useState,
@@ -17,6 +18,7 @@ import {
   Trash2,
   UserMinus,
   Users,
+  QrCode,
   Share2,
   X,
 } from 'lucide-react'
@@ -160,6 +162,9 @@ function GroupManagementModal({
     group.name,
     group.invite_code,
   ])
+
+  const [showQr, setShowQr] =
+    useState(false)
 
   if (!open) {
     return null
@@ -1010,6 +1015,33 @@ const shareInviteLink =
     </>
   )}
 </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              setShowQr(true)
+            }
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-50 py-3 text-sm font-black text-violet-600 transition active:scale-[0.98]"
+          >
+            <QrCode size={18} />
+            Mostrar QR
+          </button>
+
+          {showQr && (
+            <InviteQrModal
+              link={buildInviteLink(
+                group.invite_code,
+                currentUserId,
+              )}
+              groupName={group.name}
+              inviteCode={
+                group.invite_code
+              }
+              onClose={() =>
+                setShowQr(false)
+              }
+            />
+          )}
 
           <p className="mt-2 text-center text-xs font-semibold text-zinc-400">
             🃏 Si alguien nuevo se suma con
