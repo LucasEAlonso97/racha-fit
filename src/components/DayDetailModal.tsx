@@ -23,6 +23,7 @@ import type {
 import ActivityPhoto from './ActivityPhoto'
 import CommentThread from './CommentThread'
 import ReactionBar from './ReactionBar'
+import PendingBadge from './PendingBadge'
 import UserAvatar from './UserAvatar'
 
 import {
@@ -459,6 +460,10 @@ function DayDetailModal({
                                       recuperado
                                     </p>
                                   )}
+
+                                  {activity.pending && (
+                                    <PendingBadge />
+                                  )}
                                 </div>
 
                                 {/* EDITAR */}
@@ -498,7 +503,8 @@ function DayDetailModal({
 
                               {/* REACCIONES */}
 
-                              {activity.id && (
+                              {activity.id &&
+                                !activity.pending && (
                                 <ReactionBar
                                   reactions={
                                     activity.reactions ??
@@ -520,7 +526,8 @@ function DayDetailModal({
 
                               {/* COMENTARIOS */}
 
-                              {activity.id && (
+                              {activity.id &&
+                                !activity.pending && (
                                 <CommentThread
                                   comments={
                                     activity.comments ??

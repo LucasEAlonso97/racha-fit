@@ -18,6 +18,7 @@ import Nickname from '../components/Nickname'
 import ReactionBar from '../components/ReactionBar'
 import UserAvatar from '../components/UserAvatar'
 import WrappedBanner from '../components/WrappedBanner'
+import PendingBadge from '../components/PendingBadge'
 
 import {
   openGroupGallery,
@@ -1253,6 +1254,10 @@ streakEligibleFrom:
                           min
                         </p>
 
+                        {activity.pending && (
+                          <PendingBadge />
+                        )}
+
                         {activity.recovered_with_wildcard && (
                           <div className="mt-2 flex w-fit items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-black text-amber-700">
                             <RotateCcw
@@ -1292,7 +1297,8 @@ streakEligibleFrom:
                       />
                     )}
 
-                    {activity.id && (
+                    {activity.id &&
+                      !activity.pending && (
                       <div className="mt-1">
                         <ReactionBar
                           reactions={

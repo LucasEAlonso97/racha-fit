@@ -5,6 +5,10 @@ import {
   useState,
 } from 'react'
 
+import {
+  retryImport,
+} from './lib/appVersion'
+
 import type {
   Session,
 } from '@supabase/supabase-js'
@@ -13,13 +17,16 @@ import {
   supabase,
 } from './lib/supabase'
 
-const Auth = lazy(
-  () => import('./pages/Auth'),
+const Auth = lazy(() =>
+  retryImport(() => import('./pages/Auth')),
 )
-const ResetPassword = lazy(
-  () => import('./pages/ResetPassword'),
+const ResetPassword = lazy(() =>
+  retryImport(() => import('./pages/ResetPassword')),
 )
 import RachaApp from './RachaApp'
+import {
+  LoadingScreen,
+} from './components/StatusScreen'
 
 function App() {
   const [
@@ -132,17 +139,7 @@ function App() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl">
-            🔥
-          </div>
-
-          <p className="mt-3 font-bold text-violet-500">
-            Cargando Racha...
-          </p>
-        </div>
-      </main>
+      <LoadingScreen message="Cargando Racha..." />
     )
   }
 

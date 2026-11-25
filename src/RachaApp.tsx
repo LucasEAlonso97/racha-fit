@@ -6,6 +6,10 @@ import {
   useState,
 } from 'react'
 
+import {
+  retryImport,
+} from './lib/appVersion'
+
 import type {
   Session,
 } from '@supabase/supabase-js'
@@ -25,6 +29,7 @@ import WhatsNewModal from './components/WhatsNewModal'
 import {
   ErrorScreen,
   LoadingScreen,
+  PageSkeleton,
 } from './components/StatusScreen'
 
 import Home from './pages/Home'
@@ -33,26 +38,26 @@ import Home from './pages/Home'
  * Pantallas que no se ven al abrir la app:
  * se descargan recién cuando hacen falta.
  */
-const Calendar = lazy(
-  () => import('./pages/Calendar'),
+const Calendar = lazy(() =>
+  retryImport(() => import('./pages/Calendar')),
 )
-const GroupSetup = lazy(
-  () => import('./pages/GroupSetup'),
+const GroupSetup = lazy(() =>
+  retryImport(() => import('./pages/GroupSetup')),
 )
-const InviteJoin = lazy(
-  () => import('./pages/InviteJoin'),
+const InviteJoin = lazy(() =>
+  retryImport(() => import('./pages/InviteJoin')),
 )
-const Onboarding = lazy(
-  () => import('./pages/Onboarding'),
+const Onboarding = lazy(() =>
+  retryImport(() => import('./pages/Onboarding')),
 )
-const Perfil = lazy(
-  () => import('./pages/Perfil'),
+const Perfil = lazy(() =>
+  retryImport(() => import('./pages/Perfil')),
 )
-const Rachas = lazy(
-  () => import('./pages/Rachas'),
+const Rachas = lazy(() =>
+  retryImport(() => import('./pages/Rachas')),
 )
-const Torneos = lazy(
-  () => import('./pages/Torneos'),
+const Torneos = lazy(() =>
+  retryImport(() => import('./pages/Torneos')),
 )
 
 import {
@@ -66,6 +71,10 @@ import {
 import {
   useActivityModal,
 } from './hooks/useActivityModal'
+
+import {
+  useOfflineSync,
+} from './hooks/useOfflineSync'
 
 import {
   useChallenges,
@@ -260,6 +269,23 @@ function RachaApp({
         groupData.setActivities,
       refreshWildcards,
     })
+
+  /*
+   * Actividades guardadas sin señal: se
+   * muestran y se envían al volver internet.
+   */
+  useOfflineSync({
+    userId: currentUserId,
+    activeGroupId:
+      activeGroup?.id ?? null,
+    ready:
+      Boolean(activeGroup) &&
+      !groupData.loading &&
+      !groupData.error,
+    setActivities:
+      groupData.setActivities,
+    refreshWildcards,
+  })
 
   const profileActions =
     useProfileActions({
@@ -568,9 +594,9 @@ function RachaApp({
 
       <Suspense
         fallback={
-          <p className="mt-10 text-center font-bold text-violet-400">
-            Cargando...
-          </p>
+          <div className="mx-auto w-full max-w-md px-5 pt-8">
+            <PageSkeleton />
+          </div>
         }
       >
         {view === 'calendar' && (

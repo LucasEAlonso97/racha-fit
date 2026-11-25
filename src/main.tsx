@@ -5,6 +5,15 @@ import './index.css'
 
 import App from './App'
 import FeedbackHost from './components/FeedbackHost'
+import UpdateBanner from './components/UpdateBanner'
+import CelebrationBurst from './components/CelebrationBurst'
+
+/*
+ * Recarga sola si falta un archivo por una
+ * publicación nueva, y avisa cuando hay
+ * versión nueva (ver lib/appVersion.ts).
+ */
+import './lib/appVersion'
 
 /*
  * Escucha "se puede instalar" lo antes
@@ -32,6 +41,8 @@ createRoot(
   <StrictMode>
     <App />
     <FeedbackHost />
+    <UpdateBanner />
+    <CelebrationBurst />
   </StrictMode>,
 )
 

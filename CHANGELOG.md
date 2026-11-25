@@ -2,6 +2,28 @@
 
 Todas las versiones de Racha. La más nueva arriba.
 
+## 2.5.0 — Noviembre 2026
+
+### Sin señal
+
+- 📶 Si guardás la actividad del día sin internet (por ejemplo, en un subsuelo), queda guardada en el celu con la marca "Sin señal · se envía sola" y se manda sola cuando vuelve la conexión.
+- Recuperar días pasados con comodín sigue necesitando internet.
+
+### Más ágil
+
+- ↩️ **Deshacer:** borrar una actividad o un comentario ya no pregunta "¿Estás seguro?". Se borra al toque y aparece "Deshacer" por 5 segundos.
+- 🔥 **Festejo** con fueguitos al cargar la actividad del día, y vibración en Android (también al reaccionar).
+- 💀 **Pantallas de carga** con la forma de la app en gris, en vez del cartel "Cargando...".
+
+### Publicaciones
+
+- ✨ **Aviso de versión nueva:** al volver a la app, si hay una publicación nueva aparece un cartel con "Actualizar".
+- 🔁 Si alguien tenía la app abierta durante una publicación y entra a una pantalla que cambió, la app se recarga sola en vez de mostrar un error.
+
+### Base de datos
+
+No hay que correr nada.
+
 ## 2.4.0 — Noviembre 2026
 
 ### Racha Wrapped

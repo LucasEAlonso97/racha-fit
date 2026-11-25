@@ -10,19 +10,19 @@
 
 export const WHATS_NEW = [
   {
-    emoji: '🎁',
-    title: 'Racha Wrapped',
-    text: 'Tu año en Racha en formato historias: días, horas, deporte del año, tu compañero de racha y más. Está en tu perfil, y en diciembre también en el inicio.',
+    emoji: '📶',
+    title: 'Funciona sin señal',
+    text: '¿Sin internet en el gimnasio? Cargá tu actividad igual: se guarda en el celu y se envía sola cuando vuelve la conexión.',
   },
   {
-    emoji: '🃏',
-    title: 'Comodines por constancia',
-    text: 'Cumplí tu meta semanal 4 semanas seguidas y ganás un comodín. Mirá tu progreso en el perfil.',
+    emoji: '↩️',
+    title: 'Deshacer',
+    text: 'Si borrás una actividad o un comentario por error, tocá "Deshacer" y vuelve.',
   },
   {
-    emoji: '📱',
-    title: 'Adiós al zoom raro',
-    text: 'En el celu la app ya no se agranda cuando escribís un comentario.',
+    emoji: '🔥',
+    title: 'Más festejo',
+    text: 'Fueguitos cada vez que cargás el día. Y la app te avisa cuando hay una versión nueva.',
   },
 ]
 
