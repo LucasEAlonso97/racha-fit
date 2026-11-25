@@ -23,6 +23,8 @@ import AddGroupModal from '../components/AddGroupModal'
 import GroupManagementModal from '../components/GroupManagementModal'
 import NotificationSettings from '../components/NotificationSettings'
 import UserAvatar from '../components/UserAvatar'
+import ConsistencyProgress from '../components/ConsistencyProgress'
+import WrappedBanner from '../components/WrappedBanner'
 
 import type {
   ActivitiesByDate,
@@ -47,6 +49,11 @@ type Props = {
 
   wildcardBalance:
     number | null
+
+  consistencyRun:
+    number | null
+
+  consistencyAtCap: boolean
 
   activities:
     ActivitiesByDate
@@ -115,6 +122,8 @@ function Perfil({
   members,
   memberCount,
   wildcardBalance,
+  consistencyRun,
+  consistencyAtCap,
   activities,
   onLogout,
   onSaveProfile,
@@ -1196,15 +1205,27 @@ function Perfil({
 
           <div className="text-right">
             <p className="text-xs font-black text-zinc-600">
-              Máximo 3
+              Máximo 3 por mes
             </p>
 
             <p className="mt-0.5 text-[11px] font-semibold text-zinc-400">
-              Podés acumularlos
+              Hasta 6 con premios
             </p>
           </div>
         </div>
+
+        <ConsistencyProgress
+          run={consistencyRun}
+          atCap={consistencyAtCap}
+          user={currentUser}
+          activities={activities}
+        />
       </section>
+
+      <WrappedBanner
+        today={new Date()}
+        place="profile"
+      />
 
       {/* ================================= */}
       {/* ESTADÍSTICAS */}

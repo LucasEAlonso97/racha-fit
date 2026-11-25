@@ -1,9 +1,19 @@
 import {
+  lazy,
+  Suspense,
   useSyncExternalStore,
 } from 'react'
 
 import GroupGalleryModal from './GroupGalleryModal'
 import MemberProfileModal from './MemberProfileModal'
+
+/*
+ * El Wrapped se usa poco: se baja recién
+ * cuando alguien lo abre.
+ */
+const WrappedStories = lazy(
+  () => import('./WrappedStories'),
+)
 
 import {
   closeSocialPanel,
@@ -45,6 +55,22 @@ function SocialPanelsHost({
 
   if (!panel) {
     return null
+  }
+
+  if (panel.kind === 'wrapped') {
+    return (
+      <Suspense fallback={null}>
+        <WrappedStories
+          year={panel.year}
+          groupId={groupId}
+          groupName={groupName}
+          activities={activities}
+          users={users}
+          currentUserId={currentUserId}
+          onClose={closeSocialPanel}
+        />
+      </Suspense>
+    )
   }
 
   if (panel.kind === 'gallery') {

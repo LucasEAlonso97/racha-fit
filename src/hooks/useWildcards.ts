@@ -8,6 +8,10 @@ import {
   supabase,
 } from '../lib/supabase'
 
+import {
+  claimConsistencyWildcards,
+} from '../lib/consistency'
+
 export function useWildcards(
   userId: string,
 ) {
@@ -33,9 +37,56 @@ export function useWildcards(
   ] =
     useState<string[]>([])
 
+  /*
+   * Comodines por constancia: semanas
+   * seguidas cumpliendo la meta (de 0 a 3,
+   * a la 4ª se gana uno) y cuántos se
+   * ganaron en esta apertura.
+   */
+  const [
+    consistencyRun,
+    setConsistencyRun,
+  ] =
+    useState<number | null>(
+      null,
+    )
+
+  const [
+    consistencyAtCap,
+    setConsistencyAtCap,
+  ] =
+    useState(false)
+
+  const [
+    justEarned,
+    setJustEarned,
+  ] =
+    useState(0)
+
   const refresh =
     useCallback(
       async () => {
+        const consistency =
+          await claimConsistencyWildcards()
+
+        if (consistency) {
+          setConsistencyRun(
+            consistency.run,
+          )
+
+          setConsistencyAtCap(
+            consistency.atCap,
+          )
+
+          if (
+            consistency.granted > 0
+          ) {
+            setJustEarned(
+              consistency.granted,
+            )
+          }
+        }
+
         const [
           walletResult,
           recoveriesResult,
@@ -110,8 +161,18 @@ export function useWildcards(
     refresh,
   ])
 
+  const dismissJustEarned =
+    useCallback(
+      () => setJustEarned(0),
+      [],
+    )
+
   return {
     balance,
+    consistencyRun,
+    consistencyAtCap,
+    justEarned,
+    dismissJustEarned,
     nextGrantDate,
     recoveredDates,
     refresh,

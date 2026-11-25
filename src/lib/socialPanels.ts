@@ -16,6 +16,7 @@
 export type SocialPanel =
   | { kind: 'member'; userId: string }
   | { kind: 'gallery' }
+  | { kind: 'wrapped'; year: number }
   | null
 
 let panel: SocialPanel = null
@@ -57,6 +58,15 @@ export function openMemberProfile(
 export function openGroupGallery() {
   setPanel({
     kind: 'gallery',
+  })
+}
+
+export function openWrapped(
+  year: number,
+) {
+  setPanel({
+    kind: 'wrapped',
+    year,
   })
 }
 

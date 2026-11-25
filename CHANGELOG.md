@@ -2,6 +2,32 @@
 
 Todas las versiones de Racha. La más nueva arriba.
 
+## 2.4.0 — Noviembre 2026
+
+### Racha Wrapped
+
+- 🎁 **Tu año en Racha**, en formato historias: días entrenados, horas, deporte del año, racha más larga, mejor mes, día favorito, compañero de racha, puesto en el grupo, torneos ganados, fotos y días salvados con comodín. Cierra con una frase que te define.
+- 📲 Botón para compartir una imagen en historias de Instagram/WhatsApp.
+- En Inicio aparece un banner del 1 de diciembre al 31 de enero. En el perfil está siempre ("hasta ahora").
+- Se calcula con los datos del grupo activo: no necesita nada en la base de datos.
+
+### Comodines por constancia
+
+- 🃏 Cada **4 semanas seguidas cumpliendo tu meta semanal** ganás 1 comodín (hasta 6).
+- Cuenta si cumplís la meta en cualquiera de tus grupos. Los días recuperados con comodín no suman.
+- Al abrir la app el lunes se revisa la semana anterior; si ganaste, aparece un festejo.
+- En el perfil, dentro de Comodines, se ve el progreso (x/4 semanas) y cómo vas esta semana.
+
+### Arreglos
+
+- 📱 En el celu la app ya no se agranda al tocar un campo de texto (por ejemplo, al comentar).
+
+### Base de datos
+
+Correr en Supabase → SQL Editor:
+
+1. `supabase/migrations/20261125120000_comodines_por_constancia.sql`
+
 ## 2.3.0 — Noviembre 2026
 
 ### Torneos
