@@ -10,14 +10,14 @@
 
 export const WHATS_NEW = [
   {
-    emoji: '🔄',
-    title: 'Tirá para actualizar',
-    text: 'En el inicio, deslizá hacia abajo desde arriba de todo para traer lo último del grupo.',
+    emoji: '🎁',
+    title: 'Logros con regalos',
+    text: 'Tus logros ahora dan comodines, y los más difíciles también una corona 👑 por 7 días. Andá a Rachas → Logros y reclamalos.',
   },
   {
-    emoji: '➕',
-    title: 'Barra de abajo renovada',
-    text: 'El botón + es más chico y ya no tapa Rachas. Y los textos se leen mejor.',
+    emoji: '🏅',
+    title: 'También los que ya tenías',
+    text: 'Los logros que ya habías cumplido también tienen su regalo esperando.',
   },
 ]
 

@@ -23,6 +23,13 @@ type Props = {
   ) => void
 
   onAddActivity: () => void
+
+  /*
+   * Numerito arriba de una pestaña (por
+   * ejemplo, regalos para reclamar en
+   * Rachas).
+   */
+  badges?: Partial<Record<View, number>>
 }
 
 type Tab = {
@@ -67,10 +74,12 @@ const TABS: Tab[] = [
 function NavTab({
   tab,
   active,
+  badge,
   onSelect,
 }: {
   tab: Tab
   active: boolean
+  badge: number
   onSelect: (view: View) => void
 }) {
   const { Icon } = tab
@@ -90,7 +99,15 @@ function NavTab({
           : 'text-zinc-400'
       }`}
     >
-      <Icon size={22} />
+      <span className="relative">
+        <Icon size={22} />
+
+        {badge > 0 && (
+          <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-[9px] font-black leading-none text-white ring-2 ring-white">
+            {badge}
+          </span>
+        )}
+      </span>
 
       {/* 11px (antes 9). */}
       <span
@@ -110,6 +127,7 @@ function BottomNavigation({
   view,
   onChangeView,
   onAddActivity,
+  badges = {},
 }: Props) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-zinc-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
@@ -138,6 +156,7 @@ function BottomNavigation({
               key={tab.view}
               tab={tab}
               active={view === tab.view}
+              badge={badges[tab.view] ?? 0}
               onSelect={onChangeView}
             />
           ))}

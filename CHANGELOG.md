@@ -2,6 +2,28 @@
 
 Todas las versiones de Racha. La más nueva arriba.
 
+## 2.7.0 — Noviembre 2026
+
+### Logros con regalos
+
+- 🎁 Los logros (Rachas → Logros) ahora dan regalos, según la dificultad:
+  - **Fáciles** (primera actividad, 3 días, etc.): sin regalo.
+  - **Medianos** (21 logros): 1 comodín.
+  - **Difíciles** (racha de 30/60/100, 100/180/365 días, 365 actividades, 100/200 horas): 1 comodín + 👑 corona en el grupo por 7 días.
+- El regalo se reclama con un botón. Si hay varios, "Todos" los reclama de una.
+- Los logros que ya estaban cumplidos también se pueden reclamar.
+- Con 6 comodines (el máximo) no se puede reclamar hasta usar alguno: el regalo queda esperando.
+- Un numerito naranja en Rachas (barra de abajo) y en la pestaña Logros avisa cuántos hay para reclamar.
+- La base verifica cada logro antes de dar el regalo, y cada uno se reclama una sola vez.
+
+### Base de datos
+
+Correr en Supabase → SQL Editor:
+
+1. `supabase/migrations/20261125180000_logros_con_regalos.sql`
+
+Si no se corre, los logros se ven como antes (sin regalos).
+
 ## 2.6.1 — Noviembre 2026
 
 - 🔄 **Tirar hacia abajo para actualizar** en Inicio. Sin señal, avisa y se queda con lo guardado.
