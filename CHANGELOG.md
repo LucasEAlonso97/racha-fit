@@ -2,6 +2,32 @@
 
 Todas las versiones de Racha. La más nueva arriba.
 
+## 2.9.0 — Noviembre 2026
+
+### Deportes propios
+
+- ⚡ Al elegir "Otra" podés crear tu deporte con nombre y emoji (Crossfit, Surf, Remo…). Queda guardado y aparece en la lista la próxima vez.
+- Se ve con su nombre en todos lados: inicio, día, perfil, Wrapped, resumen semanal y estadísticas.
+- En la base se guarda como "Otra" + nombre y emoji, así no se toca la lista de deportes ni los logros.
+- Si escribís a mano uno que ya existe ("gym"), se usa el de la lista.
+
+### Racha en peligro
+
+- 🔥 Desde las 18, si todavía no cargaste nada hoy y venías con racha (o si sin entrenar hoy ya no llegás a tu meta semanal), aparece un cartel en Inicio con cuenta regresiva hasta la medianoche y un botón para cargar al toque.
+- "Más tarde" lo esconde hasta el día siguiente. Todo dentro de la app.
+
+### Tu progreso
+
+- 📈 En el perfil, barras por semana de los últimos 3 meses en minutos o en días, con promedio, tu meta y la tendencia contra el mes anterior. Tocás una barra para ver esa semana.
+
+### Base de datos
+
+Correr en Supabase → SQL Editor:
+
+1. `supabase/migrations/20261125220000_deportes_propios.sql`
+
+Si no se corre, la app anda igual y "Otra" funciona como antes.
+
 ## 2.8.0 — Noviembre 2026
 
 ### Tu semana en 10 segundos

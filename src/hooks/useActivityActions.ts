@@ -24,8 +24,14 @@ import {
 } from '../lib/feedback'
 
 import {
+  isCustomSportSupported,
   isMoodSupported,
 } from '../lib/groupData'
+
+import {
+  getActivityEmoji,
+  isBuiltInType,
+} from '../data/activities'
 
 import {
   celebrate,
@@ -55,7 +61,6 @@ import type {
   Activity,
   ActivityComment,
   ActivityReaction,
-  ActivityType,
   Group,
   PhotoChange,
   ReactionEmoji,
@@ -100,6 +105,46 @@ export function moodPayload(
   return {
     mood: activity.mood ?? null,
     note,
+  }
+}
+
+/*
+ * Tipo de deporte para la base: los propios
+ * van como 'Otra' + custom_name /
+ * custom_emoji (migración "deportes
+ * propios").
+ */
+export function sportPayload(
+  activity: Pick<Activity, 'type'>,
+) {
+  const custom = isCustomSportSupported()
+
+  if (isBuiltInType(activity.type)) {
+    return {
+      type: activity.type,
+      ...(custom
+        ? {
+            custom_name: null,
+            custom_emoji: null,
+          }
+        : {}),
+    }
+  }
+
+  if (!custom) {
+    return {
+      type: 'Otra',
+    }
+  }
+
+  return {
+    type: 'Otra',
+    custom_name: activity.type
+      .trim()
+      .slice(0, 30),
+    custom_emoji: getActivityEmoji(
+      activity.type,
+    ),
   }
 }
 
@@ -272,7 +317,7 @@ export function useActivityActions({
       await supabase
         .from('activities')
         .update({
-          type: activity.type,
+          ...sportPayload(activity),
           duration: activity.duration,
           ...moodPayload(activity),
           ...(photo.kind === 'keep'
@@ -314,7 +359,7 @@ export function useActivityActions({
         activityId,
         {
           id: data.id,
-          type: data.type as ActivityType,
+          type: activity.type,
           duration: data.duration,
           recovered_with_wildcard:
             data.recovered_with_wildcard,
@@ -376,7 +421,7 @@ export function useActivityActions({
           user_id: currentUserId,
           group_id: activeGroup.id,
           activity_date: dateKey,
-          type: activity.type,
+          ...sportPayload(activity),
           duration: activity.duration,
           ...moodPayload(activity),
           ...(photoUrl
@@ -417,7 +462,7 @@ export function useActivityActions({
 
     const newActivity: Activity = {
       id: data.id,
-      type: data.type as ActivityType,
+      type: activity.type,
       duration: data.duration,
       recovered_with_wildcard:
         data.recovered_with_wildcard,

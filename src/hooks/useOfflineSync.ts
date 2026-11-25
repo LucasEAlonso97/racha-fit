@@ -30,11 +30,11 @@ import {
 import {
   getCreateActivityErrorMessage,
   moodPayload,
+  sportPayload,
 } from './useActivityActions'
 
 import type {
   ActivitiesByDate,
-  ActivityType,
 } from '../types'
 
 type Options = {
@@ -130,7 +130,7 @@ export function useOfflineSync({
               user_id: item.userId,
               group_id: item.groupId,
               activity_date: item.dateKey,
-              type: item.type,
+              ...sportPayload(item),
               duration: item.duration,
               ...moodPayload(item),
             })
@@ -210,7 +210,7 @@ export function useOfflineSync({
               userId,
               {
                 id: data.id,
-                type: data.type as ActivityType,
+                type: item.type,
                 duration: data.duration,
                 recovered_with_wildcard:
                   data.recovered_with_wildcard,

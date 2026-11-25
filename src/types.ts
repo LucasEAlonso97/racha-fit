@@ -1,4 +1,7 @@
-export type ActivityType =
+/*
+ * Deportes de la lista fija.
+ */
+export type BuiltInActivityType =
   | 'Gym'
   | 'Caminata'
   | 'Correr'
@@ -18,6 +21,17 @@ export type ActivityType =
   | 'Básquet'
   | 'Handball'
   | 'Otra'
+
+/*
+ * Un deporte de la lista o uno propio
+ * ("Crossfit", "Escalada en roca"...). Los
+ * propios se guardan en la base como
+ * 'Otra' + custom_name / custom_emoji (ver
+ * lib/groupData.ts).
+ */
+export type ActivityType =
+  | BuiltInActivityType
+  | (string & {})
 
 export type ReactionEmoji =
   | '🔥'

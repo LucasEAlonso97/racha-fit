@@ -7,6 +7,11 @@ import {
 } from 'react'
 
 import {
+  getActivityEmoji,
+  isBuiltInType,
+} from './data/activities'
+
+import {
   showToast,
 } from './lib/feedback'
 
@@ -416,6 +421,47 @@ function RachaApp({
   )
 
   /*
+   * DEPORTES PROPIOS (los tuyos, más
+   * recientes primero)
+   */
+  const customSports = useMemo(() => {
+    const seen = new Map<
+      string,
+      string
+    >()
+
+    Object.keys(activities)
+      .sort()
+      .reverse()
+      .forEach((dateKey) => {
+        ;(
+          activities[dateKey]?.[
+            currentUserId
+          ] ?? []
+        ).forEach((activity) => {
+          if (
+            !isBuiltInType(activity.type) &&
+            !seen.has(activity.type)
+          ) {
+            seen.set(
+              activity.type,
+              getActivityEmoji(
+                activity.type,
+              ),
+            )
+          }
+        })
+      })
+
+    return [...seen].map(
+      ([name, emoji]) => ({
+        name,
+        emoji,
+      }),
+    )
+  }, [activities, currentUserId])
+
+  /*
    * TU SEMANA EN 10 SEGUNDOS
    *
    * Una vez por semana y por grupo, si
@@ -762,6 +808,7 @@ function RachaApp({
       {view === 'home' && (
         <Home
           groupId={activeGroup.id}
+          wildcardBalance={wildcardBalance}
           activities={activities}
           users={users}
           currentUserId={currentUserId}
@@ -934,6 +981,7 @@ function RachaApp({
         lastActivity={
           activityModal.lastActivity
         }
+        customSports={customSports}
         onClose={activityModal.close}
         onSave={saveActivity}
         onDelete={deleteActivity}

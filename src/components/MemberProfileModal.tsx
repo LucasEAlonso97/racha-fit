@@ -18,7 +18,7 @@ import {
 } from '../hooks/useTrophyCabinet'
 
 import {
-  activityOptions,
+  getActivityEmoji,
 } from '../data/activities'
 
 import {
@@ -60,15 +60,6 @@ type Props = {
 const RECENT_LIMIT = 5
 const PHOTO_LIMIT = 9
 
-function getActivityEmoji(
-  type: ActivityType | null,
-) {
-  return (
-    activityOptions.find(
-      (option) => option.name === type,
-    )?.emoji ?? '✨'
-  )
-}
 
 function formatShortDate(
   dateKey: string,

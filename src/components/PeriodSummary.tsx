@@ -13,7 +13,7 @@ import {
 import UserAvatar from './UserAvatar'
 
 import {
-  activityOptions,
+  getActivityEmoji,
 } from '../data/activities'
 
 import {
@@ -43,7 +43,6 @@ import type {
 
 import type {
   ActivitiesByDate,
-  ActivityType,
   User,
 } from '../types'
 
@@ -56,15 +55,6 @@ type Props = {
 
 const medals = ['🥇', '🥈', '🥉']
 
-function getActivityEmoji(
-  type: ActivityType | null,
-) {
-  return (
-    activityOptions.find(
-      (option) => option.name === type,
-    )?.emoji ?? '✨'
-  )
-}
 
 function capitalize(text: string) {
   return (

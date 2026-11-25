@@ -7,6 +7,10 @@ import {
   formatDateKey,
 } from '../utils/date'
 
+import {
+  registerCustomSport,
+} from '../data/activities'
+
 import type {
   ActivitiesByDate,
   Activity,
@@ -59,6 +63,8 @@ type ActivityRow = {
   comments?: ActivityComment[] | null
   mood?: string | null
   note?: string | null
+  custom_name?: string | null
+  custom_emoji?: string | null
 
   /*
    * Fila del historial viejo, traída sin
@@ -112,45 +118,94 @@ const ACTIVITY_COLUMNS = `
 `
 
 /*
- * ¿Cómo te sentiste? (mood + note). Si la
- * migración todavía no se corrió, la
- * primera consulta falla por esas columnas:
- * se marca como no disponible y se sigue
- * sin ellas.
+ * ========================================
+ * COLUMNAS OPCIONALES
+ * ========================================
+ *
+ * Vienen de migraciones que se agregaron
+ * después:
+ *   · mood: ¿cómo te sentiste? (mood, note)
+ *   · sport: deportes propios
+ *     (custom_name, custom_emoji)
+ *
+ * Si alguna migración todavía no se corrió,
+ * la consulta falla por esa columna: se
+ * marca ese grupo como no disponible y se
+ * repite sin él. La app sigue andando.
  */
-let moodSupported = true
+const optionalColumns = {
+  mood: {
+    columns: ['mood', 'note'],
+    supported: true,
+  },
+  sport: {
+    columns: [
+      'custom_name',
+      'custom_emoji',
+    ],
+    supported: true,
+  },
+}
 
 export function isMoodSupported() {
-  return moodSupported
+  return optionalColumns.mood.supported
 }
 
-function moodColumns() {
-  return moodSupported
-    ? `,
-  mood,
-  note`
-    : ''
+export function isCustomSportSupported() {
+  return optionalColumns.sport.supported
 }
 
-function isMissingMoodColumns(
+function extraColumns() {
+  return Object.values(optionalColumns)
+    .filter((group) => group.supported)
+    .flatMap((group) => group.columns)
+    .map((column) => `,
+  ${column}`)
+    .join('')
+}
+
+/*
+ * Si el error es por una columna opcional,
+ * apaga ese grupo y devuelve true.
+ */
+function disableMissingColumns(
   error: {
     code?: string
     message?: string
   } | null,
 ) {
-  return Boolean(
-    error &&
-      (error.code === '42703' ||
-        error.code === 'PGRST204') &&
-      /mood|note/.test(
-        error.message ?? '',
+  if (
+    !error ||
+    (error.code !== '42703' &&
+      error.code !== 'PGRST204')
+  ) {
+    return false
+  }
+
+  const message = error.message ?? ''
+
+  const group = Object.values(
+    optionalColumns,
+  ).find(
+    (item) =>
+      item.supported &&
+      item.columns.some((column) =>
+        message.includes(column),
       ),
   )
+
+  if (!group) {
+    return false
+  }
+
+  group.supported = false
+
+  return true
 }
 
 /*
- * Corre la consulta; si falló por las
- * columnas de ánimo, la repite sin ellas.
+ * Corre la consulta y, si falló por columnas
+ * opcionales, la repite sin ellas.
  */
 async function withMoodFallback<
   T extends {
@@ -160,15 +215,16 @@ async function withMoodFallback<
     } | null
   },
 >(run: () => PromiseLike<T>): Promise<T> {
-  const result = await run()
+  let result = await run()
 
-  if (
-    moodSupported &&
-    isMissingMoodColumns(result.error)
+  for (
+    let attempt = 0;
+    attempt <
+      Object.keys(optionalColumns).length &&
+    disableMissingColumns(result.error);
+    attempt += 1
   ) {
-    moodSupported = false
-
-    return run()
+    result = await run()
   }
 
   return result
@@ -177,7 +233,7 @@ async function withMoodFallback<
 function socialColumns() {
   return `
   ${ACTIVITY_COLUMNS},
-  photo_url${moodColumns()},
+  photo_url${extraColumns()},
 
   comments:activity_comments (
     id,
@@ -195,7 +251,7 @@ function socialColumns() {
 function lightColumns() {
   return `
   ${ACTIVITY_COLUMNS},
-  photo_url${moodColumns()}
+  photo_url${extraColumns()}
 `
 }
 
@@ -519,9 +575,26 @@ function mapActivityRow(
       }),
     )
 
+  /*
+   * Deporte propio: se guarda como 'Otra' y
+   * en la app se usa su nombre.
+   */
+  const customName =
+    row.type === 'Otra'
+      ? row.custom_name?.trim()
+      : null
+
+  if (customName) {
+    registerCustomSport(
+      customName,
+      row.custom_emoji,
+    )
+  }
+
   return {
     id: row.id,
-    type: row.type as ActivityType,
+    type: (customName ||
+      row.type) as ActivityType,
     duration: row.duration,
     recovered_with_wildcard:
       row.recovered_with_wildcard,

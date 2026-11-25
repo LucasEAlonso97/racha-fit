@@ -26,6 +26,7 @@ import UserAvatar from '../components/UserAvatar'
 import ConsistencyProgress from '../components/ConsistencyProgress'
 import WrappedBanner from '../components/WrappedBanner'
 import YearHeatmap from '../components/YearHeatmap'
+import WeeklyProgressChart from '../components/WeeklyProgressChart'
 
 import type {
   ActivitiesByDate,
@@ -134,6 +135,14 @@ function Perfil({
   onLeftGroup,
   onMemberRemoved,
 }: Props) {
+  /*
+   * Fecha fija mientras la pantalla está
+   * abierta (para el gráfico de progreso).
+   */
+  const [progressToday] = useState(
+    () => new Date(),
+  )
+
   /*
    * ========================================
    * PERFIL
@@ -1232,6 +1241,12 @@ function Perfil({
         activities={activities}
         userId={currentUser.id}
         today={new Date()}
+      />
+
+      <WeeklyProgressChart
+        activities={activities}
+        user={currentUser}
+        today={progressToday}
       />
 
       {/* ================================= */}

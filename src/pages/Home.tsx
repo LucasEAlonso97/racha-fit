@@ -18,6 +18,7 @@ import Nickname from '../components/Nickname'
 import ReactionBar from '../components/ReactionBar'
 import UserAvatar from '../components/UserAvatar'
 import WrappedBanner from '../components/WrappedBanner'
+import StreakDangerBanner from '../components/StreakDangerBanner'
 import PendingBadge from '../components/PendingBadge'
 import ActivityMoodNote from '../components/ActivityMoodNote'
 
@@ -52,6 +53,8 @@ import type {
 
 type Props = {
   groupId: string
+
+  wildcardBalance: number | null
 
   activities:
     ActivitiesByDate
@@ -92,6 +95,7 @@ type Props = {
 
 function Home({
   groupId,
+  wildcardBalance,
   activities,
   users,
   currentUserId,
@@ -468,6 +472,17 @@ streakEligibleFrom:
           Un día más cuenta 🏋️‍♀️
         </p>
       </header>
+
+      {currentUser && (
+        <StreakDangerBanner
+          activities={activities}
+          user={currentUser}
+          wildcardBalance={
+            wildcardBalance
+          }
+          onLogToday={onAddActivity}
+        />
+      )}
 
       <WrappedBanner
         today={today}
