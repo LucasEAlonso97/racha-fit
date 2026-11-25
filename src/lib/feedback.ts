@@ -19,10 +19,25 @@ export type ToastVariant =
   | 'success'
   | 'info'
 
+export type ToastAction = {
+  label: string
+  onClick: () => void
+}
+
 export type Toast = {
   id: number
   message: string
   variant: ToastVariant
+  action?: ToastAction
+}
+
+export type ToastOptions = {
+  /*
+   * Botón dentro del aviso, por ejemplo
+   * "Deshacer".
+   */
+  action?: ToastAction
+  durationMs?: number
 }
 
 export type ConfirmOptions = {
@@ -110,6 +125,7 @@ export function dismissToast(
 export function showToast(
   message: string,
   variant: ToastVariant = 'error',
+  options: ToastOptions = {},
 ) {
   const id = nextId++
 
@@ -121,14 +137,18 @@ export function showToast(
         id,
         message,
         variant,
+        action: options.action,
       },
     ],
   })
 
   window.setTimeout(
     () => dismissToast(id),
-    TOAST_DURATION_MS,
+    options.durationMs ??
+      TOAST_DURATION_MS,
   )
+
+  return id
 }
 
 /*

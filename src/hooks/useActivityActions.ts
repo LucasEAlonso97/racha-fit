@@ -16,11 +16,31 @@ import {
   replaceActivity,
   setActivityReactions,
   updateActivityById,
+  upsertActivity,
 } from '../lib/activityState'
 
 import {
   showToast,
 } from '../lib/feedback'
+
+import {
+  celebrate,
+  tapFeedback,
+} from '../lib/celebrate'
+
+import {
+  enqueueActivity,
+  isNetworkError,
+  isPendingId,
+  removeQueuedActivity,
+  updateQueuedActivity,
+} from '../lib/offlineQueue'
+
+import {
+  cancelCommit,
+  scheduleCommit,
+  UNDO_MS,
+} from '../lib/undoableDelete'
 
 import {
   supabase,
@@ -54,7 +74,7 @@ type Options = {
  * Traduce los errores de la base al crear
  * una actividad a un mensaje para el usuario.
  */
-function getCreateActivityErrorMessage(
+export function getCreateActivityErrorMessage(
   message: string | undefined,
 ) {
   const errorMessage =
@@ -153,6 +173,39 @@ export function useActivityActions({
   ) => {
     if (!activeGroup) {
       return false
+    }
+
+    /*
+     * Todavía sin enviar: se cambia en el
+     * celu y se manda así cuando vuelva
+     * la señal.
+     */
+    if (isPendingId(activityId)) {
+      updateQueuedActivity(activityId, {
+        type: activity.type,
+        duration: activity.duration,
+      })
+
+      setActivities((currentActivities) =>
+        updateActivityById(
+          currentActivities,
+          activityId,
+          (current) => ({
+            ...current,
+            type: activity.type,
+            duration: activity.duration,
+          }),
+        ),
+      )
+
+      if (photo.kind !== 'keep') {
+        showToast(
+          'La foto se puede cambiar cuando la actividad se envíe.',
+          'info',
+        )
+      }
+
+      return true
     }
 
     const previousPhotoUrl =
@@ -264,6 +317,14 @@ export function useActivityActions({
       return false
     }
 
+    if (!navigator.onLine) {
+      return queueActivity(
+        dateKey,
+        activity,
+        photo.kind === 'replace',
+      )
+    }
+
     const photoUrl =
       await resolvePhotoUrl(photo, null)
 
@@ -299,6 +360,14 @@ export function useActivityActions({
 
       void deleteActivityPhoto(photoUrl)
 
+      if (isNetworkError(error)) {
+        return queueActivity(
+          dateKey,
+          activity,
+          Boolean(photoUrl),
+        )
+      }
+
       showToast(
         getCreateActivityErrorMessage(
           error?.message,
@@ -328,9 +397,78 @@ export function useActivityActions({
       ),
     )
 
+    if (dateKey === todayKey) {
+      celebrate()
+    }
+
     if (dateKey < todayKey) {
       await refreshWildcards()
     }
+
+    return true
+  }
+
+  /*
+   * SIN SEÑAL
+   *
+   * Solo para el día de hoy: recuperar un
+   * día pasado usa un comodín y eso lo
+   * tiene que confirmar la base.
+   */
+
+  const queueActivity = (
+    dateKey: string,
+    activity: Activity,
+    droppedPhoto: boolean,
+  ) => {
+    if (!activeGroup) {
+      return false
+    }
+
+    if (dateKey !== todayKey) {
+      showToast(
+        'Sin conexión. Para recuperar un día con comodín necesitás internet.',
+      )
+
+      return false
+    }
+
+    const queued = enqueueActivity({
+      userId: currentUserId,
+      groupId: activeGroup.id,
+      dateKey,
+      type: activity.type,
+      duration: activity.duration,
+    })
+
+    setActivities((currentActivities) =>
+      addActivity(
+        currentActivities,
+        dateKey,
+        currentUserId,
+        {
+          id: queued.pendingId,
+          type: activity.type,
+          duration: activity.duration,
+          reactions: [],
+          comments: [],
+          photo_url: null,
+          pending: true,
+        },
+      ),
+    )
+
+    showToast(
+      droppedPhoto
+        ? 'Sin señal: guardamos tu actividad (sin la foto) y se envía sola cuando vuelva internet.'
+        : 'Sin señal: guardamos tu actividad y se envía sola cuando vuelva internet.',
+      'info',
+      {
+        durationMs: 5000,
+      },
+    )
+
+    celebrate()
 
     return true
   }
@@ -347,42 +485,96 @@ export function useActivityActions({
       return false
     }
 
-    const photoUrl =
+    const target =
       findActivityById(
         activities,
         activityId,
-      )?.photo_url
-
-    const { error } = await supabase
-      .from('activities')
-      .delete()
-      .eq('id', activityId)
-      .eq('user_id', currentUserId)
-      .eq('group_id', activeGroup.id)
-
-    if (error) {
-      console.error(
-        'Error eliminando actividad:',
-        error,
       )
 
-      showToast(
-        'No pudimos eliminar la actividad.',
-      )
-
+    if (!target) {
       return false
     }
 
-    setActivities((currentActivities) =>
-      removeActivity(
-        currentActivities,
-        dateKey,
-        currentUserId,
-        activityId,
-      ),
-    )
+    const hide = () =>
+      setActivities((currentActivities) =>
+        removeActivity(
+          currentActivities,
+          dateKey,
+          currentUserId,
+          activityId,
+        ),
+      )
 
-    void deleteActivityPhoto(photoUrl)
+    const restore = () =>
+      setActivities((currentActivities) =>
+        upsertActivity(
+          currentActivities,
+          dateKey,
+          currentUserId,
+          target,
+        ),
+      )
+
+    /*
+     * Sin enviar todavía: solo se saca de
+     * la cola del celu.
+     */
+    if (isPendingId(activityId)) {
+      removeQueuedActivity(activityId)
+      hide()
+
+      return true
+    }
+
+    const groupId = activeGroup.id
+
+    hide()
+
+    const commitKey = `activity:${activityId}`
+
+    scheduleCommit(commitKey, async () => {
+      const { error } = await supabase
+        .from('activities')
+        .delete()
+        .eq('id', activityId)
+        .eq('user_id', currentUserId)
+        .eq('group_id', groupId)
+
+      if (error) {
+        console.error(
+          'Error eliminando actividad:',
+          error,
+        )
+
+        restore()
+
+        showToast(
+          'No pudimos eliminar la actividad.',
+        )
+
+        return
+      }
+
+      void deleteActivityPhoto(
+        target.photo_url,
+      )
+    })
+
+    showToast(
+      'Actividad eliminada',
+      'info',
+      {
+        durationMs: UNDO_MS,
+        action: {
+          label: 'Deshacer',
+          onClick: () => {
+            if (cancelCommit(commitKey)) {
+              restore()
+            }
+          },
+        },
+      },
+    )
 
     return true
   }
@@ -395,6 +587,15 @@ export function useActivityActions({
     activityId: string,
     body: string,
   ) => {
+    if (isPendingId(activityId)) {
+      showToast(
+        'Esperá a que la actividad se envíe para comentar.',
+        'info',
+      )
+
+      return false
+    }
+
     const text = body.trim()
 
     if (
@@ -453,39 +654,98 @@ export function useActivityActions({
     activityId: string,
     commentId: string,
   ) => {
-    const { error } = await supabase
-      .from('activity_comments')
-      .delete()
-      .eq('id', commentId)
-      .eq('user_id', currentUserId)
+    const comment = findActivityById(
+      activities,
+      activityId,
+    )?.comments?.find(
+      (current) =>
+        current.id === commentId,
+    )
 
-    if (error) {
-      console.error(
-        'Error borrando comentario:',
-        error,
-      )
-
-      showToast(
-        'No pudimos borrar el comentario.',
-      )
-
+    if (!comment) {
       return
     }
 
-    setActivities((currentActivities) =>
-      updateActivityById(
-        currentActivities,
-        activityId,
-        (activity) => ({
-          ...activity,
-          comments: (
-            activity.comments ?? []
-          ).filter(
-            (comment) =>
-              comment.id !== commentId,
+    const setComments = (
+      change: (
+        comments: ActivityComment[],
+      ) => ActivityComment[],
+    ) =>
+      setActivities((currentActivities) =>
+        updateActivityById(
+          currentActivities,
+          activityId,
+          (activity) => ({
+            ...activity,
+            comments: change(
+              activity.comments ?? [],
+            ),
+          }),
+        ),
+      )
+
+    const hide = () =>
+      setComments((comments) =>
+        comments.filter(
+          (current) =>
+            current.id !== commentId,
+        ),
+      )
+
+    const restore = () =>
+      setComments((comments) =>
+        [
+          ...comments.filter(
+            (current) =>
+              current.id !== commentId,
           ),
-        }),
-      ),
+          comment,
+        ].sort((a, b) =>
+          a.created_at.localeCompare(
+            b.created_at,
+          ),
+        ),
+      )
+
+    hide()
+
+    const commitKey = `comment:${commentId}`
+
+    scheduleCommit(commitKey, async () => {
+      const { error } = await supabase
+        .from('activity_comments')
+        .delete()
+        .eq('id', commentId)
+        .eq('user_id', currentUserId)
+
+      if (error) {
+        console.error(
+          'Error borrando comentario:',
+          error,
+        )
+
+        restore()
+
+        showToast(
+          'No pudimos borrar el comentario.',
+        )
+      }
+    })
+
+    showToast(
+      'Comentario borrado',
+      'info',
+      {
+        durationMs: UNDO_MS,
+        action: {
+          label: 'Deshacer',
+          onClick: () => {
+            if (cancelCommit(commitKey)) {
+              restore()
+            }
+          },
+        },
+      },
     )
   }
 
@@ -500,6 +760,15 @@ export function useActivityActions({
     activityId: string,
     emoji: ReactionEmoji,
   ) => {
+    if (isPendingId(activityId)) {
+      showToast(
+        'Esperá a que la actividad se envíe para reaccionar.',
+        'info',
+      )
+
+      return
+    }
+
     const targetActivity =
       findActivityById(
         activities,
@@ -509,6 +778,8 @@ export function useActivityActions({
     if (!targetActivity) {
       return
     }
+
+    tapFeedback()
 
     const currentReactions =
       targetActivity.reactions ?? []

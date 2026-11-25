@@ -4,6 +4,10 @@ import {
   useSyncExternalStore,
 } from 'react'
 
+import {
+  retryImport,
+} from '../lib/appVersion'
+
 import GroupGalleryModal from './GroupGalleryModal'
 import MemberProfileModal from './MemberProfileModal'
 
@@ -11,8 +15,8 @@ import MemberProfileModal from './MemberProfileModal'
  * El Wrapped se usa poco: se baja recién
  * cuando alguien lo abre.
  */
-const WrappedStories = lazy(
-  () => import('./WrappedStories'),
+const WrappedStories = lazy(() =>
+  retryImport(() => import('./WrappedStories')),
 )
 
 import {

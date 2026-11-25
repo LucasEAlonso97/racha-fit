@@ -14,10 +14,6 @@ import {
 } from 'lucide-react'
 
 import {
-  confirmAction,
-} from '../lib/feedback'
-
-import {
   activityOptions,
 } from '../data/activities'
 
@@ -353,17 +349,10 @@ function ActivityModal({
         return
       }
 
-      const confirmed =
-        await confirmAction({
-          title:
-            '¿Eliminar esta actividad?',
-          confirmLabel: 'Eliminar',
-          danger: true,
-        })
-
-      if (!confirmed) {
-        return
-      }
+      /*
+       * Sin "¿Estás seguro?": se borra al
+       * toque y aparece "Deshacer".
+       */
 
       setError(
         null,

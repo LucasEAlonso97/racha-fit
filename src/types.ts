@@ -46,6 +46,12 @@ export type Activity = {
   recovered_with_wildcard?: boolean
   photo_url?: string | null
   comments?: ActivityComment[]
+
+  /*
+   * Guardada sin señal: todavía no se
+   * envió (ver lib/offlineQueue.ts).
+   */
+  pending?: boolean
 }
 
 /*
