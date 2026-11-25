@@ -247,6 +247,18 @@ function RachaApp({
   const [selectedDate, setSelectedDate] =
     useState<string | null>(null)
 
+  /*
+   * Al abrir un día viejo se completan sus
+   * comentarios (ver lib/groupData.ts).
+   */
+  const { loadDayDetails } = groupData
+
+  useEffect(() => {
+    if (selectedDate) {
+      void loadDayDetails(selectedDate)
+    }
+  }, [selectedDate, loadDayDetails])
+
   const activityModal =
     useActivityModal({
       todayKey,

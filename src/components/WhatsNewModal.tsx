@@ -1,4 +1,7 @@
 import {
+  useSwipeToClose,
+} from '../hooks/useSwipeToClose'
+import {
   WHATS_NEW,
 } from '../lib/whatsNew'
 
@@ -17,9 +20,13 @@ type Props = {
 function WhatsNewModal({
   onClose,
 }: Props) {
+  const sheetRef =
+    useSwipeToClose(onClose)
+
   return (
     <div className="fixed inset-0 z-[75] flex items-end justify-center bg-black/40 backdrop-blur-[2px] sm:items-center">
       <div
+        ref={sheetRef}
         role="dialog"
         aria-modal="true"
         className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-[32px] bg-white px-6 pb-8 pt-7 sm:rounded-[32px]"

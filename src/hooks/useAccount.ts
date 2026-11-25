@@ -7,6 +7,20 @@ import {
   loadAccountWithRetry,
 } from '../lib/account'
 
+import {
+  readCache,
+  writeCache,
+} from '../lib/localCache'
+
+import {
+  isNetworkError,
+} from '../lib/offlineQueue'
+
+type AccountCache = {
+  profile: Profile
+  groups: Group[]
+}
+
 import type {
   Group,
   Profile,
@@ -68,6 +82,41 @@ export function useAccount(
       setLoading(true)
       setError(null)
 
+      const cacheKey = `account:${userId}`
+
+      const pickActive = (
+        loadedGroups: Group[],
+      ) => {
+        const savedGroupId =
+          window.localStorage.getItem(
+            activeGroupStorageKey,
+          )
+
+        return (
+          loadedGroups.find(
+            (group) =>
+              group.id === savedGroupId,
+          ) ??
+          loadedGroups[0] ??
+          null
+        )
+      }
+
+      /*
+       * Primero lo guardado en el celu.
+       */
+      const cached =
+        readCache<AccountCache>(cacheKey)
+
+      if (cached) {
+        setProfile(cached.profile)
+        setGroups(cached.groups)
+        setActiveGroup(
+          pickActive(cached.groups),
+        )
+        setLoading(false)
+      }
+
       const {
         profileResult,
         groupsResult,
@@ -75,6 +124,22 @@ export function useAccount(
         await loadAccountWithRetry(userId)
 
       if (cancelled) {
+        return
+      }
+
+      if (
+        cached &&
+        (profileResult.error ||
+          groupsResult.error) &&
+        isNetworkError(
+          profileResult.error ??
+            groupsResult.error,
+        )
+      ) {
+        console.warn(
+          'Sin conexión: usando el perfil guardado.',
+        )
+
         return
       }
 
@@ -119,20 +184,30 @@ export function useAccount(
 
       setGroups(loadedGroups)
 
-      const savedGroupId =
-        window.localStorage.getItem(
-          activeGroupStorageKey,
-        )
+      writeCache(cacheKey, {
+        profile:
+          profileResult.data as Profile,
+        groups: loadedGroups,
+      } satisfies AccountCache)
 
       const groupToActivate =
-        loadedGroups.find(
-          (group) =>
-            group.id === savedGroupId,
-        ) ??
-        loadedGroups[0] ??
-        null
+        pickActive(loadedGroups)
 
-      setActiveGroup(groupToActivate)
+      /*
+       * Mismo grupo que ya se mostraba desde
+       * lo guardado: no lo reemplazamos (si
+       * no, se recargaría todo de nuevo).
+       */
+      setActiveGroup((current) =>
+        current &&
+        groupToActivate &&
+        current.id === groupToActivate.id
+          ? {
+              ...current,
+              ...groupToActivate,
+            }
+          : groupToActivate,
+      )
 
       if (groupToActivate) {
         window.localStorage.setItem(

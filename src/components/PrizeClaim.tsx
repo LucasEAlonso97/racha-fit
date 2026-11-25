@@ -1,4 +1,7 @@
 import {
+  useSwipeToClose,
+} from '../hooks/useSwipeToClose'
+import {
   useState,
 } from 'react'
 
@@ -306,6 +309,9 @@ function ChoiceSheet({
     choice?: string
   }) => void
 }) {
+  const sheetRef =
+    useSwipeToClose(onClose)
+
   const isNickname =
     prizeType === 'nickname'
 
@@ -330,6 +336,7 @@ function ChoiceSheet({
       onClick={onClose}
     >
       <div
+        ref={sheetRef}
         role="dialog"
         aria-modal="true"
         onClick={(event) =>

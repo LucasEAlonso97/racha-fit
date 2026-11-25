@@ -25,6 +25,7 @@ import NotificationSettings from '../components/NotificationSettings'
 import UserAvatar from '../components/UserAvatar'
 import ConsistencyProgress from '../components/ConsistencyProgress'
 import WrappedBanner from '../components/WrappedBanner'
+import YearHeatmap from '../components/YearHeatmap'
 
 import type {
   ActivitiesByDate,
@@ -1225,6 +1226,12 @@ function Perfil({
       <WrappedBanner
         today={new Date()}
         place="profile"
+      />
+
+      <YearHeatmap
+        activities={activities}
+        userId={currentUser.id}
+        today={new Date()}
       />
 
       {/* ================================= */}

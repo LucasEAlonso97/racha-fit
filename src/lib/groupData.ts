@@ -2,6 +2,11 @@ import {
   supabase,
 } from './supabase'
 
+import {
+  addDays,
+  formatDateKey,
+} from '../utils/date'
+
 import type {
   ActivitiesByDate,
   Activity,
@@ -51,6 +56,12 @@ type ActivityRow = {
    */
   photo_url?: string | null
   comments?: ActivityComment[] | null
+
+  /*
+   * Fila del historial viejo, traída sin
+   * comentarios (ver fetchGroupActivities).
+   */
+  partial?: boolean
 }
 
 const avatarColors = [
@@ -109,17 +120,108 @@ const ACTIVITY_COLUMNS_WITH_SOCIAL = `
   )
 `
 
+/*
+ * Sin comentarios, para el historial viejo:
+ * es lo que más pesa y casi nunca se mira.
+ */
+const ACTIVITY_COLUMNS_LIGHT = `
+  ${ACTIVITY_COLUMNS},
+  photo_url
+`
+
+/*
+ * Los últimos ~4 meses se traen completos.
+ * Lo anterior, sin comentarios: cuando se
+ * abre un día viejo se completan
+ * (fetchDayDetails).
+ */
+export const RECENT_DAYS = 120
+
+/*
+ * Supabase devuelve como mucho 1000 filas
+ * por consulta: se pide de a páginas.
+ */
+const PAGE_SIZE = 1000
+
+type PageResult = {
+  data: unknown[] | null
+  error: {
+    code?: string
+    message?: string
+  } | null
+}
+
+async function fetchAllPages(
+  page: (
+    from: number,
+    to: number,
+  ) => PromiseLike<PageResult>,
+): Promise<PageResult> {
+  const rows: unknown[] = []
+
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await page(
+      from,
+      from + PAGE_SIZE - 1,
+    )
+
+    if (error) {
+      return {
+        data: null,
+        error,
+      }
+    }
+
+    rows.push(...(data ?? []))
+
+    if ((data?.length ?? 0) < PAGE_SIZE) {
+      return {
+        data: rows,
+        error: null,
+      }
+    }
+  }
+}
+
+type DateRange = {
+  since?: string
+  before?: string
+}
+
 function fetchActivities(
   groupId: string,
   columns: string,
+  range: DateRange = {},
 ) {
-  return supabase
-    .from('activities')
-    .select(columns)
-    .eq('group_id', groupId)
-    .order('created_at', {
-      ascending: true,
-    })
+  return fetchAllPages((from, to) => {
+    let query = supabase
+      .from('activities')
+      .select(columns)
+      .eq('group_id', groupId)
+
+    if (range.since) {
+      query = query.gte(
+        'activity_date',
+        range.since,
+      )
+    }
+
+    if (range.before) {
+      query = query.lt(
+        'activity_date',
+        range.before,
+      )
+    }
+
+    return query
+      .order('created_at', {
+        ascending: true,
+      })
+      .order('id', {
+        ascending: true,
+      })
+      .range(from, to)
+  })
 }
 
 /*
@@ -141,26 +243,108 @@ function isMissingSocialSchema(
   )
 }
 
-async function fetchActivitiesWithFallback(
-  groupId: string,
+export function getRecentCutoff(
+  today = new Date(),
 ) {
-  const result = await fetchActivities(
-    groupId,
-    ACTIVITY_COLUMNS_WITH_SOCIAL,
+  return formatDateKey(
+    addDays(today, -RECENT_DAYS),
   )
+}
 
-  if (!isMissingSocialSchema(result.error)) {
-    return result
+/*
+ * Todo el historial del grupo:
+ * - reciente: completo (fotos, comentarios)
+ * - viejo: sin comentarios (partial)
+ *
+ * Las rachas necesitan todos los días, por
+ * eso no se puede cortar el historial.
+ */
+async function fetchGroupActivities(
+  groupId: string,
+): Promise<PageResult> {
+  const cutoff = getRecentCutoff()
+
+  const [recent, old] =
+    await Promise.all([
+      fetchActivities(
+        groupId,
+        ACTIVITY_COLUMNS_WITH_SOCIAL,
+        {
+          since: cutoff,
+        },
+      ),
+      fetchActivities(
+        groupId,
+        ACTIVITY_COLUMNS_LIGHT,
+        {
+          before: cutoff,
+        },
+      ),
+    ])
+
+  if (
+    isMissingSocialSchema(recent.error) ||
+    isMissingSocialSchema(old.error)
+  ) {
+    console.warn(
+      'Fotos y comentarios no disponibles todavía (falta correr la migración). Cargando sin ellos.',
+    )
+
+    return fetchActivities(
+      groupId,
+      ACTIVITY_COLUMNS,
+    )
   }
 
-  console.warn(
-    'Fotos y comentarios no disponibles todavía (falta correr la migración). Cargando sin ellos.',
-  )
+  if (recent.error || old.error) {
+    return {
+      data: null,
+      error: recent.error ?? old.error,
+    }
+  }
 
-  return fetchActivities(
-    groupId,
-    ACTIVITY_COLUMNS,
-  )
+  return {
+    data: [
+      ...(old.data ?? []).map((row) => ({
+        ...(row as ActivityRow),
+        partial: true,
+      })),
+      ...(recent.data ?? []),
+    ],
+    error: null,
+  }
+}
+
+/*
+ * Completa un día viejo (con comentarios)
+ * cuando alguien lo abre.
+ */
+export async function fetchDayDetails(
+  groupId: string,
+  dateKey: string,
+) {
+  const { data, error } =
+    await supabase
+      .from('activities')
+      .select(
+        ACTIVITY_COLUMNS_WITH_SOCIAL,
+      )
+      .eq('group_id', groupId)
+      .eq('activity_date', dateKey)
+      .order('created_at', {
+        ascending: true,
+      })
+
+  if (error) {
+    return null
+  }
+
+  return (
+    (data ?? []) as unknown as ActivityRow[]
+  ).map((row) => ({
+    userId: row.user_id,
+    activity: mapActivityRow(row),
+  }))
 }
 
 export function fetchGroupData(
@@ -182,7 +366,7 @@ export function fetchGroupData(
       `)
       .eq('group_id', groupId),
 
-    fetchActivitiesWithFallback(groupId),
+    fetchGroupActivities(groupId),
   ])
 }
 
@@ -269,6 +453,11 @@ function mapActivityRow(
       row.recovered_with_wildcard,
     reactions,
     photo_url: row.photo_url ?? null,
+    ...(row.partial
+      ? {
+          partial: true,
+        }
+      : {}),
     comments: [
       ...(row.comments ?? []),
     ].sort((a, b) =>

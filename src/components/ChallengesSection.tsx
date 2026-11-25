@@ -1,4 +1,7 @@
 import {
+  useSwipeToClose,
+} from '../hooks/useSwipeToClose'
+import {
   useMemo,
   useState,
 } from 'react'
@@ -416,6 +419,9 @@ function ChallengeDetail({
   onClose: () => void
   onDelete: () => void
 }) {
+  const sheetRef =
+    useSwipeToClose(onClose)
+
   const isCreator =
     challenge.created_by ===
     currentUserId
@@ -432,6 +438,7 @@ function ChallengeDetail({
       onClick={onClose}
     >
       <div
+        ref={sheetRef}
         role="dialog"
         aria-modal="true"
         onClick={(event) =>

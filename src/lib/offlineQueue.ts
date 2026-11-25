@@ -14,8 +14,14 @@
  */
 
 import type {
+  ActivitiesByDate,
   ActivityType,
 } from '../types'
+
+import {
+  addActivity,
+  findActivityById,
+} from './activityState'
 
 export type QueuedActivity = {
   pendingId: string
@@ -163,4 +169,66 @@ export function isNetworkError(
   return /failed to fetch|load failed|networkerror|network request failed/i.test(
     error?.message ?? '',
   )
+}
+
+/*
+ * Suma a las actividades del grupo las que
+ * están esperando señal.
+ */
+export function mergePendingActivities(
+  activities: ActivitiesByDate,
+  userId: string,
+  groupId: string,
+) {
+  return getQueue(userId)
+    .filter(
+      (item) => item.groupId === groupId,
+    )
+    .reduce(
+      (next, item) =>
+        findActivityById(
+          next,
+          item.pendingId,
+        )
+          ? next
+          : addActivity(
+              next,
+              item.dateKey,
+              userId,
+              {
+                id: item.pendingId,
+                type: item.type,
+                duration: item.duration,
+                reactions: [],
+                comments: [],
+                photo_url: null,
+                pending: true,
+              },
+            ),
+      activities,
+    )
+}
+
+/*
+ * Lo mismo pero sacándolas (para no
+ * guardarlas en la caché).
+ */
+export function withoutPendingActivities(
+  activities: ActivitiesByDate,
+): ActivitiesByDate {
+  const result: ActivitiesByDate = {}
+
+  for (const [dateKey, byUser] of Object.entries(activities)) {
+    for (const [userId, list] of Object.entries(byUser)) {
+      const kept = list.filter(
+        (activity) => !activity.pending,
+      )
+
+      if (kept.length > 0) {
+        ;(result[dateKey] ??= {})[userId] = kept
+      }
+    }
+  }
+
+  return result
 }
