@@ -84,6 +84,15 @@ import {
   usePullToRefresh,
 } from './hooks/usePullToRefresh'
 
+import {
+  useAchievementClaims,
+} from './hooks/useAchievementClaims'
+
+import {
+  getAchievements,
+  getClaimableAchievements,
+} from './utils/achievements'
+
 import PullToRefreshIndicator from './components/PullToRefreshIndicator'
 
 import {
@@ -245,6 +254,55 @@ function RachaApp({
 
   const [view, setView] =
     useState<View>('home')
+
+  /*
+   * REGALOS DE LOGROS
+   */
+  const achievementClaims =
+    useAchievementClaims(currentUserId)
+
+  const claimableAchievements =
+    useMemo(
+      () =>
+        achievementClaims.available
+          ? getClaimableAchievements(
+              getAchievements(
+                activities,
+                currentUserId,
+              ),
+              achievementClaims.claimed,
+            ).length
+          : 0,
+      [
+        activities,
+        currentUserId,
+        achievementClaims.available,
+        achievementClaims.claimed,
+      ],
+    )
+
+  const claimAchievement = async (
+    achievementId: string,
+  ) => {
+    if (!activeGroup) {
+      return {
+        ok: false as const,
+        message: 'Elegí un grupo primero.',
+      }
+    }
+
+    const result =
+      await achievementClaims.claim(
+        activeGroup.id,
+        achievementId,
+      )
+
+    if (result.ok) {
+      await refreshWildcards()
+    }
+
+    return result
+  }
 
   /*
    * TIRAR HACIA ABAJO PARA ACTUALIZAR
@@ -673,6 +731,18 @@ function RachaApp({
             users={users}
             currentUserId={currentUserId}
             today={today}
+            giftsEnabled={
+              achievementClaims.available
+            }
+            claimedAchievements={
+              achievementClaims.claimed
+            }
+            claimableCount={
+              claimableAchievements
+            }
+            onClaimAchievement={
+              claimAchievement
+            }
           />
         )}
 
@@ -731,6 +801,9 @@ function RachaApp({
       <BottomNavigation
         view={view}
         onChangeView={setView}
+        badges={{
+          rachas: claimableAchievements,
+        }}
         onAddActivity={() =>
           openActivityModal(todayKey)
         }

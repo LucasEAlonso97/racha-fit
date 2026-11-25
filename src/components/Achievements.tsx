@@ -1,25 +1,13 @@
 import {
-  Award,
-  Bike,
-  CalendarCheck2,
   ChevronLeft,
   ChevronRight,
-  Crown,
-  Dumbbell,
-  Flame,
-  Footprints,
-  Medal,
-  Star,
-  Timer,
+  Gift,
+  LoaderCircle,
   Trophy,
-  Zap,
-} from 'lucide-react'
-
-import type {
-  LucideIcon,
 } from 'lucide-react'
 
 import {
+  useMemo,
   useState,
 } from 'react'
 
@@ -28,21 +16,36 @@ import type {
 } from '../types'
 
 import {
-  getBestStreak,
-} from '../utils/activityStats'
+  getAchievements,
+  getClaimableAchievements,
+  giftLabel,
+  tierHasGift,
+} from '../utils/achievements'
+
+import type {
+  ClaimResult,
+} from '../hooks/useAchievementClaims'
+
+import {
+  showToast,
+} from '../lib/feedback'
+
+import {
+  celebrate,
+} from '../lib/celebrate'
 
 type Props = {
   activities: ActivitiesByDate
   currentUserId: string
-}
 
-type Achievement = {
-  id: string
-  title: string
-  description: string
-  current: number
-  goal: number
-  icon: LucideIcon
+  /*
+   * Regalos (si la migración está corrida).
+   */
+  giftsEnabled: boolean
+  claimed: Set<string>
+  onClaim: (
+    achievementId: string,
+  ) => Promise<ClaimResult>
 }
 
 const achievementsPerPage = 6
@@ -50,596 +53,157 @@ const achievementsPerPage = 6
 function Achievements({
   activities,
   currentUserId,
+  giftsEnabled,
+  claimed,
+  onClaim,
 }: Props) {
   const [
     currentPage,
     setCurrentPage,
   ] = useState(0)
 
+  const [claiming, setClaiming] =
+    useState<string | null>(null)
+
+  const [claimingAll, setClaimingAll] =
+    useState(false)
+
   /*
-   * ========================================
-   * ESTADÍSTICAS GENERALES
-   * ========================================
+   * Los que tienen regalo para reclamar
+   * van primero, así se ven en la
+   * primera página.
    */
-
-  const activeDays =
-    Object.keys(
-      activities,
-    ).filter(
-      (dateKey) =>
-        (
-          activities[
-            dateKey
-          ]?.[
-            currentUserId
-          ] ?? []
-        ).length > 0,
-    ).length
-
-  const userActivities =
-    Object.values(
-      activities,
-    ).flatMap(
-      (day) =>
-        day[
-          currentUserId
-        ] ?? [],
-    )
-
-  const totalActivities =
-    userActivities.length
-
-  const totalMinutes =
-    userActivities.reduce(
-      (
-        total,
-        activity,
-      ) =>
-        total +
-        activity.duration,
-      0,
-    )
-
-  const bestStreak =
-    getBestStreak(
+  const achievements = useMemo(() => {
+    const list = getAchievements(
       activities,
       currentUserId,
     )
 
-  /*
-   * ========================================
-   * ACTIVIDADES POR TIPO
-   * ========================================
-   */
+    if (!giftsEnabled) {
+      return list
+    }
 
-  const gymCount =
-    userActivities.filter(
-      (activity) =>
-        activity.type ===
-        'Gym',
-    ).length
+    const claimable = new Set(
+      getClaimableAchievements(
+        list,
+        claimed,
+      ).map((item) => item.id),
+    )
 
-  const walkingCount =
-    userActivities.filter(
-      (activity) =>
-        activity.type ===
-        'Caminata',
-    ).length
-
-  const runningCount =
-    userActivities.filter(
-      (activity) =>
-        activity.type ===
-        'Correr',
-    ).length
-
-  const cyclingCount =
-    userActivities.filter(
-      (activity) =>
-        activity.type ===
-        'Bicicleta',
-    ).length
-
-  /*
-   * ========================================
-   * LOGROS
-   * ========================================
-   */
-
-  const achievements:
-    Achievement[] = [
-      /*
-       * ====================================
-       * PRIMEROS PASOS
-       * ====================================
-       */
-
-      {
-        id: 'first-activity',
-        title:
-          'Primera actividad',
-        description:
-          'Registraste tu primer movimiento.',
-        current:
-          totalActivities,
-        goal: 1,
-        icon: Dumbbell,
-      },
-
-      {
-        id: 'three-days',
-        title:
-          'Ya arrancaste',
-        description:
-          'Sumaste movimiento en 3 días.',
-        current:
-          activeDays,
-        goal: 3,
-        icon: CalendarCheck2,
-      },
-
-      {
-        id: 'three-streak',
-        title:
-          'En racha',
-        description:
-          'Llegaste a 3 días seguidos.',
-        current:
-          bestStreak,
-        goal: 3,
-        icon: Flame,
-      },
-
-      {
-        id: 'ten-activities',
-        title:
-          'Diez y contando',
-        description:
-          'Registraste 10 actividades.',
-        current:
-          totalActivities,
-        goal: 10,
-        icon: Medal,
-      },
-
-      {
-        id: 'five-hours',
-        title:
-          'Cinco horas',
-        description:
-          'Acumulaste 300 minutos moviéndote.',
-        current:
-          totalMinutes,
-        goal: 300,
-        icon: Timer,
-      },
-
-      {
-        id: 'seven-streak',
-        title:
-          'Una semana entera',
-        description:
-          'Mantuviste una racha de 7 días.',
-        current:
-          bestStreak,
-        goal: 7,
-        icon: Trophy,
-      },
-
-      /*
-       * ====================================
-       * CONSTANCIA
-       * ====================================
-       */
-
-      {
-        id: 'twenty-five-activities',
-        title:
-          'No aflojás',
-        description:
-          'Registraste 25 actividades.',
-        current:
-          totalActivities,
-        goal: 25,
-        icon: Dumbbell,
-      },
-
-      {
-        id: 'ten-active-days',
-        title:
-          'Diez días',
-        description:
-          'Te moviste en 10 días distintos.',
-        current:
-          activeDays,
-        goal: 10,
-        icon: CalendarCheck2,
-      },
-
-      {
-        id: 'ten-hours',
-        title:
-          'Diez horas',
-        description:
-          'Acumulaste 600 minutos moviéndote.',
-        current:
-          totalMinutes,
-        goal: 600,
-        icon: Timer,
-      },
-
-      {
-        id: 'fourteen-streak',
-        title:
-          'Dos semanas',
-        description:
-          'Llegaste a 14 días seguidos.',
-        current:
-          bestStreak,
-        goal: 14,
-        icon: Flame,
-      },
-
-      {
-        id: 'fifty-activities',
-        title:
-          'Imparable',
-        description:
-          'Registraste 50 actividades.',
-        current:
-          totalActivities,
-        goal: 50,
-        icon: Medal,
-      },
-
-      {
-        id: 'thirty-active-days',
-        title:
-          'Un mes en movimiento',
-        description:
-          'Te moviste en 30 días distintos.',
-        current:
-          activeDays,
-        goal: 30,
-        icon: Trophy,
-      },
-
-      /*
-       * ====================================
-       * ACTIVIDADES ACUMULADAS
-       * ====================================
-       */
-
-      {
-        id: 'seventy-five-activities',
-        title:
-          'Modo constante',
-        description:
-          'Registraste 75 actividades.',
-        current:
-          totalActivities,
-        goal: 75,
-        icon: Award,
-      },
-
-      {
-        id: 'hundred-activities',
-        title:
-          'Centenario',
-        description:
-          'Llegaste a 100 actividades.',
-        current:
-          totalActivities,
-        goal: 100,
-        icon: Trophy,
-      },
-
-      {
-        id: 'two-hundred-activities',
-        title:
-          'Máquina',
-        description:
-          'Registraste 200 actividades.',
-        current:
-          totalActivities,
-        goal: 200,
-        icon: Crown,
-      },
-
-      {
-        id: 'three-sixty-five-activities',
-        title:
-          'No parás más',
-        description:
-          'Llegaste a 365 actividades.',
-        current:
-          totalActivities,
-        goal: 365,
-        icon: Star,
-      },
-
-      /*
-       * ====================================
-       * DÍAS ACTIVOS
-       * ====================================
-       */
-
-      {
-        id: 'fifty-active-days',
-        title:
-          '50 días sumando',
-        description:
-          'Te moviste en 50 días distintos.',
-        current:
-          activeDays,
-        goal: 50,
-        icon: CalendarCheck2,
-      },
-
-      {
-        id: 'hundred-active-days',
-        title:
-          '100 días',
-        description:
-          'Llegaste a 100 días activos.',
-        current:
-          activeDays,
-        goal: 100,
-        icon: CalendarCheck2,
-      },
-
-      {
-        id: 'one-eighty-active-days',
-        title:
-          'Medio año',
-        description:
-          'Sumaste movimiento en 180 días.',
-        current:
-          activeDays,
-        goal: 180,
-        icon: Award,
-      },
-
-      {
-        id: 'three-sixty-five-active-days',
-        title:
-          '365 días sumando',
-        description:
-          'Te moviste en 365 días distintos.',
-        current:
-          activeDays,
-        goal: 365,
-        icon: Crown,
-      },
-
-      /*
-       * ====================================
-       * TIEMPO ACUMULADO
-       * ====================================
-       */
-
-      {
-        id: 'twenty-hours',
-        title:
-          '20 horas',
-        description:
-          'Acumulaste 1.200 minutos moviéndote.',
-        current:
-          totalMinutes,
-        goal: 1200,
-        icon: Timer,
-      },
-
-      {
-        id: 'fifty-hours',
-        title:
-          '50 horas',
-        description:
-          'Acumulaste 3.000 minutos.',
-        current:
-          totalMinutes,
-        goal: 3000,
-        icon: Timer,
-      },
-
-      {
-        id: 'hundred-hours',
-        title:
-          '100 horas',
-        description:
-          'Acumulaste 6.000 minutos en movimiento.',
-        current:
-          totalMinutes,
-        goal: 6000,
-        icon: Award,
-      },
-
-      {
-        id: 'two-hundred-hours',
-        title:
-          '200 horas',
-        description:
-          'Acumulaste 12.000 minutos.',
-        current:
-          totalMinutes,
-        goal: 12000,
-        icon: Crown,
-      },
-
-      /*
-       * ====================================
-       * RACHAS GRANDES
-       * ====================================
-       */
-
-      {
-        id: 'twenty-one-streak',
-        title:
-          'Tres semanas',
-        description:
-          'Llegaste a 21 días seguidos.',
-        current:
-          bestStreak,
-        goal: 21,
-        icon: Flame,
-      },
-
-      {
-        id: 'thirty-streak',
-        title:
-          'Un mes sin cortar',
-        description:
-          'Mantuviste una racha de 30 días.',
-        current:
-          bestStreak,
-        goal: 30,
-        icon: Flame,
-      },
-
-      {
-        id: 'sixty-streak',
-        title:
-          'Dos meses',
-        description:
-          'Llegaste a 60 días seguidos.',
-        current:
-          bestStreak,
-        goal: 60,
-        icon: Trophy,
-      },
-
-      {
-        id: 'hundred-streak',
-        title:
-          'Racha legendaria',
-        description:
-          'Alcanzaste 100 días seguidos.',
-        current:
-          bestStreak,
-        goal: 100,
-        icon: Crown,
-      },
-
-      /*
-       * ====================================
-       * GYM
-       * ====================================
-       */
-
-      {
-        id: 'ten-gym',
-        title:
-          'Modo gym',
-        description:
-          'Registraste 10 sesiones de Gym.',
-        current:
-          gymCount,
-        goal: 10,
-        icon: Dumbbell,
-      },
-
-      {
-        id: 'twenty-five-gym',
-        title:
-          'Fierros',
-        description:
-          'Registraste 25 sesiones de Gym.',
-        current:
-          gymCount,
-        goal: 25,
-        icon: Dumbbell,
-      },
-
-      /*
-       * ====================================
-       * CAMINATA
-       * ====================================
-       */
-
-      {
-        id: 'ten-walks',
-        title:
-          'Paso a paso',
-        description:
-          'Registraste 10 caminatas.',
-        current:
-          walkingCount,
-        goal: 10,
-        icon: Footprints,
-      },
-
-      {
-        id: 'twenty-five-walks',
-        title:
-          'Caminante',
-        description:
-          'Registraste 25 caminatas.',
-        current:
-          walkingCount,
-        goal: 25,
-        icon: Footprints,
-      },
-
-      /*
-       * ====================================
-       * CORRER
-       * ====================================
-       */
-
-      {
-        id: 'ten-runs',
-        title:
-          'A correr',
-        description:
-          'Registraste 10 salidas a correr.',
-        current:
-          runningCount,
-        goal: 10,
-        icon: Zap,
-      },
-
-      {
-        id: 'twenty-five-runs',
-        title:
-          'Corredor constante',
-        description:
-          'Registraste 25 salidas a correr.',
-        current:
-          runningCount,
-        goal: 25,
-        icon: Zap,
-      },
-
-      /*
-       * ====================================
-       * BICICLETA
-       * ====================================
-       */
-
-      {
-        id: 'ten-rides',
-        title:
-          'Sobre ruedas',
-        description:
-          'Registraste 10 actividades en bicicleta.',
-        current:
-          cyclingCount,
-        goal: 10,
-        icon: Bike,
-      },
-
-      {
-        id: 'twenty-five-rides',
-        title:
-          'A puro pedal',
-        description:
-          'Registraste 25 actividades en bicicleta.',
-        current:
-          cyclingCount,
-        goal: 25,
-        icon: Bike,
-      },
+    return [
+      ...list.filter((item) =>
+        claimable.has(item.id),
+      ),
+      ...list.filter(
+        (item) => !claimable.has(item.id),
+      ),
     ]
+  }, [
+    activities,
+    currentUserId,
+    giftsEnabled,
+    claimed,
+  ])
+
+  const claimable = giftsEnabled
+    ? getClaimableAchievements(
+        achievements,
+        claimed,
+      )
+    : []
+
+  const announce = (
+    result: Extract<
+      ClaimResult,
+      {
+        ok: true
+      }
+    >,
+  ) => {
+    celebrate(result.crown ? '👑' : '🃏')
+
+    showToast(
+      result.crown
+        ? '¡+1 comodín y corona 👑 por 7 días!'
+        : '¡+1 comodín! 🃏',
+      'success',
+    )
+  }
+
+  const claimOne = async (
+    achievementId: string,
+  ) => {
+    if (claiming || claimingAll) {
+      return
+    }
+
+    setClaiming(achievementId)
+
+    try {
+      const result =
+        await onClaim(achievementId)
+
+      if (result.ok) {
+        announce(result)
+      } else {
+        showToast(result.message)
+      }
+    } finally {
+      setClaiming(null)
+    }
+  }
+
+  const claimAll = async () => {
+    if (claiming || claimingAll) {
+      return
+    }
+
+    setClaimingAll(true)
+
+    let wildcards = 0
+    let crowns = 0
+    let stopMessage: string | null = null
+
+    try {
+      for (const item of claimable) {
+        const result = await onClaim(
+          item.id,
+        )
+
+        if (!result.ok) {
+          stopMessage = result.message
+          break
+        }
+
+        wildcards += 1
+
+        if (result.crown) {
+          crowns += 1
+        }
+      }
+    } finally {
+      setClaimingAll(false)
+    }
+
+    if (wildcards > 0) {
+      celebrate(crowns > 0 ? '👑' : '🃏')
+
+      showToast(
+        `¡+${wildcards} ${wildcards === 1 ? 'comodín' : 'comodines'}${
+          crowns > 0
+            ? ' y corona 👑'
+            : ''
+        }!`,
+        'success',
+      )
+    }
+
+    if (stopMessage) {
+      showToast(stopMessage, 'info', {
+        durationMs: 6000,
+      })
+    }
+  }
 
   /*
    * ========================================
@@ -665,8 +229,7 @@ function Achievements({
   const unlockedCount =
     achievements.filter(
       (achievement) =>
-        achievement.current >=
-        achievement.goal,
+        achievement.unlocked,
     ).length
 
   const goPrevious =
@@ -772,14 +335,73 @@ function Achievements({
         </div>
       </div>
 
+      {/* REGALOS PARA RECLAMAR */}
+
+      {claimable.length > 0 && (
+        <div className="mb-4 flex items-center gap-3 rounded-[22px] bg-gradient-to-r from-amber-400 via-orange-400 to-fuchsia-500 p-4 text-white shadow-md shadow-orange-100">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/25">
+            <Gift size={22} />
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-black leading-tight">
+              {claimable.length === 1
+                ? 'Tenés 1 regalo para reclamar'
+                : `Tenés ${claimable.length} regalos para reclamar`}
+            </p>
+
+            <p className="mt-0.5 text-[11px] font-semibold text-white/85">
+              Comodines y coronas por tus logros
+            </p>
+          </div>
+
+          {claimable.length > 1 && (
+            <button
+              type="button"
+              onClick={() =>
+                void claimAll()
+              }
+              disabled={
+                claimingAll ||
+                Boolean(claiming)
+              }
+              className="flex shrink-0 items-center gap-1 rounded-xl bg-white px-3 py-2 text-xs font-black text-orange-600 transition active:scale-95 disabled:opacity-70"
+            >
+              {claimingAll && (
+                <LoaderCircle
+                  size={14}
+                  className="animate-spin"
+                />
+              )}
+              Todos
+            </button>
+          )}
+        </div>
+      )}
+
       {/* LOGROS */}
 
       <div className="grid grid-cols-2 gap-3">
         {visibleAchievements.map(
           (achievement) => {
             const unlocked =
-              achievement.current >=
-              achievement.goal
+              achievement.unlocked
+
+            const hasGift =
+              giftsEnabled &&
+              tierHasGift(
+                achievement.tier,
+              )
+
+            const isClaimed =
+              claimed.has(
+                achievement.id,
+              )
+
+            const canClaim =
+              hasGift &&
+              unlocked &&
+              !isClaimed
 
             const progress =
               Math.min(
@@ -840,9 +462,36 @@ function Achievements({
 
                 {/* ESTADO */}
 
-                {unlocked ? (
+                {canClaim ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void claimOne(
+                        achievement.id,
+                      )
+                    }
+                    disabled={
+                      Boolean(claiming) ||
+                      claimingAll
+                    }
+                    className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-2 text-[11px] font-black text-white shadow-sm shadow-orange-200 transition active:scale-95 disabled:opacity-70"
+                  >
+                    {claiming ===
+                    achievement.id ? (
+                      <LoaderCircle
+                        size={13}
+                        className="animate-spin"
+                      />
+                    ) : (
+                      <Gift size={13} />
+                    )}
+                    Reclamar
+                  </button>
+                ) : unlocked ? (
                   <p className="mt-3 text-[11px] font-black text-violet-600">
-                    Desbloqueado
+                    {hasGift && isClaimed
+                      ? 'Desbloqueado · 🎁 ✓'
+                      : 'Desbloqueado'}
                   </p>
                 ) : (
                   <>
@@ -868,6 +517,22 @@ function Achievements({
                     </p>
                   </>
                 )}
+
+                {hasGift &&
+                  !isClaimed && (
+                    <p
+                      className={`mt-1.5 text-[10px] font-black ${
+                        canClaim
+                          ? 'text-orange-500'
+                          : 'text-amber-500/80'
+                      }`}
+                    >
+                      🎁{' '}
+                      {giftLabel(
+                        achievement.tier,
+                      )}
+                    </p>
+                  )}
               </div>
             )
           },

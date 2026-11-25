@@ -2,6 +2,10 @@ import {
   useState,
 } from 'react'
 
+import type {
+  ClaimResult,
+} from '../hooks/useAchievementClaims'
+
 import {
   Flame,
   Trophy,
@@ -42,6 +46,16 @@ type Props = {
 
   today:
     Date
+
+  /*
+   * Regalos de logros.
+   */
+  giftsEnabled: boolean
+  claimedAchievements: Set<string>
+  claimableCount: number
+  onClaimAchievement: (
+    achievementId: string,
+  ) => Promise<ClaimResult>
 }
 
 type RachasTab =
@@ -56,13 +70,23 @@ function Rachas({
   users,
   currentUserId,
   today,
+  giftsEnabled,
+  claimedAchievements,
+  claimableCount,
+  onClaimAchievement,
 }: Props) {
+  /*
+   * Si hay regalos para reclamar, se abre
+   * directo en Logros.
+   */
   const [
     activeTab,
     setActiveTab,
   ] =
-    useState<RachasTab>(
-      'history',
+    useState<RachasTab>(() =>
+      claimableCount > 0
+        ? 'achievements'
+        : 'history',
     )
 
   /*
@@ -195,7 +219,7 @@ function Rachas({
               'achievements',
             )
           }
-          className={`rounded-xl px-2 py-3 text-sm font-black transition ${
+          className={`relative rounded-xl px-2 py-3 text-sm font-black transition ${
             activeTab ===
             'achievements'
               ? 'bg-white text-violet-600 shadow-sm'
@@ -203,6 +227,12 @@ function Rachas({
           }`}
         >
           Logros
+
+          {claimableCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-black text-white">
+              {claimableCount}
+            </span>
+          )}
         </button>
 
         <button
@@ -472,6 +502,9 @@ function Rachas({
           currentUserId={
             currentUserId
           }
+          giftsEnabled={giftsEnabled}
+          claimed={claimedAchievements}
+          onClaim={onClaimAchievement}
         />
       )}
 
