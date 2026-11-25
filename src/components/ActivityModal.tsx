@@ -10,6 +10,7 @@ import {
 } from '../lib/moods'
 
 import {
+  isCustomSportSupported,
   isMoodSupported,
 } from '../lib/groupData'
 
@@ -28,6 +29,11 @@ import {
 
 import {
   activityOptions,
+  CUSTOM_SPORT_EMOJIS,
+  CUSTOM_SPORT_MAX_LENGTH,
+  getActivityEmoji,
+  isBuiltInType,
+  registerCustomSport,
 } from '../data/activities'
 
 import {
@@ -72,6 +78,17 @@ type Props = {
    * repetirla con un toque.
    */
   lastActivity?: Activity | null
+
+  /*
+   * Deportes propios de la persona (más
+   * recientes primero).
+   */
+  customSports?: CustomSport[]
+}
+
+export type CustomSport = {
+  name: string
+  emoji: string
 }
 
 function ActivityModal({
@@ -85,6 +102,7 @@ function ActivityModal({
   onSave,
   onDelete,
   lastActivity = null,
+  customSports = [],
 }: Props) {
   const sheetRef =
     useSwipeToClose(onClose)
@@ -139,6 +157,15 @@ function ActivityModal({
   const [note, setNote] = useState(
     activity?.note ?? '',
   )
+
+  /*
+   * Deporte propio nuevo (al elegir "Otra").
+   */
+  const [customName, setCustomName] =
+    useState('')
+
+  const [customEmoji, setCustomEmoji] =
+    useState(CUSTOM_SPORT_EMOJIS[0])
 
   /*
    * ========================================
@@ -214,6 +241,45 @@ function ActivityModal({
       activity?.id,
     )
 
+  /*
+   * Lista de la grilla: los de siempre, tus
+   * deportes propios y al final "Otra".
+   */
+  const ownSports = [...customSports]
+
+  if (
+    activity?.type &&
+    !isBuiltInType(activity.type) &&
+    !ownSports.some(
+      (sport) =>
+        sport.name === activity.type,
+    )
+  ) {
+    ownSports.unshift({
+      name: activity.type,
+      emoji: getActivityEmoji(
+        activity.type,
+      ),
+    })
+  }
+
+  const sportOptions: {
+    name: ActivityType
+    emoji: string
+    custom?: boolean
+  }[] = [
+    ...activityOptions.filter(
+      (option) => option.name !== 'Otra',
+    ),
+    ...ownSports.map((sport) => ({
+      ...sport,
+      custom: true,
+    })),
+    ...activityOptions.filter(
+      (option) => option.name === 'Otra',
+    ),
+  ]
+
   const isPastDay =
     dateKey <
     todayKey
@@ -253,6 +319,10 @@ function ActivityModal({
 
     setMood(activity?.mood ?? null)
     setNote(activity?.note ?? '')
+    setCustomName('')
+    setCustomEmoji(
+      CUSTOM_SPORT_EMOJIS[0],
+    )
     setSaving(false)
     setDeleting(false)
     setError(null)
@@ -316,6 +386,52 @@ function ActivityModal({
         return
       }
 
+      /*
+       * "Otra" con nombre = deporte propio.
+       * Si el nombre coincide con uno de la
+       * lista, se usa ese.
+       */
+      let finalType: ActivityType = type
+
+      const typedName = customName
+        .trim()
+        .replace(/\s+/g, ' ')
+        .slice(
+          0,
+          CUSTOM_SPORT_MAX_LENGTH,
+        )
+
+      if (
+        type === 'Otra' &&
+        typedName
+      ) {
+        const builtIn =
+          activityOptions.find(
+            (option) =>
+              option.name.toLowerCase() ===
+              typedName.toLowerCase(),
+          )
+
+        if (builtIn) {
+          finalType = builtIn.name
+        } else {
+          const existing =
+            customSports.find(
+              (sport) =>
+                sport.name.toLowerCase() ===
+                typedName.toLowerCase(),
+            )
+
+          finalType =
+            existing?.name ?? typedName
+
+          registerCustomSport(
+            finalType,
+            existing?.emoji ?? customEmoji,
+          )
+        }
+      }
+
       setSaving(
         true,
       )
@@ -336,7 +452,7 @@ function ActivityModal({
             id:
               activity?.id,
 
-            type,
+            type: finalType,
 
             duration: minutes,
 
@@ -556,11 +672,9 @@ function ActivityModal({
               className="mb-5 flex w-full items-center gap-3 rounded-[24px] bg-violet-50 p-4 text-left transition active:scale-[0.98] disabled:opacity-50"
             >
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-xl">
-                {activityOptions.find(
-                  (option) =>
-                    option.name ===
-                    lastActivity.type,
-                )?.emoji ?? '✨'}
+                {getActivityEmoji(
+                  lastActivity.type,
+                )}
               </div>
 
               <div className="min-w-0 flex-1">
@@ -591,7 +705,7 @@ function ActivityModal({
           </p>
 
           <div className="grid grid-cols-2 gap-3">
-            {activityOptions.map(
+            {sportOptions.map(
               (
                 option,
               ) => {
@@ -620,14 +734,20 @@ function ActivityModal({
                         : 'border-zinc-100 bg-zinc-50'
                     }`}
                   >
-                    <span className="text-2xl">
+                    <span
+                      className={`shrink-0 text-2xl ${
+                        option.custom
+                          ? 'rounded-xl bg-amber-100 px-1'
+                          : ''
+                      }`}
+                    >
                       {
                         option.emoji
                       }
                     </span>
 
                     <span
-                      className={`font-black ${
+                      className={`min-w-0 truncate font-black ${
                         selected
                           ? 'text-violet-700'
                           : 'text-zinc-700'
@@ -637,11 +757,87 @@ function ActivityModal({
                         option.name
                       }
                     </span>
+
                   </button>
                 )
               },
             )}
           </div>
+
+          {/* DEPORTE PROPIO */}
+
+          {selectedType === 'Otra' &&
+            isCustomSportSupported() && (
+              <div className="mt-3 rounded-2xl bg-amber-50 p-4">
+                <p className="text-xs font-black text-amber-700">
+                  ¿Qué hiciste? Creá tu
+                  deporte (opcional)
+                </p>
+
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+                    {customEmoji}
+                  </span>
+
+                  <input
+                    type="text"
+                    value={customName}
+                    maxLength={
+                      CUSTOM_SPORT_MAX_LENGTH
+                    }
+                    disabled={
+                      saving || deleting
+                    }
+                    onChange={(event) =>
+                      setCustomName(
+                        event.target.value,
+                      )
+                    }
+                    placeholder="Ej: Crossfit, Surf, Remo"
+                    className="min-w-0 flex-1 rounded-2xl border border-amber-200 bg-white px-4 py-3 text-sm font-bold text-zinc-700 outline-none transition placeholder:font-medium placeholder:text-zinc-400 focus:border-amber-400 focus:ring-4 focus:ring-amber-100"
+                  />
+                </div>
+
+                <div
+                  data-no-swipe
+                  className="mt-3 flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]"
+                >
+                  {CUSTOM_SPORT_EMOJIS.map(
+                    (emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        aria-label={`Emoji ${emoji}`}
+                        aria-pressed={
+                          customEmoji ===
+                          emoji
+                        }
+                        onClick={() =>
+                          setCustomEmoji(
+                            emoji,
+                          )
+                        }
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl transition active:scale-95 ${
+                          customEmoji ===
+                          emoji
+                            ? 'bg-amber-400 shadow-sm'
+                            : 'bg-white'
+                        }`}
+                      >
+                        {emoji}
+                      </button>
+                    ),
+                  )}
+                </div>
+
+                <p className="mt-2 text-[11px] font-semibold text-amber-700/80">
+                  Queda guardado para la
+                  próxima vez. Si lo dejás
+                  vacío, se guarda como
+                  "Otra".
+                </p>
+              </div>
+            )}
         </section>
 
         {/* ================================= */}

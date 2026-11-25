@@ -11,18 +11,18 @@
 export const WHATS_NEW = [
   {
     emoji: '⚡',
-    title: 'Tu semana en 10 segundos',
-    text: 'Cada semana, al abrir la app, un resumen de la semana que pasó: tus días, tu mejor día y cómo le fue al grupo. Y lo podés compartir.',
+    title: 'Tus propios deportes',
+    text: 'Elegí "Otra" al cargar y creá tu deporte con nombre y emoji. La próxima vez ya aparece en la lista.',
   },
   {
     emoji: '🔥',
-    title: '¿Cómo te sentiste?',
-    text: 'Al cargar una actividad elegí un emoji (😫 😐 💪 🔥) y, si querés, sumá una nota corta. Tus amigos lo ven en el inicio.',
+    title: 'Racha en peligro',
+    text: 'A la noche, si todavía no cargaste nada, te avisamos cuánto tiempo te queda para no cortar la racha.',
   },
   {
-    emoji: '📷',
-    title: 'Invitar con QR',
-    text: 'En la gestión del grupo tocá "Mostrar QR": tu amigo lo escanea y entra directo.',
+    emoji: '📈',
+    title: 'Tu progreso',
+    text: 'En tu perfil, cómo venís semana a semana en los últimos 3 meses.',
   },
 ]
 
