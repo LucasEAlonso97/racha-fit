@@ -87,16 +87,21 @@ function NavTab({
       onClick={() =>
         onSelect(tab.view)
       }
-      className={`flex min-w-0 flex-col items-center gap-1 py-2 ${
+      className={`flex min-w-0 flex-col items-center gap-1.5 py-2 ${
         active
           ? 'text-violet-600'
           : 'text-zinc-400'
       }`}
     >
-      <Icon size={21} />
+      <Icon size={22} />
 
+      {/*
+        * 11px (antes 9). "Calendario" puede
+        * ocupar un poquito del espacio de sus
+        * vecinas, que tienen nombres cortos.
+        */}
       <span
-        className={`max-w-full truncate text-[9px] tracking-tight ${
+        className={`whitespace-nowrap text-[11px] leading-none tracking-tight ${
           active
             ? 'font-bold'
             : 'font-semibold'
@@ -149,7 +154,7 @@ function BottomNavigation({
           {/* Lugar del + */}
           <div
             aria-hidden="true"
-            className="w-16 shrink-0"
+            className="w-14 shrink-0"
           />
 
           <div className="grid flex-1 grid-cols-2">

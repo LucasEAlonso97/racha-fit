@@ -7,6 +7,10 @@ import {
 } from 'react'
 
 import {
+  showToast,
+} from './lib/feedback'
+
+import {
   retryImport,
 } from './lib/appVersion'
 
@@ -75,6 +79,12 @@ import {
 import {
   useOfflineSync,
 } from './hooks/useOfflineSync'
+
+import {
+  usePullToRefresh,
+} from './hooks/usePullToRefresh'
+
+import PullToRefreshIndicator from './components/PullToRefreshIndicator'
 
 import {
   useChallenges,
@@ -235,6 +245,33 @@ function RachaApp({
 
   const [view, setView] =
     useState<View>('home')
+
+  /*
+   * TIRAR HACIA ABAJO PARA ACTUALIZAR
+   * (solo en Inicio)
+   */
+  const { reload: reloadGroupData } =
+    groupData
+
+  const pullToRefresh =
+    usePullToRefresh(
+      view === 'home',
+      async () => {
+        if (!navigator.onLine) {
+          showToast(
+            'Sin conexión: te mostramos lo último guardado.',
+            'info',
+          )
+
+          return
+        }
+
+        await Promise.all([
+          reloadGroupData(),
+          refreshWildcards(),
+        ])
+      },
+    )
 
   const [showWhatsNew, setShowWhatsNew] =
     useState(shouldShowWhatsNew)
@@ -538,6 +575,13 @@ function RachaApp({
 
   return (
     <main className="min-h-screen pb-[calc(7rem+env(safe-area-inset-bottom))]">
+      <PullToRefreshIndicator
+        pull={pullToRefresh.pull}
+        refreshing={
+          pullToRefresh.refreshing
+        }
+      />
+
       <GroupHeader
         groups={groups}
         activeGroup={activeGroup}
