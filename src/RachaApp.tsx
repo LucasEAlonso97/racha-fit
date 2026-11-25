@@ -537,7 +537,7 @@ function RachaApp({
    */
 
   return (
-    <main className="min-h-screen pb-28">
+    <main className="min-h-screen pb-[calc(7rem+env(safe-area-inset-bottom))]">
       <GroupHeader
         groups={groups}
         activeGroup={activeGroup}

@@ -636,7 +636,7 @@ function NotificationSettings({
         <div className="mt-4 grid grid-cols-2 gap-3">
           {/* RECORDATORIO 1 */}
 
-          <label className="block">
+          <label className="block min-w-0">
             <span className="mb-2 block text-xs font-bold text-zinc-500">
               Recordatorio 1
             </span>
@@ -657,13 +657,13 @@ function NotificationSettings({
                   false,
                 )
               }}
-              className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-center text-base font-black text-zinc-800 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+              className="time-input block w-full min-w-0 max-w-full appearance-none rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-center text-base font-black text-zinc-800 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
             />
           </label>
 
           {/* RECORDATORIO 2 */}
 
-          <label className="block">
+          <label className="block min-w-0">
             <span className="mb-2 block text-xs font-bold text-zinc-500">
               Recordatorio 2
             </span>
@@ -684,7 +684,7 @@ function NotificationSettings({
                   false,
                 )
               }}
-              className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-center text-base font-black text-zinc-800 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+              className="time-input block w-full min-w-0 max-w-full appearance-none rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-center text-base font-black text-zinc-800 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
             />
           </label>
         </div>
