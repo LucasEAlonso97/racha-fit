@@ -10,19 +10,14 @@
 
 export const WHATS_NEW = [
   {
-    emoji: '⚡',
-    title: 'Abre al toque',
-    text: 'Racha muestra al instante lo último que viste y trae lo nuevo de fondo. Y ahora abre aunque no tengas señal.',
+    emoji: '🔄',
+    title: 'Tirá para actualizar',
+    text: 'En el inicio, deslizá hacia abajo desde arriba de todo para traer lo último del grupo.',
   },
   {
-    emoji: '🟪',
-    title: 'Tu año día por día',
-    text: 'En tu perfil hay un mapa con un cuadradito por día: más oscuro, más entrenaste. Tocá uno para ver qué hiciste.',
-  },
-  {
-    emoji: '👇',
-    title: 'Deslizá para cerrar',
-    text: 'Las ventanas que suben desde abajo se cierran arrastrándolas hacia abajo.',
+    emoji: '➕',
+    title: 'Barra de abajo renovada',
+    text: 'El botón + es más chico y ya no tapa Rachas. Y los textos se leen mejor.',
   },
 ]
 

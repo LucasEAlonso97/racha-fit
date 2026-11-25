@@ -105,3 +105,18 @@ button:disabled {
   opacity: 0;
   animation: celebration-rise 1.1s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
 }
+
+/*
+ * Campos de hora: en iPhone tienen un ancho
+ * mínimo propio y se salen de la pantalla
+ * en una grilla de dos columnas.
+ */
+.time-input {
+  -webkit-appearance: none;
+  min-width: 0;
+}
+
+.time-input::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: center;
+}

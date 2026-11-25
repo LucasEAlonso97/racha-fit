@@ -101,6 +101,21 @@ export function useGroupData(
     useState<string | null>(null)
 
   /*
+   * Recarga manual (tirar hacia abajo):
+   * promesas que se resuelven cuando
+   * termina la próxima carga.
+   */
+  const reloadWaiters = useRef<
+    (() => void)[]
+  >([])
+
+  const hasDataRef = useRef(false)
+
+  useEffect(() => {
+    hasDataRef.current = users.length > 0
+  }, [users])
+
+  /*
    * LOADING AL CAMBIAR DE GRUPO
    */
 
@@ -125,6 +140,16 @@ export function useGroupData(
     }
 
     let cancelled = false
+
+    const finishWaiters = () => {
+      const waiters =
+        reloadWaiters.current
+
+      reloadWaiters.current = []
+      waiters.forEach((resolve) =>
+        resolve(),
+      )
+    }
 
     const loadGroupData = async () => {
       setError(null)
@@ -170,7 +195,7 @@ export function useGroupData(
        * quedamos con eso.
        */
       if (
-        cached &&
+        (cached || hasDataRef.current) &&
         (membersResult.error ||
           activitiesResult.error) &&
         isNetworkError(
@@ -233,7 +258,11 @@ export function useGroupData(
       setLoading(false)
     }
 
-    void loadGroupData()
+    void loadGroupData().finally(() => {
+      if (!cancelled) {
+        finishWaiters()
+      }
+    })
 
     return () => {
       cancelled = true
@@ -633,7 +662,32 @@ export function useGroupData(
     [groupId],
   )
 
+  /*
+   * RECARGA MANUAL
+   */
+
+  const reload = useCallback(
+    () =>
+      new Promise<void>((resolve) => {
+        if (!groupId) {
+          resolve()
+
+          return
+        }
+
+        reloadWaiters.current.push(
+          resolve,
+        )
+
+        setRefreshKey(
+          (current) => current + 1,
+        )
+      }),
+    [groupId],
+  )
+
   return {
+    reload,
     loadDayDetails,
     users,
     setUsers,

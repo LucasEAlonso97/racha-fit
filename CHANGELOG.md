@@ -2,6 +2,15 @@
 
 Todas las versiones de Racha. La más nueva arriba.
 
+## 2.6.1 — Noviembre 2026
+
+- 🔄 **Tirar hacia abajo para actualizar** en Inicio. Sin señal, avisa y se queda con lo guardado.
+- ➕ El botón **+** es más chico y flota un poco más arriba: ya no tapa Rachas. La barra respeta la rayita de gestos del iPhone.
+- 🔠 Textos de la barra de abajo más grandes (de 9 a 11 px).
+- 📱 Recordatorios: el segundo horario ya no se sale de la pantalla en iPhone.
+
+No hay que correr nada en la base.
+
 ## 2.6.0 — Noviembre 2026
 
 ### Más rápida y liviana
