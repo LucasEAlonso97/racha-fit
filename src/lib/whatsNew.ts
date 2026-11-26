@@ -10,19 +10,9 @@
 
 export const WHATS_NEW = [
   {
-    emoji: '⚡',
-    title: 'Tus propios deportes',
-    text: 'Elegí "Otra" al cargar y creá tu deporte con nombre y emoji. La próxima vez ya aparece en la lista.',
-  },
-  {
-    emoji: '🔥',
-    title: 'Racha en peligro',
-    text: 'A la noche, si todavía no cargaste nada, te avisamos cuánto tiempo te queda para no cortar la racha.',
-  },
-  {
-    emoji: '📈',
-    title: 'Tu progreso',
-    text: 'En tu perfil, cómo venís semana a semana en los últimos 3 meses.',
+    emoji: '💬',
+    title: 'Contanos qué pensás',
+    text: 'En tu perfil hay un botón nuevo para sugerir ideas o avisar si algo no anda. Lo leemos todo.',
   },
 ]
 

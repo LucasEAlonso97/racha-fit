@@ -2,6 +2,29 @@
 
 Todas las versiones de Racha. La más nueva arriba.
 
+## 2.10.0 — Noviembre 2026
+
+### Sugerir o reportar algo
+
+- 💬 En el perfil, cualquiera puede mandar una idea o avisar de un problema. Le llega al admin en su panel, con nombre y versión de la app. Hasta 10 por persona por día.
+
+### Panel de admin (solo para el admin)
+
+- 📊 En el perfil, botón "Panel de admin", visible solo para las cuentas en `app_admins`.
+- Quién la usa: personas que abrieron la app hoy, en 7 y en 30 días (y cuántas entrenaron), usuarios totales y nuevos, grupos activos y actividades.
+- Gráfico de los últimos 30 días: abrieron, entrenaron o registros nuevos.
+- ¿Vuelven?: de los que se registraron cada semana, cuántos volvieron 1, 2 y 4 semanas después.
+- Sugerencias: las sin leer primero, con "Marcar leída".
+- Usuarios: buscador, filtros "Activos" y "Dormidos", última vez que abrieron la app y que entrenaron.
+- La app anota una vez cada 15 minutos que la abriste (una fila por persona y por día). Se empieza a contar con esta versión.
+
+### Base de datos
+
+Correr en Supabase → SQL Editor:
+
+1. `supabase/migrations/20261126120000_panel_admin.sql`
+2. Sumarse como admin (ver el final de ese archivo).
+
 ## 2.9.0 — Noviembre 2026
 
 ### Deportes propios
