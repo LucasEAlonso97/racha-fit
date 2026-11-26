@@ -7,6 +7,10 @@ import {
 } from 'react'
 
 import {
+  touchAppUsage,
+} from './lib/admin'
+
+import {
   getActivityEmoji,
   isBuiltInType,
 } from './data/activities'
@@ -419,6 +423,36 @@ function RachaApp({
   const currentUser = users.find(
     (user) => user.id === currentUserId,
   )
+
+  /*
+   * USO DIARIO: anota que abriste la app hoy
+   * (para el panel de admin). Como mucho
+   * cada 15 minutos.
+   */
+  useEffect(() => {
+    void touchAppUsage(currentUserId)
+
+    const onVisible = () => {
+      if (
+        document.visibilityState ===
+        'visible'
+      ) {
+        void touchAppUsage(currentUserId)
+      }
+    }
+
+    document.addEventListener(
+      'visibilitychange',
+      onVisible,
+    )
+
+    return () => {
+      document.removeEventListener(
+        'visibilitychange',
+        onVisible,
+      )
+    }
+  }, [currentUserId])
 
   /*
    * DEPORTES PROPIOS (los tuyos, más

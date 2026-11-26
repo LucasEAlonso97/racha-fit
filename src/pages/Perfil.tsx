@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useEffect,
   useState,
 } from 'react'
@@ -9,7 +11,9 @@ import {
   Copy,
   Flame,
   LoaderCircle,
+  BarChart3,
   LogOut,
+  MessageCircleHeart,
   Mail,
   Pencil,
   Plus,
@@ -27,6 +31,25 @@ import ConsistencyProgress from '../components/ConsistencyProgress'
 import WrappedBanner from '../components/WrappedBanner'
 import YearHeatmap from '../components/YearHeatmap'
 import WeeklyProgressChart from '../components/WeeklyProgressChart'
+import FeedbackModal from '../components/FeedbackModal'
+
+import {
+  useIsAdmin,
+} from '../hooks/useIsAdmin'
+
+import {
+  retryImport,
+} from '../lib/appVersion'
+
+/*
+ * El panel solo lo abre el admin: se baja
+ * recién cuando lo abre.
+ */
+const AdminPanel = lazy(() =>
+  retryImport(
+    () => import('../components/AdminPanel'),
+  ),
+)
 
 import type {
   ActivitiesByDate,
@@ -141,6 +164,22 @@ function Perfil({
    */
   const [progressToday] = useState(
     () => new Date(),
+  )
+
+  /*
+   * Sugerencias y panel de admin.
+   */
+  const [feedbackOpen, setFeedbackOpen] =
+    useState(false)
+
+  const [adminOpen, setAdminOpen] =
+    useState(false)
+
+  const [adminUnread, setAdminUnread] =
+    useState(0)
+
+  const isAdmin = useIsAdmin(
+    currentUser.id,
   )
 
   /*
@@ -1735,6 +1774,38 @@ function Perfil({
 
         <button
           type="button"
+          onClick={() =>
+            setFeedbackOpen(true)
+          }
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-50 py-3.5 font-black text-violet-600 transition active:scale-[0.98]"
+        >
+          <MessageCircleHeart
+            size={18}
+          />
+          Sugerir o reportar algo
+        </button>
+
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() =>
+              setAdminOpen(true)
+            }
+            className="relative mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-zinc-900 py-3.5 font-black text-white transition active:scale-[0.98]"
+          >
+            <BarChart3 size={18} />
+            Panel de admin
+
+            {adminUnread > 0 && (
+              <span className="absolute right-3 top-1/2 flex h-5 min-w-5 -translate-y-1/2 items-center justify-center rounded-full bg-orange-500 px-1.5 text-[10px] font-black">
+                {adminUnread}
+              </span>
+            )}
+          </button>
+        )}
+
+        <button
+          type="button"
           onClick={
             onLogout
           }
@@ -1749,6 +1820,27 @@ function Perfil({
           Cerrar sesión
         </button>
       </section>
+
+      {feedbackOpen && (
+        <FeedbackModal
+          onClose={() =>
+            setFeedbackOpen(false)
+          }
+        />
+      )}
+
+      {adminOpen && (
+        <Suspense fallback={null}>
+          <AdminPanel
+            onClose={() =>
+              setAdminOpen(false)
+            }
+            onUnreadChange={
+              setAdminUnread
+            }
+          />
+        </Suspense>
+      )}
 
       <p className="mt-6 text-center text-xs font-medium text-zinc-300">
         Racha · Un día más cuenta 🏋️‍♀️
