@@ -210,10 +210,10 @@ function PeriodSummary({
               onClick={() =>
                 changeKind(kind)
               }
-              className={`rounded-xl py-2 text-sm font-black transition ${
+              className={`rounded-xl py-2 text-sm font-bold transition ${
                 period.kind === kind
                   ? 'bg-white text-violet-600 shadow-sm'
-                  : 'text-zinc-400'
+                  : 'text-zinc-500'
               }`}
             >
               {label}
@@ -310,7 +310,7 @@ function PeriodSummary({
               onClick={() =>
                 void shareSummary()
               }
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-3 text-sm font-black text-violet-600 transition active:scale-[0.98] disabled:opacity-70"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-3 text-sm font-bold text-violet-600 transition active:scale-[0.98] disabled:opacity-70"
             >
               {sharing ? (
                 <LoaderCircle
@@ -354,7 +354,7 @@ function PeriodSummary({
 
             <div className="mt-3 flex flex-wrap gap-2">
               {summary.favoriteType && (
-                <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-black text-violet-600">
+                <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-bold text-violet-600">
                   {getActivityEmoji(
                     summary.favoriteType,
                   )}{' '}
@@ -365,7 +365,7 @@ function PeriodSummary({
 
               {summary.busiestWeekDay !==
                 null && (
-                <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-black text-orange-600">
+                <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-bold text-orange-600">
                   📅 Día más activo:{' '}
                   {
                     weekDayNames[
@@ -401,7 +401,7 @@ function PeriodSummary({
                     />
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-black text-zinc-800">
+                      <p className="truncate font-bold text-zinc-800">
                         {member.user.id ===
                         currentUserId
                           ? 'Vos'

@@ -113,13 +113,13 @@ function CommentThread({
                 )}
 
                 <div className="min-w-0 flex-1 rounded-2xl bg-zinc-50 px-3 py-2">
-                  <p className="text-xs font-black text-zinc-700">
+                  <p className="text-xs font-bold text-zinc-700">
                     {isMine
                       ? 'Vos'
                       : (author?.name ??
                         'Alguien')}
 
-                    <span className="ml-2 font-semibold text-zinc-400">
+                    <span className="ml-2 font-semibold text-zinc-500">
                       {formatCommentTime(
                         comment.created_at,
                       )}
@@ -138,7 +138,7 @@ function CommentThread({
                     onClick={() =>
                       onDelete(comment.id)
                     }
-                    className="mt-2 shrink-0 text-zinc-300 transition hover:text-red-400"
+                    className="mt-2 shrink-0 text-zinc-400 transition hover:text-red-400"
                   >
                     <Trash2 size={14} />
                   </button>

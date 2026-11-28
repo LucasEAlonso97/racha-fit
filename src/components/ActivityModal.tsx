@@ -20,8 +20,7 @@ import {
 
 import {
   Camera,
-  Clock,
-  Repeat2,
+  Plus,
   LoaderCircle,
   Trash2,
   X,
@@ -84,7 +83,29 @@ type Props = {
    * recientes primero).
    */
   customSports?: CustomSport[]
+
+  /*
+   * Los deportes que más usa la persona
+   * (los primeros 6 se muestran a mano).
+   */
+  favoriteSports?: ActivityType[]
 }
+
+const DURATION_SHORTCUTS = [
+  30,
+  45,
+  60,
+  90,
+]
+
+const DEFAULT_QUICK_SPORTS: ActivityType[] = [
+  'Gym',
+  'Caminata',
+  'Correr',
+  'Bicicleta',
+  'Fútbol',
+  'Funcional',
+]
 
 export type CustomSport = {
   name: string
@@ -103,6 +124,7 @@ function ActivityModal({
   onDelete,
   lastActivity = null,
   customSports = [],
+  favoriteSports = [],
 }: Props) {
   const sheetRef =
     useSwipeToClose(onClose)
@@ -166,6 +188,20 @@ function ActivityModal({
 
   const [customEmoji, setCustomEmoji] =
     useState(CUSTOM_SPORT_EMOJIS[0])
+
+  /*
+   * Lo que se ve de entrada es lo mínimo:
+   * 6 deportes, atajos de duración y
+   * guardar. El resto se abre si se pide.
+   */
+  const [showAllSports, setShowAllSports] =
+    useState(false)
+
+  const [customDuration, setCustomDuration] =
+    useState(false)
+
+  const [showDetails, setShowDetails] =
+    useState(false)
 
   /*
    * ========================================
@@ -280,6 +316,41 @@ function ActivityModal({
     ),
   ]
 
+  /*
+   * Los 6 de siempre de esta persona (o los
+   * más comunes si recién arranca). Si el
+   * elegido no está entre ellos, se suma.
+   */
+  const quickNames = [
+    ...favoriteSports,
+    ...DEFAULT_QUICK_SPORTS,
+  ].filter(
+    (name, index, all) =>
+      all.indexOf(name) === index &&
+      sportOptions.some(
+        (option) => option.name === name,
+      ),
+  ).slice(0, 6)
+
+  if (
+    selectedType &&
+    !quickNames.includes(selectedType)
+  ) {
+    quickNames[quickNames.length - 1] =
+      selectedType
+  }
+
+  const quickSports = quickNames
+    .map((name) =>
+      sportOptions.find(
+        (option) => option.name === name,
+      ),
+    )
+    .filter(
+      (option): option is (typeof sportOptions)[number] =>
+        Boolean(option),
+    )
+
   const isPastDay =
     dateKey <
     todayKey
@@ -307,14 +378,38 @@ function ActivityModal({
       return
     }
 
+    /*
+     * Al cargar algo nuevo se propone lo de
+     * la última vez: deporte y duración.
+     */
+    const initialDuration =
+      activity?.duration ??
+      lastActivity?.duration ??
+      45
+
     setSelectedType(
       activity?.type ??
+        lastActivity?.type ??
+        favoriteSports[0] ??
         'Gym',
     )
 
-    setDuration(
-      activity?.duration ??
-        60,
+    setDuration(initialDuration)
+
+    setCustomDuration(
+      !DURATION_SHORTCUTS.includes(
+        initialDuration,
+      ),
+    )
+
+    setShowAllSports(false)
+
+    setShowDetails(
+      Boolean(
+        activity?.mood ||
+          activity?.note ||
+          activity?.photo_url,
+      ),
     )
 
     setMood(activity?.mood ?? null)
@@ -328,6 +423,10 @@ function ActivityModal({
     setError(null)
     setPhotoFile(null)
     setPhotoRemoved(false)
+    // Solo al abrir: si cambian los
+    // favoritos con la ventana abierta, no
+    // se pisa lo que eligió la persona.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     open,
     activity,
@@ -581,15 +680,12 @@ function ActivityModal({
                   : '¿Qué hiciste hoy?'}
             </h2>
 
-            <p className="mt-1 text-sm text-zinc-500">
-              {isEditing
-                ? 'Podés cambiar el tipo, la duración o la foto.'
-                : usesWildcard
-                  ? `Actividad del ${formattedDate}.`
-                  : isPastDay
-                    ? `Actividad del ${formattedDate}.`
-                    : 'Podés agregar todas las actividades que quieras.'}
-            </p>
+            {(usesWildcard ||
+              isPastDay) && (
+              <p className="mt-1 text-sm text-zinc-500">
+                {formattedDate}
+              </p>
+            )}
           </div>
 
           <button
@@ -614,162 +710,87 @@ function ActivityModal({
         {/* ================================= */}
 
         {usesWildcard && (
-          <section className="mb-5 rounded-[24px] bg-amber-50 p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-xl">
-                🃏
-              </div>
-
-              <div>
-                <p className="font-black text-amber-800">
-                  Vas a usar 1
-                  comodín
-                </p>
-
-                <p className="mt-1 text-sm leading-relaxed text-amber-700">
-                  Este día se
-                  agregará a tu
-                  historial y
-                  contará normalmente
-                  para tu racha.
-                </p>
-
-                {wildcardBalance !==
-                  null && (
-                  <p className="mt-2 text-xs font-black text-amber-600">
-                    Tenés{' '}
-                    {
-                      wildcardBalance
-                    }{' '}
-                    {wildcardBalance ===
-                    1
-                      ? 'comodín disponible'
-                      : 'comodines disponibles'}
-                  </p>
-                )}
-              </div>
-            </div>
-          </section>
+          <p className="mb-5 flex items-center gap-2 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+            <span className="text-lg">
+              🃏
+            </span>
+            Usás 1 comodín
+            {wildcardBalance !== null &&
+              ` · tenés ${wildcardBalance}`}
+          </p>
         )}
-
-        {/* ================================= */}
-        {/* REPETIR LA ÚLTIMA */}
-        {/* ================================= */}
-
-        {!isEditing &&
-          lastActivity && (
-            <button
-              type="button"
-              disabled={
-                saving || deleting
-              }
-              onClick={() =>
-                void handleSave(
-                  lastActivity.type,
-                  lastActivity.duration,
-                )
-              }
-              className="mb-5 flex w-full items-center gap-3 rounded-[24px] bg-violet-50 p-4 text-left transition active:scale-[0.98] disabled:opacity-50"
-            >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-xl">
-                {getActivityEmoji(
-                  lastActivity.type,
-                )}
-              </div>
-
-              <div className="min-w-0 flex-1">
-                <p className="font-black text-violet-700">
-                  Lo mismo que la última vez
-                </p>
-
-                <p className="text-sm text-violet-500">
-                  {lastActivity.type} ·{' '}
-                  {lastActivity.duration} min
-                </p>
-              </div>
-
-              <Repeat2
-                size={20}
-                className="shrink-0 text-violet-400"
-              />
-            </button>
-          )}
 
         {/* ================================= */}
         {/* ACTIVIDAD */}
         {/* ================================= */}
 
         <section>
-          <p className="mb-3 text-xs font-black tracking-wider text-zinc-400">
-            ACTIVIDAD
-          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {(showAllSports
+              ? sportOptions
+              : quickSports
+            ).map((option) => {
+              const selected =
+                selectedType ===
+                option.name
 
-          <div className="grid grid-cols-2 gap-3">
-            {sportOptions.map(
-              (
-                option,
-              ) => {
-                const selected =
-                  selectedType ===
-                  option.name
+              return (
+                <button
+                  key={option.name}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() =>
+                    setSelectedType(
+                      option.name,
+                    )
+                  }
+                  disabled={
+                    saving || deleting
+                  }
+                  className={`flex min-w-0 flex-col items-center gap-1 rounded-2xl border px-1 py-3 transition active:scale-[0.97] ${
+                    selected
+                      ? 'border-violet-500 bg-violet-50 ring-2 ring-violet-100'
+                      : 'border-zinc-100 bg-zinc-50'
+                  }`}
+                >
+                  <span className="text-2xl leading-none">
+                    {option.emoji}
+                  </span>
 
-                return (
-                  <button
-                    key={
-                      option.name
-                    }
-                    type="button"
-                    onClick={() =>
-                      setSelectedType(
-                        option.name,
-                      )
-                    }
-                    disabled={
-                      saving ||
-                      deleting
-                    }
-                    className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition active:scale-[0.98] ${
+                  <span
+                    className={`w-full truncate text-center text-sm font-semibold ${
                       selected
-                        ? 'border-violet-500 bg-violet-50 ring-2 ring-violet-100'
-                        : 'border-zinc-100 bg-zinc-50'
+                        ? 'text-violet-700'
+                        : 'text-zinc-600'
                     }`}
                   >
-                    <span
-                      className={`shrink-0 text-2xl ${
-                        option.custom
-                          ? 'rounded-xl bg-amber-100 px-1'
-                          : ''
-                      }`}
-                    >
-                      {
-                        option.emoji
-                      }
-                    </span>
-
-                    <span
-                      className={`min-w-0 truncate font-black ${
-                        selected
-                          ? 'text-violet-700'
-                          : 'text-zinc-700'
-                      }`}
-                    >
-                      {
-                        option.name
-                      }
-                    </span>
-
-                  </button>
-                )
-              },
-            )}
+                    {option.name}
+                  </span>
+                </button>
+              )
+            })}
           </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              setShowAllSports(
+                (current) => !current,
+              )
+            }
+            className="mt-2 w-full rounded-xl py-2 text-sm font-semibold text-violet-600"
+          >
+            {showAllSports
+              ? 'Ver menos'
+              : 'Más deportes'}
+          </button>
 
           {/* DEPORTE PROPIO */}
 
           {selectedType === 'Otra' &&
             isCustomSportSupported() && (
               <div className="mt-3 rounded-2xl bg-amber-50 p-4">
-                <p className="text-xs font-black text-amber-700">
+                <p className="text-xs font-bold text-amber-700">
                   ¿Qué hiciste? Creá tu
                   deporte (opcional)
                 </p>
@@ -794,7 +815,7 @@ function ActivityModal({
                       )
                     }
                     placeholder="Ej: Crossfit, Surf, Remo"
-                    className="min-w-0 flex-1 rounded-2xl border border-amber-200 bg-white px-4 py-3 text-sm font-bold text-zinc-700 outline-none transition placeholder:font-medium placeholder:text-zinc-400 focus:border-amber-400 focus:ring-4 focus:ring-amber-100"
+                    className="min-w-0 flex-1 rounded-2xl border border-amber-200 bg-white px-4 py-3 text-sm font-bold text-zinc-700 outline-none transition placeholder:font-semibold placeholder:text-zinc-400 focus:border-amber-400 focus:ring-4 focus:ring-amber-100"
                   />
                 </div>
 
@@ -830,7 +851,7 @@ function ActivityModal({
                   )}
                 </div>
 
-                <p className="mt-2 text-[11px] font-semibold text-amber-700/80">
+                <p className="mt-2 text-xs font-semibold text-amber-700/80">
                   Queda guardado para la
                   próxima vez. Si lo dejás
                   vacío, se guarda como
@@ -844,19 +865,61 @@ function ActivityModal({
         {/* DURACIÓN */}
         {/* ================================= */}
 
-        <section className="mt-6">
-          <div className="mb-3 flex items-center gap-2">
-            <Clock
-              size={17}
-              className="text-violet-500"
-            />
+        <section className="mt-5">
+          <p className="mb-2 text-sm font-semibold text-zinc-500">
+            ¿Cuánto tiempo?
+          </p>
 
-            <p className="text-xs font-black tracking-wider text-zinc-400">
-              DURACIÓN
-            </p>
+          <div className="grid grid-cols-5 gap-2">
+            {DURATION_SHORTCUTS.map(
+              (minutes) => (
+                <button
+                  key={minutes}
+                  type="button"
+                  aria-pressed={
+                    !customDuration &&
+                    duration === minutes
+                  }
+                  onClick={() => {
+                    setDuration(minutes)
+                    setCustomDuration(false)
+                  }}
+                  disabled={
+                    saving || deleting
+                  }
+                  className={`rounded-xl py-3 text-sm font-bold transition ${
+                    !customDuration &&
+                    duration === minutes
+                      ? 'bg-violet-500 text-white'
+                      : 'bg-zinc-100 text-zinc-600'
+                  }`}
+                >
+                  {minutes}′
+                </button>
+              ),
+            )}
+
+            <button
+              type="button"
+              aria-pressed={customDuration}
+              onClick={() =>
+                setCustomDuration(true)
+              }
+              disabled={
+                saving || deleting
+              }
+              className={`rounded-xl py-3 text-sm font-bold transition ${
+                customDuration
+                  ? 'bg-violet-500 text-white'
+                  : 'bg-zinc-100 text-zinc-600'
+              }`}
+            >
+              Otro
+            </button>
           </div>
 
-          <div className="rounded-[24px] bg-zinc-50 p-4">
+          {customDuration && (
+          <div className="mt-3 rounded-2xl bg-zinc-50 p-3">
             <div className="flex items-center justify-between gap-3">
               <button
                 type="button"
@@ -915,15 +978,11 @@ function ActivityModal({
                     className="w-24 bg-transparent text-center text-4xl font-black text-zinc-800 outline-none"
                   />
 
-                  <span className="mb-1 font-bold text-zinc-400">
+                  <span className="mb-1 font-bold text-zinc-500">
                     min
                   </span>
                 </div>
 
-                <p className="mt-1 text-xs font-semibold text-zinc-400">
-                  Tiempo de
-                  actividad
-                </p>
               </div>
 
               <button
@@ -950,57 +1009,37 @@ function ActivityModal({
               </button>
             </div>
 
-            {/* ATAJOS */}
-
-            <div className="mt-4 grid grid-cols-4 gap-2">
-              {[
-                30,
-                45,
-                60,
-                90,
-              ].map(
-                (
-                  minutes,
-                ) => (
-                  <button
-                    key={
-                      minutes
-                    }
-                    type="button"
-                    onClick={() =>
-                      setDuration(
-                        minutes,
-                      )
-                    }
-                    disabled={
-                      saving ||
-                      deleting
-                    }
-                    className={`rounded-xl py-2 text-xs font-black transition ${
-                      duration ===
-                      minutes
-                        ? 'bg-violet-500 text-white'
-                        : 'bg-white text-zinc-500'
-                    }`}
-                  >
-                    {
-                      minutes
-                    }{' '}
-                    min
-                  </button>
-                ),
-              )}
-            </div>
           </div>
+          )}
         </section>
 
+        {/* ================================= */}
+        {/* DETALLES (OPCIONALES, PLEGADOS) */}
+        {/* ================================= */}
+
+        {!showDetails ? (
+          <button
+            type="button"
+            onClick={() =>
+              setShowDetails(true)
+            }
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-zinc-200 py-3 text-sm font-semibold text-zinc-500"
+          >
+            <Plus size={16} />
+            Agregar detalles
+            <span className="text-zinc-500">
+              (foto, cómo te sentiste)
+            </span>
+          </button>
+        ) : (
+          <>
         {/* ================================= */}
         {/* CÓMO TE SENTISTE (OPCIONAL) */}
         {/* ================================= */}
 
         {isMoodSupported() && (
           <section className="mt-5">
-            <p className="mb-2 text-xs font-black tracking-wide text-zinc-400">
+            <p className="mb-2 text-xs font-bold tracking-wide text-zinc-500">
               ¿CÓMO TE SENTISTE? (OPCIONAL)
             </p>
 
@@ -1034,7 +1073,7 @@ function ActivityModal({
                       {option.emoji}
                     </span>
 
-                    <span className="text-[10px] font-black">
+                    <span className="text-xs font-bold">
                       {option.label}
                     </span>
                   </button>
@@ -1058,11 +1097,11 @@ function ActivityModal({
                   )
                 }
                 placeholder="Una nota: «primera vez que corro 5 km»"
-                className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 py-3 pl-4 pr-12 text-sm font-semibold text-zinc-700 outline-none transition placeholder:font-medium placeholder:text-zinc-400 focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 py-3 pl-4 pr-12 text-sm font-semibold text-zinc-700 outline-none transition placeholder:font-semibold placeholder:text-zinc-400 focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
               />
 
               {note.length > 0 && (
-                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-400">
+                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-500">
                   {NOTE_MAX_LENGTH -
                     note.length}
                 </span>
@@ -1076,7 +1115,7 @@ function ActivityModal({
         {/* ================================= */}
 
         <section className="mt-5">
-          <p className="mb-2 text-xs font-black tracking-wide text-zinc-400">
+          <p className="mb-2 text-xs font-bold tracking-wide text-zinc-500">
             FOTO (OPCIONAL)
           </p>
 
@@ -1105,7 +1144,7 @@ function ActivityModal({
             </div>
           ) : (
             <label
-              className={`flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-zinc-200 py-4 text-sm font-bold text-zinc-400 transition hover:border-violet-300 hover:text-violet-500 ${
+              className={`flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-zinc-200 py-4 text-sm font-bold text-zinc-500 transition hover:border-violet-300 hover:text-violet-500 ${
                 saving || deleting
                   ? 'pointer-events-none opacity-50'
                   : ''
@@ -1149,6 +1188,9 @@ function ActivityModal({
           )}
         </section>
 
+          </>
+        )}
+
         {/* ================================= */}
         {/* ERROR */}
         {/* ================================= */}
@@ -1173,7 +1215,7 @@ function ActivityModal({
             deleting ||
             duration <= 0
           }
-          className={`mt-6 flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-black text-white transition active:scale-[0.98] disabled:opacity-50 ${
+          className={`mt-6 flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-bold text-white transition active:scale-[0.98] disabled:opacity-50 ${
             usesWildcard
               ? 'bg-amber-500 shadow-lg shadow-amber-100'
               : 'bg-violet-500 shadow-lg shadow-violet-200'
@@ -1237,29 +1279,6 @@ function ActivityModal({
           </button>
         )}
 
-        {/* ================================= */}
-        {/* ACLARACIÓN */}
-        {/* ================================= */}
-
-        {!isEditing &&
-          !usesWildcard &&
-          !isPastDay && (
-            <p className="mt-4 text-center text-xs font-semibold leading-relaxed text-zinc-400">
-              Si después hacés
-              otra cosa, la podés
-              sumar también. El
-              día cuenta una sola
-              vez para tu racha.
-            </p>
-          )}
-
-        {usesWildcard && (
-          <p className="mt-4 text-center text-xs font-semibold leading-relaxed text-zinc-400">
-            El comodín se consume
-            al guardar la
-            actividad.
-          </p>
-        )}
       </div>
     </div>
   )

@@ -102,7 +102,7 @@ function InstallBanner() {
           />
 
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-black">
+            <p className="text-sm font-bold">
               Instalá Racha
             </p>
 
@@ -116,7 +116,7 @@ function InstallBanner() {
           <button
             type="button"
             onClick={() => void install()}
-            className="shrink-0 rounded-xl bg-white px-3 py-2 text-xs font-black text-violet-600 transition active:scale-95"
+            className="shrink-0 rounded-xl bg-white px-3 py-2 text-xs font-bold text-violet-600 transition active:scale-95"
           >
             Instalar
           </button>
@@ -189,7 +189,7 @@ function InstallBanner() {
                 setShowIosSteps(false)
                 close()
               }}
-              className="mt-8 w-full rounded-2xl bg-violet-500 py-4 font-black text-white"
+              className="mt-8 w-full rounded-2xl bg-violet-500 py-4 font-bold text-white"
             >
               Entendido
             </button>
@@ -209,7 +209,7 @@ function IosStep({
 }) {
   return (
     <li className="flex items-start gap-3">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-sm font-black text-violet-600">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-sm font-bold text-violet-600">
         {number}
       </span>
 

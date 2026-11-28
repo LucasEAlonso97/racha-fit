@@ -30,7 +30,7 @@ function ActivityMoodNote({
       {moodInfo && (
         <span
           title={moodInfo.label}
-          className="flex shrink-0 items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-black text-violet-600"
+          className="flex shrink-0 items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-xs font-bold text-violet-600"
         >
           <span className="text-sm leading-none">
             {moodInfo.emoji}
@@ -40,7 +40,7 @@ function ActivityMoodNote({
       )}
 
       {note && (
-        <p className="min-w-0 break-words pt-0.5 text-[13px] font-medium italic leading-snug text-zinc-600">
+        <p className="min-w-0 break-words pt-0.5 text-sm font-semibold italic leading-snug text-zinc-600">
           “{note}”
         </p>
       )}

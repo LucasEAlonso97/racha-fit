@@ -1,4 +1,6 @@
 import {
+  useEffect,
+  useMemo,
   useState,
 } from 'react'
 
@@ -19,6 +21,16 @@ import ReactionBar from '../components/ReactionBar'
 import UserAvatar from '../components/UserAvatar'
 import WrappedBanner from '../components/WrappedBanner'
 import StreakDangerBanner from '../components/StreakDangerBanner'
+import InstallBanner from '../components/InstallBanner'
+
+import {
+  getStreakDanger,
+  isDangerDismissedToday,
+} from '../utils/streakDanger'
+
+import {
+  isWrappedSeason,
+} from '../utils/wrapped'
 import PendingBadge from '../components/PendingBadge'
 import ActivityMoodNote from '../components/ActivityMoodNote'
 
@@ -147,6 +159,56 @@ function Home({
         user.id ===
         currentUserId,
     )
+
+  /*
+   * ¿Qué aviso mostrar arriba? Solo uno.
+   * Se revisa cada minuto (la racha en
+   * peligro arranca a las 18).
+   */
+  const [noticeNow, setNoticeNow] =
+    useState(() => new Date())
+
+  const [noticeTick, setNoticeTick] =
+    useState(0)
+
+  useEffect(() => {
+    const timer = window.setInterval(
+      () => setNoticeNow(new Date()),
+      60_000,
+    )
+
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [])
+
+  const notice = useMemo(() => {
+    if (
+      currentUser &&
+      !isDangerDismissedToday(noticeNow) &&
+      getStreakDanger(
+        activities,
+        currentUser,
+        noticeNow,
+      )
+    ) {
+      return 'danger' as const
+    }
+
+    if (isWrappedSeason(noticeNow)) {
+      return 'wrapped' as const
+    }
+
+    return 'install' as const
+    // noticeTick: se recalcula al tocar
+    // "Más tarde".
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    activities,
+    currentUser,
+    noticeNow,
+    noticeTick,
+  ])
 
   if (
     !currentUser
@@ -473,21 +535,37 @@ streakEligibleFrom:
         </p>
       </header>
 
-      {currentUser && (
-        <StreakDangerBanner
-          activities={activities}
-          user={currentUser}
-          wildcardBalance={
-            wildcardBalance
-          }
-          onLogToday={onAddActivity}
+      {/*
+        * UN AVISO A LA VEZ: racha en peligro >
+        * Wrapped > instalá la app.
+        */}
+      {notice === 'danger' &&
+        currentUser && (
+          <StreakDangerBanner
+            activities={activities}
+            user={currentUser}
+            wildcardBalance={
+              wildcardBalance
+            }
+            onLogToday={onAddActivity}
+            onDismiss={() =>
+              setNoticeTick(
+                (tick) => tick + 1,
+              )
+            }
+          />
+        )}
+
+      {notice === 'wrapped' && (
+        <WrappedBanner
+          today={today}
+          place="home"
         />
       )}
 
-      <WrappedBanner
-        today={today}
-        place="home"
-      />
+      {notice === 'install' && (
+        <InstallBanner />
+      )}
 
       {/* ================================= */}
       {/* RACHA DEL GRUPO */}
@@ -518,7 +596,7 @@ streakEligibleFrom:
       <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <p className="text-xs font-black tracking-wider text-zinc-400">
+            <p className="text-xs font-bold tracking-wider text-zinc-500">
               TU META ESTA SEMANA
             </p>
 
@@ -565,7 +643,7 @@ streakEligibleFrom:
                 : `Te faltan ${weeklyRemaining} días`}
           </p>
 
-          <span className="shrink-0 rounded-full bg-violet-50 px-3 py-1 text-[10px] font-black text-violet-500">
+          <span className="shrink-0 rounded-full bg-violet-50 px-3 py-1 text-xs font-bold text-violet-500">
             META{' '}
             {
               weeklyGoal
@@ -581,7 +659,7 @@ streakEligibleFrom:
       <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <p className="text-xs font-black tracking-wider text-zinc-400">
+            <p className="text-xs font-bold tracking-wider text-zinc-500">
               HOY
             </p>
 
@@ -651,7 +729,7 @@ streakEligibleFrom:
                     />
 
                     <div className="min-w-0 flex-1">
-                      <p className="font-black text-zinc-800">
+                      <p className="font-bold text-zinc-800">
                         {
                           user.name
                         }{' '}
@@ -726,7 +804,7 @@ streakEligibleFrom:
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-black text-green-700">
+                  <p className="font-bold text-green-700">
                     ✓ Vos también
                     sumaste hoy
                   </p>
@@ -782,7 +860,7 @@ streakEligibleFrom:
               onClick={
                 onAddActivity
               }
-              className="mt-3 w-full rounded-2xl bg-violet-100 py-3 font-black text-violet-600 transition active:scale-[0.98]"
+              className="mt-3 w-full rounded-2xl bg-violet-100 py-3 font-bold text-violet-600 transition active:scale-[0.98]"
             >
               + Agregar otra actividad
             </button>
@@ -793,7 +871,7 @@ streakEligibleFrom:
             onClick={
               onAddActivity
             }
-            className="mt-5 w-full rounded-2xl bg-violet-500 py-3.5 font-black text-white shadow-lg shadow-violet-100 transition active:scale-[0.98]"
+            className="mt-5 w-full rounded-2xl bg-violet-500 py-3.5 font-bold text-white shadow-lg shadow-violet-100 transition active:scale-[0.98]"
           >
             Sumar mi actividad
           </button>
@@ -826,7 +904,7 @@ streakEligibleFrom:
 
             {socialUnreadCount >
               0 && (
-              <div className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-pink-500 px-1 text-[10px] font-black text-white">
+              <div className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-pink-500 px-1 text-xs font-bold text-white">
                 {socialUnreadCount >
                 9
                   ? '9+'
@@ -836,11 +914,11 @@ streakEligibleFrom:
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-black tracking-wider text-zinc-400">
+            <p className="text-xs font-bold tracking-wider text-zinc-500">
               NOVEDADES
             </p>
 
-            <p className="mt-1 font-black text-zinc-800">
+            <p className="mt-1 font-bold text-zinc-800">
               {socialUnreadCount >
               0
                 ? `${socialUnreadCount} ${
@@ -858,14 +936,14 @@ streakEligibleFrom:
               size={
                 20
               }
-              className="text-zinc-400"
+              className="text-zinc-500"
             />
           ) : (
             <ChevronDown
               size={
                 20
               }
-              className="text-zinc-400"
+              className="text-zinc-500"
             />
           )}
         </button>
@@ -873,7 +951,7 @@ streakEligibleFrom:
         {notificationsOpen && (
           <div className="border-t border-zinc-100 px-5 pb-5">
             {socialNotificationsLoading ? (
-              <div className="flex items-center justify-center gap-2 py-6 text-sm font-bold text-zinc-400">
+              <div className="flex items-center justify-center gap-2 py-6 text-sm font-bold text-zinc-500">
                 <LoaderCircle
                   size={
                     18
@@ -933,20 +1011,20 @@ streakEligibleFrom:
 
                               <div className="min-w-0 flex-1">
                                 <p className="text-sm leading-relaxed text-zinc-600">
-                                  <span className="font-black text-zinc-800">
+                                  <span className="font-bold text-zinc-800">
                                     {
                                       notification.actorName
                                     }
                                   </span>{' '}
                                   te mandó
                                   un{' '}
-                                  <span className="font-black text-orange-600">
+                                  <span className="font-bold text-orange-600">
                                     empujón
                                     👊
                                   </span>
                                 </p>
 
-                                <p className="mt-1 text-xs font-bold text-zinc-400">
+                                <p className="mt-1 text-xs font-bold text-zinc-500">
                                   Dale,
                                   faltás vos.
                                 </p>
@@ -991,20 +1069,20 @@ streakEligibleFrom:
 
                               <div className="min-w-0 flex-1">
                                 <p className="text-sm leading-relaxed text-zinc-600">
-                                  <span className="font-black text-zinc-800">
+                                  <span className="font-bold text-zinc-800">
                                     {
                                       notification.actorName
                                     }
                                   </span>{' '}
                                   se sumó con tu
                                   invitación.{' '}
-                                  <span className="font-black text-zinc-800">
+                                  <span className="font-bold text-zinc-800">
                                     ¡Ganaste un
                                     comodín!
                                   </span>
                                 </p>
 
-                                <p className="mt-1 text-xs font-bold text-zinc-400">
+                                <p className="mt-1 text-xs font-bold text-zinc-500">
                                   Gracias por
                                   sumar gente 🙌
                                 </p>
@@ -1058,7 +1136,7 @@ streakEligibleFrom:
 
                             <div className="min-w-0 flex-1">
                               <p className="text-sm leading-relaxed text-zinc-600">
-                                <span className="font-black text-zinc-800">
+                                <span className="font-bold text-zinc-800">
                                   {
                                     notification.actorName
                                   }
@@ -1072,7 +1150,7 @@ streakEligibleFrom:
                                 ) : (
                                   <>
                                     reaccionó{' '}
-                                    <span className="font-black">
+                                    <span className="font-bold">
                                       {
                                         notification.emoji ??
                                         '💪'
@@ -1081,7 +1159,7 @@ streakEligibleFrom:
                                     a tu{' '}
                                   </>
                                 )}
-                                <span className="font-black text-zinc-800">
+                                <span className="font-bold text-zinc-800">
                                   {
                                     notification.activityType ??
                                     'actividad'
@@ -1089,7 +1167,7 @@ streakEligibleFrom:
                                 </span>
                               </p>
 
-                              <p className="mt-1 text-xs font-bold capitalize text-zinc-400">
+                              <p className="mt-1 text-xs font-bold capitalize text-zinc-500">
                                 {notification.activityDate
                                   ? getDateLabel(
                                       notification.activityDate,
@@ -1129,7 +1207,7 @@ streakEligibleFrom:
                     onClick={() =>
                       void onMarkSocialNotificationsRead()
                     }
-                    className="mt-3 w-full rounded-2xl bg-violet-50 py-3 text-sm font-black text-violet-600 transition active:scale-[0.98]"
+                    className="mt-3 w-full rounded-2xl bg-violet-50 py-3 text-sm font-bold text-violet-600 transition active:scale-[0.98]"
                   >
                     Marcar como
                     vistas
@@ -1138,12 +1216,12 @@ streakEligibleFrom:
               </>
             ) : (
               <div className="py-6 text-center">
-                <p className="font-black text-zinc-600">
+                <p className="font-bold text-zinc-600">
                   Todavía no hay
                   novedades
                 </p>
 
-                <p className="mt-1 text-sm text-zinc-400">
+                <p className="mt-1 text-sm text-zinc-500">
                   Las reacciones y
                   los empujones de
                   la banda van a
@@ -1162,7 +1240,7 @@ streakEligibleFrom:
       <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <p className="text-xs font-black tracking-wider text-zinc-400">
+            <p className="text-xs font-bold tracking-wider text-zinc-500">
               ACTIVIDAD RECIENTE
             </p>
 
@@ -1176,7 +1254,7 @@ streakEligibleFrom:
             onClick={
               openGroupGallery
             }
-            className="flex items-center gap-2 rounded-2xl bg-violet-50 px-3 py-2.5 text-xs font-black text-violet-600 transition active:scale-95"
+            className="flex items-center gap-2 rounded-2xl bg-violet-50 px-3 py-2.5 text-xs font-bold text-violet-600 transition active:scale-95"
           >
             <Images
               size={
@@ -1235,7 +1313,7 @@ streakEligibleFrom:
 
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                          <p className="font-black text-zinc-800">
+                          <p className="font-bold text-zinc-800">
                             {isMe
                               ? 'Vos'
                               : user.name}
@@ -1247,7 +1325,7 @@ streakEligibleFrom:
                             }
                           />
 
-                          <span className="text-xs font-bold capitalize text-zinc-400">
+                          <span className="text-xs font-bold capitalize text-zinc-500">
                             {
                               getDateLabel(
                                 dateKey,
@@ -1280,7 +1358,7 @@ streakEligibleFrom:
                         )}
 
                         {activity.recovered_with_wildcard && (
-                          <div className="mt-2 flex w-fit items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-black text-amber-700">
+                          <div className="mt-2 flex w-fit items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">
                             <RotateCcw
                               size={
                                 10
@@ -1303,7 +1381,7 @@ streakEligibleFrom:
                             dateKey,
                           )
                         }
-                        className="shrink-0 rounded-xl bg-white px-3 py-2 text-[11px] font-black text-violet-600 shadow-sm"
+                        className="shrink-0 rounded-xl bg-white px-3 py-2 text-xs font-bold text-violet-600 shadow-sm"
                       >
                         Ver
                       </button>
@@ -1351,7 +1429,7 @@ streakEligibleFrom:
                             dateKey,
                           )
                         }
-                        className="mt-2 text-xs font-bold text-zinc-400 hover:text-violet-500"
+                        className="mt-2 text-xs font-bold text-zinc-500 hover:text-violet-500"
                       >
                         💬{' '}
                         {
@@ -1372,12 +1450,12 @@ streakEligibleFrom:
           </div>
         ) : (
           <div className="rounded-2xl bg-zinc-50 px-4 py-6 text-center">
-            <p className="font-black text-zinc-600">
+            <p className="font-bold text-zinc-600">
               Todavía está
               tranquilo por acá
             </p>
 
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="mt-1 text-sm text-zinc-500">
               Cuando alguien del
               grupo registre una
               actividad va a
@@ -1392,7 +1470,7 @@ streakEligibleFrom:
       {/* ================================= */}
 
       <section className="rounded-[28px] bg-pink-100 px-5 py-4">
-        <p className="font-black text-pink-600">
+        <p className="font-bold text-pink-600">
           🔥 Que no se corte
         </p>
 

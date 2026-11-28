@@ -114,7 +114,7 @@ function ReactionBar({
               </span>
 
               {count > 0 && (
-                <span className="text-[11px]">
+                <span className="text-xs">
                   {count}
                 </span>
               )}

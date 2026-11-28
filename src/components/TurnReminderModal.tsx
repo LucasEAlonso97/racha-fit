@@ -181,7 +181,7 @@ function TurnReminderModal({
           {timeLeft !== null && (
             <p className="text-sm font-semibold leading-relaxed text-zinc-500">
               Tenés{' '}
-              <span className="font-black text-violet-600">
+              <span className="font-bold text-violet-600">
                 {formatTimeLeft(timeLeft)}
               </span>
               . Si no, se elige una
@@ -196,7 +196,7 @@ function TurnReminderModal({
               close()
               onGoToTournaments()
             }}
-            className="mt-5 w-full rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98]"
+            className="mt-5 w-full rounded-2xl bg-violet-500 py-4 font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98]"
           >
             {reminder.kind === 'choose'
               ? 'Elegir carta 🎴'
@@ -206,7 +206,7 @@ function TurnReminderModal({
           <button
             type="button"
             onClick={close}
-            className="mt-2 w-full py-2 text-sm font-bold text-zinc-400"
+            className="mt-2 w-full py-2 text-sm font-bold text-zinc-500"
           >
             Después
           </button>

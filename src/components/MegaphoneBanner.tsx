@@ -51,11 +51,11 @@ function MegaphoneBanner({
           </span>
 
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-black tracking-wider text-fuchsia-500">
+            <p className="text-xs font-bold tracking-wider text-fuchsia-500">
               MEGÁFONO DE {authorName.toUpperCase()}
             </p>
 
-            <p className="mt-0.5 font-black text-zinc-800">
+            <p className="mt-0.5 font-bold text-zinc-800">
               {banner.message}
             </p>
           </div>

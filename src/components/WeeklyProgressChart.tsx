@@ -182,7 +182,7 @@ function WeeklyProgressChart({
     <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black tracking-wider text-violet-500">
+          <p className="text-xs font-bold tracking-wider text-violet-500">
             TU PROGRESO
           </p>
 
@@ -191,7 +191,7 @@ function WeeklyProgressChart({
           </p>
         </div>
 
-        <div className="flex rounded-xl bg-zinc-100 p-1 text-[11px] font-black">
+        <div className="flex rounded-xl bg-zinc-100 p-1 text-xs font-bold">
           {(
             [
               ['minutes', 'Minutos'],
@@ -210,7 +210,7 @@ function WeeklyProgressChart({
               className={`rounded-lg px-2.5 py-1.5 transition ${
                 metric === value
                   ? 'bg-white text-violet-600 shadow-sm'
-                  : 'text-zinc-400'
+                  : 'text-zinc-500'
               }`}
             >
               {label}
@@ -220,7 +220,7 @@ function WeeklyProgressChart({
       </div>
 
       {!hasData ? (
-        <p className="mt-6 rounded-2xl bg-zinc-50 px-4 py-6 text-center text-sm font-semibold text-zinc-400">
+        <p className="mt-6 rounded-2xl bg-zinc-50 px-4 py-6 text-center text-sm font-semibold text-zinc-500">
           Cuando cargues actividades, acá vas a
           ver cómo venís semana a semana.
         </p>
@@ -230,7 +230,7 @@ function WeeklyProgressChart({
 
           <div className="mt-4 flex items-end justify-between gap-3">
             <div>
-              <p className="text-[11px] font-bold text-zinc-400">
+              <p className="text-xs font-bold text-zinc-500">
                 {selectedWeek.current
                   ? 'Esta semana (en curso)'
                   : `Semana del ${shortDate(selectedWeek.start)}`}
@@ -238,7 +238,7 @@ function WeeklyProgressChart({
 
               <p className="text-2xl font-black text-zinc-800">
                 {valueOf(selectedWeek)}{' '}
-                <span className="text-sm font-bold text-zinc-400">
+                <span className="text-sm font-bold text-zinc-500">
                   {metric === 'minutes'
                     ? 'min'
                     : valueOf(selectedWeek) ===
@@ -251,7 +251,7 @@ function WeeklyProgressChart({
 
             {trend !== null && (
               <div
-                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black ${
+                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${
                   trend >= 0
                     ? 'bg-emerald-50 text-emerald-600'
                     : 'bg-rose-50 text-rose-500'
@@ -279,7 +279,7 @@ function WeeklyProgressChart({
                   bottom: `${(avg / max) * 100}%`,
                 }}
               >
-                <span className="absolute -top-4 right-0 rounded bg-white px-1 text-[9px] font-bold text-zinc-400">
+                <span className="absolute -top-4 right-0 rounded bg-white px-1 text-xs font-bold text-zinc-500">
                   promedio
                 </span>
               </div>
@@ -293,7 +293,7 @@ function WeeklyProgressChart({
                   bottom: `${(goal / max) * 100}%`,
                 }}
               >
-                <span className="absolute -top-4 left-0 rounded bg-white px-1 text-[9px] font-black text-emerald-500">
+                <span className="absolute -top-4 left-0 rounded bg-white px-1 text-xs font-bold text-emerald-500">
                   meta {goal}
                 </span>
               </div>
@@ -339,7 +339,7 @@ function WeeklyProgressChart({
 
           {/* Fechas */}
 
-          <div className="mt-1.5 flex justify-between text-[9px] font-bold text-zinc-400">
+          <div className="mt-1.5 flex justify-between text-xs font-bold text-zinc-500">
             <span>
               {shortDate(weeks[0].start)}
             </span>
@@ -349,15 +349,14 @@ function WeeklyProgressChart({
             <span>Esta semana</span>
           </div>
 
-          <p className="mt-3 text-[11px] font-semibold text-zinc-400">
+          <p className="mt-3 text-xs font-semibold text-zinc-500">
             Promedio:{' '}
             {metric === 'minutes'
               ? `${Math.round(avg)} min por semana`
               : `${avg.toLocaleString('es-AR', {
                   maximumFractionDigits: 1,
                 })} días por semana`}
-            . Tocá una barra para ver esa
-            semana.
+            .
           </p>
         </>
       )}

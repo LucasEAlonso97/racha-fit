@@ -279,11 +279,11 @@ function MemberProfileModal({
         {cabinet !== null && (
           <section className="mt-6 overflow-hidden rounded-[24px] bg-gradient-to-br from-amber-50 via-orange-50 to-fuchsia-50 p-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-black tracking-wider text-amber-700">
+              <h3 className="text-xs font-bold tracking-wider text-amber-700">
                 VITRINA DE TROFEOS
               </h3>
 
-              <span className="rounded-full bg-white px-2.5 py-1 text-xs font-black text-amber-600 shadow-sm">
+              <span className="rounded-full bg-white px-2.5 py-1 text-xs font-bold text-amber-600 shadow-sm">
                 🏆 {shelf?.count ?? 0}
               </span>
             </div>
@@ -300,7 +300,7 @@ function MemberProfileModal({
                           10,
                         ),
                       )}
-                      className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-black text-zinc-700 shadow-sm"
+                      className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-zinc-700 shadow-sm"
                     >
                       <span>{trophy.emoji}</span>
                       {trophy.name}
@@ -322,7 +322,7 @@ function MemberProfileModal({
 
         {stats.photos.length > 0 && (
           <section className="mt-6">
-            <h3 className="mb-3 text-xs font-black tracking-wider text-zinc-400">
+            <h3 className="mb-3 text-xs font-bold tracking-wider text-zinc-500">
               FOTOS
             </h3>
 
@@ -345,7 +345,7 @@ function MemberProfileModal({
         {/* ÚLTIMAS ACTIVIDADES */}
 
         <section className="mt-6">
-          <h3 className="mb-3 text-xs font-black tracking-wider text-zinc-400">
+          <h3 className="mb-3 text-xs font-bold tracking-wider text-zinc-500">
             ÚLTIMAS ACTIVIDADES
           </h3>
 
@@ -371,7 +371,7 @@ function MemberProfileModal({
                       {item.type}
                     </span>
 
-                    <span className="text-xs font-semibold text-zinc-400">
+                    <span className="text-xs font-semibold text-zinc-500">
                       {item.duration} min ·{' '}
                       {formatShortDate(
                         item.dateKey,
@@ -401,7 +401,7 @@ function Stat({
         {value}
       </p>
 
-      <p className="text-xs font-semibold text-zinc-400">
+      <p className="text-xs font-semibold text-zinc-500">
         {label}
       </p>
     </div>

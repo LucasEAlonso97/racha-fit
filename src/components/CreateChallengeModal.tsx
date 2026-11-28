@@ -169,7 +169,7 @@ function CreateChallengeModal({
 
         {/* CUÁNDO */}
 
-        <p className="mb-2 mt-6 text-xs font-black tracking-wide text-zinc-400">
+        <p className="mb-2 mt-6 text-xs font-bold tracking-wide text-zinc-500">
           CUÁNDO
         </p>
 
@@ -213,7 +213,7 @@ function CreateChallengeModal({
                     )
                   }
                 }}
-                className={`rounded-full px-3 py-2 text-xs font-black transition ${
+                className={`rounded-full px-3 py-2 text-xs font-bold transition ${
                   selected
                     ? 'bg-violet-500 text-white'
                     : 'bg-zinc-100 text-zinc-500'
@@ -260,7 +260,7 @@ function CreateChallengeModal({
 
         {/* META */}
 
-        <p className="mb-2 mt-6 text-xs font-black tracking-wide text-zinc-400">
+        <p className="mb-2 mt-6 text-xs font-bold tracking-wide text-zinc-500">
           META
         </p>
 
@@ -309,7 +309,7 @@ function CreateChallengeModal({
 
         {/* NOMBRE */}
 
-        <p className="mb-2 mt-6 text-xs font-black tracking-wide text-zinc-400">
+        <p className="mb-2 mt-6 text-xs font-bold tracking-wide text-zinc-500">
           NOMBRE
         </p>
 
@@ -332,7 +332,7 @@ function CreateChallengeModal({
           type="button"
           disabled={Boolean(error) || saving}
           onClick={() => void submit()}
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white transition active:scale-[0.98] disabled:opacity-40"
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-bold text-white transition active:scale-[0.98] disabled:opacity-40"
         >
           {saving && (
             <LoaderCircle
@@ -343,7 +343,7 @@ function CreateChallengeModal({
           Lanzar desafío 🔥
         </button>
 
-        <p className="mt-3 text-center text-xs text-zinc-400">
+        <p className="mt-3 text-center text-xs text-zinc-500">
           Participa todo el grupo.
           Cuentan los días con al menos
           una actividad.

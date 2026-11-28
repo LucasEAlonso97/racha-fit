@@ -33,6 +33,12 @@ type Props = {
   ) => void
 
   onBack: () => void
+
+  /*
+   * Dentro de Progreso → Calendario: sin
+   * título ni botón de volver.
+   */
+  embedded?: boolean
 }
 
 function Calendar({
@@ -42,6 +48,7 @@ function Calendar({
   today,
   onSelectDate,
   onBack,
+  embedded = false,
 }: Props) {
   /*
    * ========================================
@@ -256,11 +263,16 @@ function Calendar({
     )
 
   return (
-    <div className="mx-auto w-full max-w-md px-5 pt-8">
+    <div
+      className={`mx-auto w-full max-w-md px-5 ${
+        embedded ? 'pt-4' : 'pt-8'
+      }`}
+    >
       {/* ================================= */}
       {/* HEADER */}
       {/* ================================= */}
 
+      {!embedded && (
       <header className="mb-7">
         <button
           type="button"
@@ -289,6 +301,7 @@ function Calendar({
           cada día 👀
         </p>
       </header>
+      )}
 
       {/* ================================= */}
       {/* CALENDARIO */}
@@ -375,7 +388,7 @@ function Calendar({
                 key={
                   day
                 }
-                className="py-2 text-center text-xs font-black text-zinc-400"
+                className="py-2 text-center text-xs font-bold text-zinc-500"
               >
                 {
                   day
@@ -589,7 +602,7 @@ function Calendar({
 
                   {activeUsers.length >
                     3 && (
-                    <span className="mt-0.5 text-[9px] font-black text-violet-400">
+                    <span className="mt-0.5 text-xs font-bold text-violet-400">
                       +
                       {activeUsers.length -
                         3}
@@ -603,7 +616,7 @@ function Calendar({
                   {activityCount >
                     activeUsers.length && (
                     <div
-                      className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-100 px-1 text-[8px] font-black text-orange-500"
+                      className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-100 px-1 text-xs font-bold text-orange-500"
                       title={`${activityCount} actividades`}
                     >
                       {
@@ -622,7 +635,7 @@ function Calendar({
         {/* ================================= */}
 
         <div className="mt-5 border-t border-zinc-100 pt-4">
-          <p className="mb-3 text-[10px] font-black tracking-wider text-zinc-400">
+          <p className="mb-3 text-xs font-bold tracking-wider text-zinc-500">
             INTEGRANTES
           </p>
 
@@ -686,7 +699,7 @@ function Calendar({
       {/* ================================= */}
 
       <section className="mt-5 rounded-[25px] bg-violet-100 p-4">
-        <p className="font-black text-violet-700">
+        <p className="font-bold text-violet-700">
           👥 Calendario del grupo
         </p>
 
@@ -702,7 +715,7 @@ function Calendar({
       {/* ================================= */}
 
       <section className="mt-3 rounded-[25px] bg-orange-50 p-4">
-        <p className="font-black text-orange-600">
+        <p className="font-bold text-orange-600">
           🏋️ + 🚶 + 🚲
         </p>
 

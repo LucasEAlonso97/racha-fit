@@ -6,6 +6,8 @@ import {
   Target,
 } from 'lucide-react'
 
+import InfoTip from './InfoTip'
+
 import {
   useGroupNudges,
 } from '../hooks/useGroupNudges'
@@ -454,7 +456,7 @@ function GroupStreakCard({
 
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-black tracking-[0.14em] text-violet-500">
+            <p className="text-xs font-bold tracking-[0.14em] text-violet-500">
               RACHA DEL GRUPO
             </p>
 
@@ -479,16 +481,12 @@ function GroupStreakCard({
               </div>
 
               <div>
-                <h2 className="text-xl font-black text-zinc-800">
+                <h2 className="flex items-center gap-1 text-xl font-black text-zinc-800">
                   {everybodyCompleted
                     ? 'Semana salvada 🔥'
                     : 'Semana en juego'}
+                  <InfoTip text="La racha del grupo sigue si todos llegan a su meta de la semana." />
                 </h2>
-
-                <p className="mt-0.5 text-xs font-semibold text-zinc-500">
-                  Todos tienen que
-                  llegar a su meta
-                </p>
               </div>
             </div>
           </div>
@@ -508,7 +506,7 @@ function GroupStreakCard({
               }
             </p>
 
-            <p className="text-[10px] font-black text-zinc-400">
+            <p className="text-xs font-bold text-zinc-500">
               CUMPLIERON
             </p>
           </div>
@@ -526,7 +524,7 @@ function GroupStreakCard({
                 banda
               </p>
 
-              <p className="mt-0.5 text-sm font-black text-zinc-700">
+              <p className="mt-0.5 text-sm font-bold text-zinc-700">
                 {
                   totalCompleted
                 }{' '}
@@ -596,7 +594,7 @@ function GroupStreakCard({
               </div>
 
               <div>
-                <p className="text-sm font-black text-orange-700">
+                <p className="text-sm font-bold text-orange-700">
                   Todos llegaron.
                 </p>
 
@@ -619,7 +617,7 @@ function GroupStreakCard({
               </div>
 
               <div className="min-w-0">
-                <p className="text-sm font-black text-pink-700">
+                <p className="text-sm font-bold text-pink-700">
                   {lastPendingMember
                     .user
                     .id ===
@@ -661,7 +659,7 @@ function GroupStreakCard({
               </div>
 
               <div>
-                <p className="text-sm font-black text-zinc-700">
+                <p className="text-sm font-bold text-zinc-700">
                   {totalRemaining ===
                   1
                     ? 'Falta 1 día entre todos.'
@@ -751,7 +749,7 @@ function GroupStreakCard({
                       />
 
                       {isLastPending && (
-                        <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-pink-500 text-[9px]">
+                        <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-pink-500 text-xs">
                           👀
                         </div>
                       )}
@@ -765,21 +763,21 @@ function GroupStreakCard({
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="truncate text-sm font-black text-zinc-800">
+                            <p className="truncate text-sm font-bold text-zinc-800">
                               {isMe
                                 ? 'Vos'
                                 : member.user.name}
                             </p>
 
                             {!member.eligibleThisWeek && (
-                              <span className="shrink-0 rounded-full bg-violet-100 px-2 py-0.5 text-[8px] font-black tracking-wide text-violet-500">
+                              <span className="shrink-0 rounded-full bg-violet-100 px-2 py-0.5 text-xs font-bold tracking-wide text-violet-500">
                                 NUEVO
                               </span>
                             )}
                           </div>
 
                           {isLastPending && (
-                            <p className="mt-0.5 text-[9px] font-black tracking-wide text-pink-500">
+                            <p className="mt-0.5 text-xs font-bold tracking-wide text-pink-500">
                               ÚLTIMO PENDIENTE
                             </p>
                           )}
@@ -787,7 +785,7 @@ function GroupStreakCard({
 
                         <div className="flex shrink-0 items-center gap-2">
                           <span
-                            className={`text-sm font-black ${
+                            className={`text-sm font-bold ${
                               !member.eligibleThisWeek
                                 ? 'text-violet-400'
                                 : member.completed
@@ -850,12 +848,12 @@ function GroupStreakCard({
 
                       <div className="mt-2 flex items-center justify-between gap-2">
                         <p
-                          className={`text-[10px] font-bold ${
+                          className={`text-xs font-bold ${
                             !member.eligibleThisWeek
                               ? 'text-violet-400'
                               : isLastPending
                                 ? 'text-pink-500'
-                                : 'text-zinc-400'
+                                : 'text-zinc-500'
                           }`}
                         >
                           {!member.eligibleThisWeek
@@ -869,7 +867,7 @@ function GroupStreakCard({
                         </p>
 
                         {member.activeToday && (
-                          <span className="text-[10px] font-black text-green-500">
+                          <span className="text-xs font-bold text-green-500">
                             HOY ✓
                           </span>
                         )}
@@ -893,9 +891,9 @@ function GroupStreakCard({
                           member.user.id,
                         )
                       }
-                      className={`mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-black transition active:scale-[0.98] ${
+                      className={`mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition active:scale-[0.98] ${
                         alreadySent
-                          ? 'bg-zinc-100 text-zinc-400'
+                          ? 'bg-zinc-100 text-zinc-500'
                           : isLastPending
                             ? 'bg-pink-500 text-white'
                             : 'bg-violet-100 text-violet-600'
@@ -959,7 +957,7 @@ function GroupStreakCard({
       <div className="border-t border-white/70 bg-white/40 px-5 py-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-black text-zinc-700">
+            <p className="text-xs font-bold text-zinc-700">
               LA BANDA HOY
             </p>
 
@@ -1011,7 +1009,7 @@ function GroupStreakCard({
 
             {memberProgress.length >
               6 && (
-              <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-violet-100 text-[10px] font-black text-violet-600">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-violet-100 text-xs font-bold text-violet-600">
                 +
                 {
                   memberProgress.length -

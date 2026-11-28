@@ -6,6 +6,14 @@ import {
   useState,
 } from 'react'
 
+import type {
+  GroupTab,
+} from './pages/Grupo'
+
+import type {
+  ProgressTab,
+} from './pages/Progreso'
+
 import {
   touchAppUsage,
 } from './lib/admin'
@@ -32,7 +40,6 @@ import BottomNavigation from './components/BottomNavigation'
 import ChallengesSection from './components/ChallengesSection'
 import DayDetailModal from './components/DayDetailModal'
 import GroupHeader from './components/GroupHeader'
-import InstallBanner from './components/InstallBanner'
 import MegaphoneBanner from './components/MegaphoneBanner'
 import MilestoneCelebration from './components/MilestoneCelebration'
 import SocialPanelsHost from './components/SocialPanelsHost'
@@ -51,9 +58,6 @@ import Home from './pages/Home'
  * Pantallas que no se ven al abrir la app:
  * se descargan recién cuando hacen falta.
  */
-const Calendar = lazy(() =>
-  retryImport(() => import('./pages/Calendar')),
-)
 const GroupSetup = lazy(() =>
   retryImport(() => import('./pages/GroupSetup')),
 )
@@ -66,11 +70,11 @@ const Onboarding = lazy(() =>
 const Perfil = lazy(() =>
   retryImport(() => import('./pages/Perfil')),
 )
-const Rachas = lazy(() =>
-  retryImport(() => import('./pages/Rachas')),
+const Grupo = lazy(() =>
+  retryImport(() => import('./pages/Grupo')),
 )
-const Torneos = lazy(() =>
-  retryImport(() => import('./pages/Torneos')),
+const Progreso = lazy(() =>
+  retryImport(() => import('./pages/Progreso')),
 )
 
 import {
@@ -274,6 +278,16 @@ function RachaApp({
     useState<View>('home')
 
   /*
+   * Pestaña elegida dentro de Grupo y de
+   * Progreso.
+   */
+  const [groupTab, setGroupTab] =
+    useState<GroupTab>('ranking')
+
+  const [progressTab, setProgressTab] =
+    useState<ProgressTab>('calendar')
+
+  /*
    * REGALOS DE LOGROS
    */
   const achievementClaims =
@@ -298,6 +312,22 @@ function RachaApp({
         achievementClaims.claimed,
       ],
     )
+
+  /*
+   * Al entrar a Progreso con regalos para
+   * reclamar, se abre directo en Logros.
+   */
+  const changeView = (next: View) => {
+    if (
+      next === 'progress' &&
+      view !== 'progress' &&
+      claimableAchievements > 0
+    ) {
+      setProgressTab('achievements')
+    }
+
+    setView(next)
+  }
 
   const claimAchievement = async (
     achievementId: string,
@@ -493,6 +523,35 @@ function RachaApp({
         emoji,
       }),
     )
+  }, [activities, currentUserId])
+
+  /*
+   * Tus deportes más usados (los 6 que se
+   * ven primero al cargar una actividad).
+   */
+  const favoriteSports = useMemo(() => {
+    const counts = new Map<
+      string,
+      number
+    >()
+
+    Object.values(activities).forEach(
+      (day) => {
+        ;(day[currentUserId] ?? []).forEach(
+          (activity) =>
+            counts.set(
+              activity.type,
+              (counts.get(activity.type) ??
+                0) + 1,
+            ),
+        )
+      },
+    )
+
+    return [...counts]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([type]) => type)
   }, [activities, currentUserId])
 
   /*
@@ -806,7 +865,10 @@ function RachaApp({
         groups={groups}
         activeGroup={activeGroup}
         onSelectGroup={selectGroup}
-        onLogout={profileActions.logout}
+        wildcardBalance={wildcardBalance}
+        onOpenWildcards={() =>
+          setView('profile')
+        }
       />
 
       {view === 'home' && (
@@ -816,28 +878,6 @@ function RachaApp({
         />
       )}
 
-      {view === 'home' && (
-        <InstallBanner />
-      )}
-
-      {view === 'home' &&
-        groupChallenges.available && (
-          <ChallengesSection
-            challenges={
-              groupChallenges.challenges
-            }
-            activities={activities}
-            users={users}
-            currentUserId={currentUserId}
-            today={today}
-            onCreate={
-              groupChallenges.createChallenge
-            }
-            onDelete={
-              groupChallenges.deleteChallenge
-            }
-          />
-        )}
 
       {view === 'home' && (
         <Home
@@ -876,46 +916,64 @@ function RachaApp({
           </div>
         }
       >
-        {view === 'calendar' && (
-          <Calendar
-            activities={activities}
-            users={users}
-            currentUserId={currentUserId}
-            today={today}
-            onSelectDate={setSelectedDate}
-            onBack={() => setView('home')}
-          />
-        )}
-
-        {view === 'rachas' && (
-          <Rachas
-            groupId={activeGroup.id}
-            activities={activities}
-            users={users}
-            currentUserId={currentUserId}
-            today={today}
-            giftsEnabled={
-              achievementClaims.available
-            }
-            claimedAchievements={
-              achievementClaims.claimed
-            }
-            claimableCount={
-              claimableAchievements
-            }
-            onClaimAchievement={
-              claimAchievement
-            }
-          />
-        )}
-
-        {view === 'tournaments' && (
-          <Torneos
+        {view === 'group' && (
+          <Grupo
             group={activeGroup}
+            activities={activities}
             users={users}
             currentUserId={currentUserId}
+            today={today}
+            tab={groupTab}
+            onChangeTab={setGroupTab}
+            challenges={
+              groupChallenges.available ? (
+                <ChallengesSection
+                  challenges={
+                    groupChallenges.challenges
+                  }
+                  activities={activities}
+                  users={users}
+                  currentUserId={
+                    currentUserId
+                  }
+                  today={today}
+                  onCreate={
+                    groupChallenges.createChallenge
+                  }
+                  onDelete={
+                    groupChallenges.deleteChallenge
+                  }
+                />
+              ) : null
+            }
           />
         )}
+
+        {view === 'progress' &&
+          currentUser && (
+            <Progreso
+              activities={activities}
+              users={users}
+              currentUser={currentUser}
+              groupName={activeGroup.name}
+              today={today}
+              tab={progressTab}
+              onChangeTab={setProgressTab}
+              onSelectDate={setSelectedDate}
+              giftsEnabled={
+                achievementClaims.available
+              }
+              claimedAchievements={
+                achievementClaims.claimed
+              }
+              claimableCount={
+                claimableAchievements
+              }
+              onClaimAchievement={
+                claimAchievement
+              }
+            />
+          )}
 
         {view === 'profile' &&
           currentUser && (
@@ -963,9 +1021,9 @@ function RachaApp({
 
       <BottomNavigation
         view={view}
-        onChangeView={setView}
+        onChangeView={changeView}
         badges={{
-          rachas: claimableAchievements,
+          progress: claimableAchievements,
         }}
         onAddActivity={() =>
           openActivityModal(todayKey)
@@ -1016,6 +1074,7 @@ function RachaApp({
           activityModal.lastActivity
         }
         customSports={customSports}
+        favoriteSports={favoriteSports}
         onClose={activityModal.close}
         onSave={saveActivity}
         onDelete={deleteActivity}
@@ -1028,14 +1087,18 @@ function RachaApp({
       )}
 
       {!showWhatsNew &&
-        view !== 'tournaments' && (
+        !(
+          view === 'group' &&
+          groupTab === 'tournament'
+        ) && (
           <TurnReminderModal
             key={activeGroup.id}
             groupId={activeGroup.id}
             currentUserId={currentUserId}
-            onGoToTournaments={() =>
-              setView('tournaments')
-            }
+            onGoToTournaments={() => {
+              setGroupTab('tournament')
+              setView('group')
+            }}
           />
         )}
 

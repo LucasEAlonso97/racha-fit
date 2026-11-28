@@ -559,7 +559,7 @@ function Auth() {
               Te enviamos un enlace a
             </p>
 
-            <p className="mt-1 break-all font-black text-zinc-700">
+            <p className="mt-1 break-all font-bold text-zinc-700">
               {email}
             </p>
 
@@ -577,7 +577,7 @@ function Auth() {
                   'login',
                 )
               }
-              className="mt-6 w-full rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98]"
+              className="mt-6 w-full rounded-2xl bg-violet-500 py-4 font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98]"
             >
               Volver al login
             </button>
@@ -589,7 +589,7 @@ function Auth() {
                   false,
                 )
               }}
-              className="mt-3 text-sm font-bold text-zinc-400"
+              className="mt-3 text-sm font-bold text-zinc-500"
             >
               Enviar otro enlace
             </button>
@@ -670,7 +670,7 @@ function Auth() {
                     'login',
                   )
                 }
-                className="mb-5 flex items-center gap-2 text-sm font-bold text-zinc-400 transition hover:text-violet-500"
+                className="mb-5 flex items-center gap-2 text-sm font-bold text-zinc-500 transition hover:text-violet-500"
               >
                 <ArrowLeft
                   size={17}
@@ -708,11 +708,11 @@ function Auth() {
                       'login',
                     )
                   }
-                  className={`rounded-xl py-3 text-sm font-black transition ${
+                  className={`rounded-xl py-3 text-sm font-bold transition ${
                     mode ===
                     'login'
                       ? 'bg-white text-violet-600 shadow-sm'
-                      : 'text-zinc-400'
+                      : 'text-zinc-500'
                   }`}
                 >
                   Entrar
@@ -725,11 +725,11 @@ function Auth() {
                       'register',
                     )
                   }
-                  className={`rounded-xl py-3 text-sm font-black transition ${
+                  className={`rounded-xl py-3 text-sm font-bold transition ${
                     mode ===
                     'register'
                       ? 'bg-white text-violet-600 shadow-sm'
-                      : 'text-zinc-400'
+                      : 'text-zinc-500'
                   }`}
                 >
                   Crear cuenta
@@ -769,14 +769,14 @@ function Auth() {
             {mode ===
               'register' && (
               <div className="mb-5">
-                <label className="text-xs font-black tracking-wider text-zinc-400">
+                <label className="text-xs font-bold tracking-wider text-zinc-500">
                   NOMBRE
                 </label>
 
                 <div className="mt-2 flex items-center rounded-2xl bg-zinc-50 px-4">
                   <UserRound
                     size={19}
-                    className="shrink-0 text-zinc-400"
+                    className="shrink-0 text-zinc-500"
                   />
 
                   <input
@@ -799,7 +799,7 @@ function Auth() {
                     disabled={
                       loading
                     }
-                    className="min-w-0 flex-1 bg-transparent px-3 py-4 font-medium text-zinc-800 outline-none placeholder:text-zinc-300 disabled:opacity-60"
+                    className="min-w-0 flex-1 bg-transparent px-3 py-4 font-semibold text-zinc-800 outline-none placeholder:text-zinc-300 disabled:opacity-60"
                   />
                 </div>
               </div>
@@ -810,14 +810,14 @@ function Auth() {
             {/* ================================= */}
 
             <div className="mb-5">
-              <label className="text-xs font-black tracking-wider text-zinc-400">
+              <label className="text-xs font-bold tracking-wider text-zinc-500">
                 EMAIL
               </label>
 
               <div className="mt-2 flex items-center rounded-2xl bg-zinc-50 px-4">
                 <Mail
                   size={19}
-                  className="shrink-0 text-zinc-400"
+                  className="shrink-0 text-zinc-500"
                 />
 
                 <input
@@ -839,7 +839,7 @@ function Auth() {
                   disabled={
                     loading
                   }
-                  className="min-w-0 flex-1 bg-transparent px-3 py-4 font-medium text-zinc-800 outline-none placeholder:text-zinc-300 disabled:opacity-60"
+                  className="min-w-0 flex-1 bg-transparent px-3 py-4 font-semibold text-zinc-800 outline-none placeholder:text-zinc-300 disabled:opacity-60"
                 />
               </div>
             </div>
@@ -852,7 +852,7 @@ function Auth() {
               'recovery' && (
               <div>
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-black tracking-wider text-zinc-400">
+                  <label className="text-xs font-bold tracking-wider text-zinc-500">
                     CONTRASEÑA
                   </label>
 
@@ -865,7 +865,7 @@ function Auth() {
                           'recovery',
                         )
                       }
-                      className="text-xs font-black text-violet-500"
+                      className="text-xs font-bold text-violet-500"
                     >
                       ¿La olvidaste?
                     </button>
@@ -875,7 +875,7 @@ function Auth() {
                 <div className="mt-2 flex items-center rounded-2xl bg-zinc-50 px-4">
                   <LockKeyhole
                     size={19}
-                    className="shrink-0 text-zinc-400"
+                    className="shrink-0 text-zinc-500"
                   />
 
                   <input
@@ -911,7 +911,7 @@ function Auth() {
                     disabled={
                       loading
                     }
-                    className="min-w-0 flex-1 bg-transparent px-3 py-4 font-medium text-zinc-800 outline-none placeholder:text-zinc-300 disabled:opacity-60"
+                    className="min-w-0 flex-1 bg-transparent px-3 py-4 font-semibold text-zinc-800 outline-none placeholder:text-zinc-300 disabled:opacity-60"
                   />
 
                   <button
@@ -924,7 +924,7 @@ function Auth() {
                           !current,
                       )
                     }
-                    className="shrink-0 text-zinc-400"
+                    className="shrink-0 text-zinc-500"
                   >
                     {showPassword ? (
                       <EyeOff
@@ -940,7 +940,7 @@ function Auth() {
 
                 {mode ===
                   'register' && (
-                  <p className="mt-2 text-xs font-medium text-zinc-400">
+                  <p className="mt-2 text-xs font-semibold text-zinc-500">
                     Usá al menos 8 caracteres.
                   </p>
                 )}
@@ -976,7 +976,7 @@ function Auth() {
               disabled={
                 loading
               }
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <>
@@ -1011,7 +1011,7 @@ function Auth() {
 
           {mode ===
             'recovery' && (
-            <p className="mt-5 text-center text-xs leading-relaxed text-zinc-400">
+            <p className="mt-5 text-center text-xs leading-relaxed text-zinc-500">
               El enlace te va a llevar
               nuevamente a Racha para
               elegir tu nueva contraseña
@@ -1023,7 +1023,7 @@ function Auth() {
         {/* FOOTER */}
         {/* ================================= */}
 
-        <p className="mt-6 text-center text-xs font-semibold text-zinc-300">
+        <p className="mt-6 text-center text-xs font-semibold text-zinc-400">
           Desarrollado por Lucas Ezequiel Alonso
         </p>
       </div>

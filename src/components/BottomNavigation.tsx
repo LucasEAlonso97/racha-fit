@@ -3,12 +3,11 @@ import type {
 } from 'lucide-react'
 
 import {
-  CalendarDays,
-  Flame,
+  ChartNoAxesColumnIncreasing,
   Home,
   Plus,
-  Trophy,
   UserRound,
+  Users,
 } from 'lucide-react'
 
 import type {
@@ -27,7 +26,7 @@ type Props = {
   /*
    * Numerito arriba de una pestaña (por
    * ejemplo, regalos para reclamar en
-   * Rachas).
+   * Progreso).
    */
   badges?: Partial<Record<View, number>>
 }
@@ -39,30 +38,29 @@ type Tab = {
 }
 
 /*
- * Las 5 pestañas con el mismo ancho. El +
- * flota arriba de Rachas, más chico y más
- * alto, para no taparla.
+ * Inicio · Grupo · [+] · Progreso · Perfil
+ *
+ * Dos pestañas a cada lado y el + en el
+ * medio, con su propio lugar: no tapa nada.
  */
-const TABS: Tab[] = [
+const LEFT: Tab[] = [
   {
     view: 'home',
     label: 'Inicio',
     Icon: Home,
   },
   {
-    view: 'calendar',
-    label: 'Calendario',
-    Icon: CalendarDays,
+    view: 'group',
+    label: 'Grupo',
+    Icon: Users,
   },
+]
+
+const RIGHT: Tab[] = [
   {
-    view: 'rachas',
-    label: 'Rachas',
-    Icon: Flame,
-  },
-  {
-    view: 'tournaments',
-    label: 'Torneos',
-    Icon: Trophy,
+    view: 'progress',
+    label: 'Progreso',
+    Icon: ChartNoAxesColumnIncreasing,
   },
   {
     view: 'profile',
@@ -93,25 +91,29 @@ function NavTab({
       onClick={() =>
         onSelect(tab.view)
       }
-      className={`flex min-w-0 flex-col items-center gap-1.5 py-2 ${
+      className={`flex min-w-0 flex-col items-center gap-1 py-2 ${
         active
           ? 'text-violet-600'
-          : 'text-zinc-400'
+          : 'text-zinc-500'
       }`}
     >
       <span className="relative">
-        <Icon size={22} />
+        <Icon
+          size={23}
+          strokeWidth={
+            active ? 2.5 : 2
+          }
+        />
 
         {badge > 0 && (
-          <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-[9px] font-black leading-none text-white ring-2 ring-white">
+          <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-xs font-bold leading-none text-white ring-2 ring-white">
             {badge}
           </span>
         )}
       </span>
 
-      {/* 11px (antes 9). */}
       <span
-        className={`whitespace-nowrap text-[11px] leading-none tracking-tight ${
+        className={`text-xs leading-none ${
           active
             ? 'font-bold'
             : 'font-semibold'
@@ -129,38 +131,36 @@ function BottomNavigation({
   onAddActivity,
   badges = {},
 }: Props) {
+  const renderTab = (tab: Tab) => (
+    <NavTab
+      key={tab.view}
+      tab={tab}
+      active={view === tab.view}
+      badge={badges[tab.view] ?? 0}
+      onSelect={onChangeView}
+    />
+  )
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-zinc-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
-      <div className="relative mx-auto max-w-md">
-        {/* BOTÓN CENTRAL */}
+      <div className="mx-auto grid max-w-md grid-cols-5 items-center px-2 py-1.5">
+        {LEFT.map(renderTab)}
 
-        <button
-          type="button"
-          aria-label="Agregar actividad"
-          onClick={
-            onAddActivity
-          }
-          className="absolute left-1/2 top-0 z-20 flex h-12 w-12 -translate-x-1/2 -translate-y-[38px] items-center justify-center rounded-full bg-violet-500 text-white shadow-lg shadow-violet-300 ring-4 ring-white transition active:scale-95"
-        >
-          <Plus
-            size={25}
-            strokeWidth={3}
-          />
-        </button>
-
-        {/* NAV */}
-
-        <div className="grid grid-cols-5 items-center px-2 py-2">
-          {TABS.map((tab) => (
-            <NavTab
-              key={tab.view}
-              tab={tab}
-              active={view === tab.view}
-              badge={badges[tab.view] ?? 0}
-              onSelect={onChangeView}
+        <div className="flex justify-center">
+          <button
+            type="button"
+            aria-label="Agregar actividad"
+            onClick={onAddActivity}
+            className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500 text-white shadow-lg shadow-violet-200 transition active:scale-95"
+          >
+            <Plus
+              size={26}
+              strokeWidth={3}
             />
-          ))}
+          </button>
         </div>
+
+        {RIGHT.map(renderTab)}
       </div>
     </nav>
   )

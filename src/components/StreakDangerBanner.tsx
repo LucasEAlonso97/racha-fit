@@ -15,12 +15,10 @@ import type {
 } from '../types'
 
 import {
+  dismissDangerToday,
   getStreakDanger,
+  isDangerDismissedToday,
 } from '../utils/streakDanger'
-
-import {
-  formatDateKey,
-} from '../utils/date'
 
 /*
  * ========================================
@@ -45,19 +43,7 @@ type Props = {
   user: User
   wildcardBalance: number | null
   onLogToday: () => void
-}
-
-const DISMISS_KEY =
-  'racha-streak-danger-dismissed'
-
-function readDismissed() {
-  try {
-    return window.localStorage.getItem(
-      DISMISS_KEY,
-    )
-  } catch {
-    return null
-  }
+  onDismiss?: () => void
 }
 
 function formatCountdown(now: Date) {
@@ -86,13 +72,16 @@ function StreakDangerBanner({
   user,
   wildcardBalance,
   onLogToday,
+  onDismiss,
 }: Props) {
   const [now, setNow] = useState(
     () => new Date(),
   )
 
-  const [dismissedDay, setDismissedDay] =
-    useState(readDismissed)
+  const [dismissed, setDismissed] =
+    useState(() =>
+      isDangerDismissedToday(new Date()),
+    )
 
   /*
    * Reloj: cada 30 segundos.
@@ -108,9 +97,7 @@ function StreakDangerBanner({
     }
   }, [])
 
-  const todayKey = formatDateKey(now)
-
-  if (dismissedDay === todayKey) {
+  if (dismissed) {
     return null
   }
 
@@ -125,16 +112,9 @@ function StreakDangerBanner({
   }
 
   const dismiss = () => {
-    try {
-      window.localStorage.setItem(
-        DISMISS_KEY,
-        todayKey,
-      )
-    } catch {
-      // Sin storage: se esconde hasta recargar.
-    }
-
-    setDismissedDay(todayKey)
+    dismissDangerToday(now)
+    setDismissed(true)
+    onDismiss?.()
   }
 
   const title =
@@ -166,7 +146,7 @@ function StreakDangerBanner({
         <X size={16} />
       </button>
 
-      <div className="flex items-center gap-2 text-xs font-black tracking-wider text-white/85">
+      <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-white/85">
         <Flame
           size={15}
           className="animate-pulse"
@@ -184,7 +164,7 @@ function StreakDangerBanner({
 
       <div className="mt-4 flex items-center gap-3">
         <div className="rounded-2xl bg-white/20 px-3 py-2 text-center">
-          <p className="text-[10px] font-black uppercase tracking-wider text-white/80">
+          <p className="text-xs font-bold uppercase tracking-wider text-white/80">
             Te quedan
           </p>
           <p className="text-lg font-black tabular-nums leading-tight">
@@ -195,7 +175,7 @@ function StreakDangerBanner({
         <button
           type="button"
           onClick={onLogToday}
-          className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white py-3.5 font-black text-orange-600 shadow-md transition active:scale-[0.98]"
+          className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white py-3.5 font-bold text-orange-600 shadow-md transition active:scale-[0.98]"
         >
           <Plus
             size={18}
@@ -207,7 +187,7 @@ function StreakDangerBanner({
 
       {danger.streak >= 1 &&
         (wildcardBalance ?? 0) > 0 && (
-          <p className="mt-3 text-[11px] font-semibold text-white/85">
+          <p className="mt-3 text-xs font-semibold text-white/85">
             🃏 Si se te pasa, mañana la
             podés salvar con un comodín
             (tenés {wildcardBalance}).

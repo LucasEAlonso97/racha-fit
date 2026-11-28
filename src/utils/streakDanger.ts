@@ -76,3 +76,36 @@ export function getStreakDanger(
   }
 }
 
+
+/*
+ * "Más tarde": se esconde hasta mañana.
+ */
+const DISMISS_KEY =
+  'racha-streak-danger-dismissed'
+
+export function isDangerDismissedToday(
+  now: Date,
+) {
+  try {
+    return (
+      window.localStorage.getItem(
+        DISMISS_KEY,
+      ) === formatDateKey(now)
+    )
+  } catch {
+    return false
+  }
+}
+
+export function dismissDangerToday(
+  now: Date,
+) {
+  try {
+    window.localStorage.setItem(
+      DISMISS_KEY,
+      formatDateKey(now),
+    )
+  } catch {
+    // Sin storage: se esconde hasta recargar.
+  }
+}

@@ -256,11 +256,11 @@ function GroupSetup({
                   'create',
                 )
               }
-              className={`rounded-xl py-3 text-sm font-black transition ${
+              className={`rounded-xl py-3 text-sm font-bold transition ${
                 mode ===
                 'create'
                   ? 'bg-white text-violet-600 shadow-sm'
-                  : 'text-zinc-400'
+                  : 'text-zinc-500'
               }`}
             >
               Crear grupo
@@ -272,11 +272,11 @@ function GroupSetup({
                   'join',
                 )
               }
-              className={`rounded-xl py-3 text-sm font-black transition ${
+              className={`rounded-xl py-3 text-sm font-bold transition ${
                 mode ===
                 'join'
                   ? 'bg-white text-violet-600 shadow-sm'
-                  : 'text-zinc-400'
+                  : 'text-zinc-500'
               }`}
             >
               Tengo código
@@ -336,7 +336,7 @@ function GroupSetup({
                 disabled={
                   loading
                 }
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-60"
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-60"
               >
                 {loading ? (
                   <LoaderCircle
@@ -408,7 +408,7 @@ function GroupSetup({
                 disabled={
                   loading
                 }
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-60"
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-60"
               >
                 {loading && (
                   <LoaderCircle
@@ -433,7 +433,7 @@ function GroupSetup({
           onClick={
             onLogout
           }
-          className="mx-auto mt-6 flex items-center gap-2 text-sm font-bold text-zinc-400"
+          className="mx-auto mt-6 flex items-center gap-2 text-sm font-bold text-zinc-500"
         >
           <LogOut
             size={16}

@@ -493,7 +493,7 @@ function NotificationSettings({
             className="animate-spin text-violet-500"
           />
 
-          <p className="text-sm font-bold text-zinc-400">
+          <p className="text-sm font-bold text-zinc-500">
             Verificando
             notificaciones...
           </p>
@@ -536,14 +536,8 @@ function NotificationSettings({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="font-black text-zinc-800">
+          <p className="font-bold text-zinc-800">
             Notificaciones
-          </p>
-
-          <p className="mt-1 text-sm leading-relaxed text-zinc-500">
-            Elegí cuándo querés que
-            Racha te recuerde
-            moverte.
           </p>
         </div>
       </div>
@@ -560,7 +554,7 @@ function NotificationSettings({
               className="text-emerald-600"
             />
 
-            <p className="text-sm font-black text-emerald-600">
+            <p className="text-sm font-bold text-emerald-600">
               Activadas en este
               dispositivo
             </p>
@@ -581,7 +575,7 @@ function NotificationSettings({
             activating ||
             !supported
           }
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-3.5 font-black text-white transition active:scale-[0.98] disabled:opacity-50"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-3.5 font-bold text-white transition active:scale-[0.98] disabled:opacity-50"
         >
           {activating ? (
             <>
@@ -622,7 +616,7 @@ function NotificationSettings({
             className="text-violet-500"
           />
 
-          <p className="text-xs font-black tracking-wider text-zinc-500">
+          <p className="text-xs font-bold tracking-wider text-zinc-500">
             TUS HORARIOS
           </p>
         </div>
@@ -657,7 +651,7 @@ function NotificationSettings({
                   false,
                 )
               }}
-              className="time-input block w-full min-w-0 max-w-full appearance-none rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-center text-base font-black text-zinc-800 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+              className="time-input block w-full min-w-0 max-w-full appearance-none rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-center text-base font-bold text-zinc-800 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
             />
           </label>
 
@@ -684,7 +678,7 @@ function NotificationSettings({
                   false,
                 )
               }}
-              className="time-input block w-full min-w-0 max-w-full appearance-none rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-center text-base font-black text-zinc-800 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+              className="time-input block w-full min-w-0 max-w-full appearance-none rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-center text-base font-bold text-zinc-800 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
             />
           </label>
         </div>
@@ -692,11 +686,6 @@ function NotificationSettings({
         <div className="mt-3 rounded-2xl bg-violet-50 px-4 py-3">
           <p className="text-xs font-semibold leading-relaxed text-violet-600">
             🔔 {time1} · {time2}
-          </p>
-
-          <p className="mt-1 text-[11px] font-semibold leading-relaxed text-violet-400">
-            Usamos la zona horaria de
-            tu dispositivo.
           </p>
         </div>
 
@@ -711,7 +700,7 @@ function NotificationSettings({
             disabled={
               savingTimes
             }
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-100 py-3 font-black text-violet-600 transition active:scale-[0.98] disabled:opacity-50"
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-100 py-3 font-bold text-violet-600 transition active:scale-[0.98] disabled:opacity-50"
           >
             {savingTimes ? (
               <>

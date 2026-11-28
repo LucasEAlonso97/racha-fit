@@ -121,7 +121,7 @@ function GroupGalleryModal({
               📷
             </p>
 
-            <p className="mt-3 font-black text-zinc-700">
+            <p className="mt-3 font-bold text-zinc-700">
               Todavía no hay fotos
             </p>
 
@@ -141,7 +141,7 @@ function GroupGalleryModal({
                 key={monthKey}
                 className="mb-6"
               >
-                <h2 className="mb-3 text-sm font-black text-zinc-500">
+                <h2 className="mb-3 text-sm font-bold text-zinc-500">
                   {capitalize(
                     monthNames[
                       date.getMonth()

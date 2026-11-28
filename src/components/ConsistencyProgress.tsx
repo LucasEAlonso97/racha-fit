@@ -52,11 +52,11 @@ function ConsistencyProgress({
   return (
     <div className="border-t border-amber-100 px-5 py-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-black tracking-wider text-amber-600">
+        <p className="text-xs font-bold tracking-wider text-amber-600">
           COMODÍN POR CONSTANCIA
         </p>
 
-        <p className="text-xs font-black text-zinc-600">
+        <p className="text-xs font-bold text-zinc-600">
           {done}/{CONSISTENCY_WEEKS}{' '}
           semanas
         </p>
@@ -84,13 +84,13 @@ function ConsistencyProgress({
         )}
       </div>
 
-      <p className="mt-3 text-[11px] font-semibold leading-relaxed text-zinc-500">
+      <p className="mt-3 text-xs font-semibold leading-relaxed text-zinc-500">
         {atCap
-          ? 'Ya tenés el máximo de 6 comodines. Tu constancia sigue contando igual.'
-          : `Cumplí tu meta ${CONSISTENCY_WEEKS} semanas seguidas y ganás 1 comodín.`}
+          ? 'Tenés el máximo (6). Seguís sumando igual.'
+          : `${CONSISTENCY_WEEKS} semanas cumpliendo tu meta = 🃏`}
       </p>
 
-      <p className="mt-1 text-[11px] font-bold text-zinc-600">
+      <p className="mt-1 text-xs font-bold text-zinc-600">
         {thisWeekMet
           ? `Esta semana ya está: ${thisWeek}/${goal} días ✅`
           : `Esta semana: ${thisWeek}/${goal} días`}

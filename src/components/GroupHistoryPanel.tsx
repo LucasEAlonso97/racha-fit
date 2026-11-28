@@ -409,7 +409,7 @@ function GroupHistoryPanel({
           />
         </div>
 
-        <p className="mt-4 font-black text-zinc-700">
+        <p className="mt-4 font-bold text-zinc-700">
           Cargando la historia de
           la banda...
         </p>
@@ -428,7 +428,7 @@ function GroupHistoryPanel({
   ) {
     return (
       <div className="rounded-[28px] bg-red-50 p-5">
-        <p className="font-black text-red-600">
+        <p className="font-bold text-red-600">
           No pudimos cargar el
           historial.
         </p>
@@ -698,7 +698,7 @@ function GroupHistoryPanel({
         <div className="p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-black tracking-[0.14em] text-orange-500">
+              <p className="text-xs font-bold tracking-[0.14em] text-orange-500">
                 RACHA DEL GRUPO
               </p>
 
@@ -719,7 +719,7 @@ function GroupHistoryPanel({
                     }
                   </p>
 
-                  <p className="text-sm font-black text-zinc-500">
+                  <p className="text-sm font-bold text-zinc-500">
                     {currentStreak ===
                     1
                       ? 'semana'
@@ -736,7 +736,7 @@ function GroupHistoryPanel({
                 }
               </p>
 
-              <p className="text-[9px] font-black tracking-wide text-zinc-400">
+              <p className="text-xs font-bold tracking-wide text-zinc-500">
                 MEJOR
               </p>
             </div>
@@ -745,7 +745,7 @@ function GroupHistoryPanel({
           <div className="mt-5 rounded-2xl bg-white/60 px-4 py-3">
             {currentWeekSecured ? (
               <>
-                <p className="font-black text-orange-600">
+                <p className="font-bold text-orange-600">
                   🔥 Esta semana ya
                   está asegurada.
                 </p>
@@ -757,7 +757,7 @@ function GroupHistoryPanel({
               </>
             ) : (
               <>
-                <p className="font-black text-zinc-700">
+                <p className="font-bold text-zinc-700">
                   Esta semana sigue en
                   juego.
                 </p>
@@ -779,7 +779,7 @@ function GroupHistoryPanel({
         <section className="rounded-[28px] bg-white p-5 shadow-sm">
           <div className="flex items-end justify-between gap-3">
             <div>
-              <p className="text-xs font-black tracking-[0.12em] text-zinc-400">
+              <p className="text-xs font-bold tracking-[0.12em] text-zinc-500">
                 BALANCE DE LA BANDA
               </p>
 
@@ -797,7 +797,7 @@ function GroupHistoryPanel({
                 {savedPercent}%
               </p>
 
-              <p className="mt-1 text-[10px] font-black tracking-wide text-zinc-400">
+              <p className="mt-1 text-xs font-bold tracking-wide text-zinc-500">
                 SALVADAS
               </p>
             </div>
@@ -841,7 +841,7 @@ function GroupHistoryPanel({
             ))}
           </div>
 
-          <div className="mt-1.5 flex justify-between text-[10px] font-bold text-zinc-300">
+          <div className="mt-1.5 flex justify-between text-xs font-bold text-zinc-400">
             <span>
               {stripWeeks.length > 1
                 ? `hace ${stripWeeks.length - 1} sem.`
@@ -866,14 +866,14 @@ function GroupHistoryPanel({
                   {savedWeeks.length}
                 </p>
 
-                <p className="mt-1 text-[10px] font-black tracking-wide text-emerald-600/70">
+                <p className="mt-1 text-xs font-bold tracking-wide text-emerald-600/70">
                   SALVADAS
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3 rounded-2xl bg-zinc-800 p-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-700 text-zinc-300">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-700 text-zinc-400">
                 <Skull size={20} />
               </div>
 
@@ -882,14 +882,14 @@ function GroupHistoryPanel({
                   {failedWeeks.length}
                 </p>
 
-                <p className="mt-1 text-[10px] font-black tracking-wide text-zinc-400">
+                <p className="mt-1 text-xs font-bold tracking-wide text-zinc-500">
                   CORTADAS
                 </p>
               </div>
             </div>
           </div>
 
-          <p className="mt-3 text-center text-xs font-bold text-zinc-400">
+          <p className="mt-3 text-center text-xs font-bold text-zinc-500">
             {getBalanceText(
               savedPercent,
               currentStreak,
@@ -917,7 +917,7 @@ function GroupHistoryPanel({
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-black tracking-[0.12em] text-violet-500">
+              <p className="text-xs font-bold tracking-[0.12em] text-violet-500">
                 SALVADOR DE LA BANDA
               </p>
 
@@ -957,7 +957,7 @@ function GroupHistoryPanel({
 
       <section className="rounded-[28px] bg-white p-5 shadow-sm">
         <div className="mb-4">
-          <p className="text-xs font-black tracking-[0.12em] text-zinc-400">
+          <p className="text-xs font-bold tracking-[0.12em] text-zinc-500">
             ÚLTIMAS SEMANAS
           </p>
 
@@ -1015,13 +1015,13 @@ function GroupHistoryPanel({
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <p className="font-black text-zinc-800">
+                          <p className="font-bold text-zinc-800">
                             {formatWeek(
                               week.weekStart,
                             )}
                           </p>
 
-                          <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-zinc-400">
+                          <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-zinc-500">
                             <Users
                               size={
                                 13
@@ -1041,20 +1041,20 @@ function GroupHistoryPanel({
 
                         {week.status ===
                         'saved' ? (
-                          <span className="rounded-full bg-green-100 px-3 py-1.5 text-[10px] font-black text-green-600">
+                          <span className="rounded-full bg-green-100 px-3 py-1.5 text-xs font-bold text-green-600">
                             SALVADA
                           </span>
                         ) : week.status ===
                           'failed' ? (
-                          <span className="rounded-full bg-zinc-200 px-3 py-1.5 text-[10px] font-black text-zinc-500">
+                          <span className="rounded-full bg-zinc-200 px-3 py-1.5 text-xs font-bold text-zinc-500">
                             CORTADA
                           </span>
                         ) : currentWeekSecured ? (
-                          <span className="rounded-full bg-orange-100 px-3 py-1.5 text-[10px] font-black text-orange-600">
+                          <span className="rounded-full bg-orange-100 px-3 py-1.5 text-xs font-bold text-orange-600">
                             ASEGURADA
                           </span>
                         ) : (
-                          <span className="rounded-full bg-violet-100 px-3 py-1.5 text-[10px] font-black text-violet-600">
+                          <span className="rounded-full bg-violet-100 px-3 py-1.5 text-xs font-bold text-violet-600">
                             EN JUEGO
                           </span>
                         )}
@@ -1075,7 +1075,7 @@ function GroupHistoryPanel({
                             />
 
                             <p className="truncate text-xs font-semibold text-zinc-500">
-                              <span className="font-black text-violet-600">
+                              <span className="font-bold text-violet-600">
                                 {
                                   saviorNames
                                 }
@@ -1119,15 +1119,15 @@ function GroupHistoryPanel({
               size={
                 23
               }
-              className="mx-auto text-zinc-300"
+              className="mx-auto text-zinc-400"
             />
 
-            <p className="mt-3 font-black text-zinc-600">
+            <p className="mt-3 font-bold text-zinc-600">
               La historia recién
               empieza
             </p>
 
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="mt-1 text-sm text-zinc-500">
               Cuando termine la
               primera semana va a
               aparecer acá.
@@ -1152,11 +1152,11 @@ function GroupHistoryPanel({
             </div>
 
             <div>
-              <p className="text-xs font-black tracking-[0.12em] text-zinc-400">
+              <p className="text-xs font-bold tracking-[0.12em] text-zinc-500">
                 SEMANA MÁS ÉPICA
               </p>
 
-              <p className="mt-2 font-black text-zinc-800">
+              <p className="mt-2 font-bold text-zinc-800">
                 {formatWeek(
                   epicWeek.week.weekStart,
                 )}
@@ -1168,7 +1168,7 @@ function GroupHistoryPanel({
                 )}
               </p>
 
-              <p className="mt-2 text-xs font-black text-violet-500">
+              <p className="mt-2 text-xs font-bold text-violet-500">
                 {getSaviorNames(
                   epicWeek.saviors,
                 )}{' '}

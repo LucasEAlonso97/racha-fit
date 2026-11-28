@@ -28,10 +28,8 @@ import GroupManagementModal from '../components/GroupManagementModal'
 import NotificationSettings from '../components/NotificationSettings'
 import UserAvatar from '../components/UserAvatar'
 import ConsistencyProgress from '../components/ConsistencyProgress'
-import WrappedBanner from '../components/WrappedBanner'
-import YearHeatmap from '../components/YearHeatmap'
-import WeeklyProgressChart from '../components/WeeklyProgressChart'
 import FeedbackModal from '../components/FeedbackModal'
+import InfoTip from '../components/InfoTip'
 
 import {
   useIsAdmin,
@@ -57,11 +55,6 @@ import type {
   Profile,
   User,
 } from '../types'
-
-type StatsRange =
-  | 'week'
-  | 'month'
-  | 'total'
 
 type Props = {
   currentUser: User
@@ -158,14 +151,6 @@ function Perfil({
   onLeftGroup,
   onMemberRemoved,
 }: Props) {
-  /*
-   * Fecha fija mientras la pantalla está
-   * abierta (para el gráfico de progreso).
-   */
-  const [progressToday] = useState(
-    () => new Date(),
-  )
-
   /*
    * Sugerencias y panel de admin.
    */
@@ -296,14 +281,6 @@ function Perfil({
    * ESTADÍSTICAS
    * ========================================
    */
-
-  const [
-    statsRange,
-    setStatsRange,
-  ] =
-    useState<StatsRange>(
-      'week',
-    )
 
   /*
    * ========================================
@@ -702,197 +679,6 @@ function Perfil({
         '?',
     }
 
-  /*
-   * ========================================
-   * ESTADÍSTICAS PERSONALES
-   * ========================================
-   */
-
-  const myActivities =
-    Object.entries(
-      activities,
-    ).flatMap(
-      ([
-        dateKey,
-        day,
-      ]) =>
-        (
-          day[
-            currentUser.id
-          ] ?? []
-        ).map(
-          (
-            activity,
-          ) => ({
-            ...activity,
-            dateKey,
-          }),
-        ),
-    )
-
-  const now =
-    new Date()
-
-  now.setHours(
-    23,
-    59,
-    59,
-    999,
-  )
-
-  const startOfWeek =
-    new Date()
-
-  const currentDay =
-    startOfWeek.getDay()
-
-  const daysSinceMonday =
-    currentDay ===
-    0
-      ? 6
-      : currentDay -
-        1
-
-  startOfWeek.setDate(
-    startOfWeek.getDate() -
-      daysSinceMonday,
-  )
-
-  startOfWeek.setHours(
-    0,
-    0,
-    0,
-    0,
-  )
-
-  const startOfMonth =
-    new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      1,
-    )
-
-  startOfMonth.setHours(
-    0,
-    0,
-    0,
-    0,
-  )
-
-  const filteredActivities =
-    myActivities.filter(
-      (
-        activity,
-      ) => {
-        if (
-          statsRange ===
-          'total'
-        ) {
-          return true
-        }
-
-        const activityDate =
-          new Date(
-            `${activity.dateKey}T12:00:00`,
-          )
-
-        if (
-          statsRange ===
-          'week'
-        ) {
-          return (
-            activityDate >=
-              startOfWeek &&
-            activityDate <=
-              now
-          )
-        }
-
-        return (
-          activityDate >=
-            startOfMonth &&
-          activityDate <=
-            now
-        )
-      },
-    )
-
-  const activeDays =
-    new Set(
-      filteredActivities.map(
-        (
-          activity,
-        ) =>
-          activity.dateKey,
-      ),
-    ).size
-
-  const totalActivities =
-    filteredActivities.length
-
-  const totalMinutes =
-    filteredActivities.reduce(
-      (
-        total,
-        activity,
-      ) =>
-        total +
-        activity.duration,
-      0,
-    )
-
-  const activityCounts =
-    filteredActivities.reduce<
-      Record<
-        string,
-        number
-      >
-    >(
-      (
-        counts,
-        activity,
-      ) => {
-        counts[
-          activity.type
-        ] =
-          (
-            counts[
-              activity.type
-            ] ??
-            0
-          ) +
-          1
-
-        return counts
-      },
-      {},
-    )
-
-  const favoriteActivity =
-    Object.entries(
-      activityCounts,
-    ).sort(
-      (
-        a,
-        b,
-      ) =>
-        b[1] -
-        a[1],
-    )[0]?.[0] ??
-    '—'
-
-  const formattedMinutes =
-    totalMinutes >=
-    60
-      ? `${Math.floor(
-          totalMinutes /
-            60,
-        )}h ${
-          totalMinutes %
-          60
-        }m`
-      : `${totalMinutes} min`
-
   const goalChanged =
     weeklyGoal !==
     currentUser.weeklyGoal
@@ -912,18 +698,9 @@ function Perfil({
       <header className="mb-7">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm font-bold text-violet-500">
-              Tu cuenta
-            </p>
-
             <h1 className="text-3xl font-black text-zinc-800">
               Perfil
             </h1>
-
-            <p className="mt-1 text-zinc-500">
-              Vos, tus grupos y tu
-              Racha 🔥
-            </p>
           </div>
 
           {!editing ? (
@@ -980,7 +757,7 @@ function Perfil({
 
         {editing ? (
           <div className="mt-6">
-            <label className="mb-2 block text-left text-xs font-black tracking-wider text-zinc-500">
+            <label className="mb-2 block text-left text-xs font-bold tracking-wider text-zinc-500">
               TU NOMBRE
             </label>
 
@@ -1037,23 +814,16 @@ function Perfil({
         <div className="p-5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs font-black tracking-wider text-violet-500">
+              <p className="text-xs font-bold tracking-wider text-violet-500">
                 TU OBJETIVO
               </p>
 
-              <h2 className="mt-1 text-xl font-black text-zinc-800">
-                ¿Cuántos días
-                querés moverte?
+              <h2 className="mt-1 flex items-center gap-1 text-xl font-black text-zinc-800">
+                Días por semana
+                <InfoTip
+                  text={`Tu meta en ${group.name}. En cada grupo podés tener una distinta.`}
+                />
               </h2>
-
-              <p className="mt-1 text-sm text-zinc-500">
-                En{' '}
-                <span className="font-bold">
-                  {
-                    group.name
-                  }
-                </span>
-              </p>
             </div>
 
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-600">
@@ -1089,7 +859,7 @@ function Perfil({
                         false,
                       )
                     }}
-                    className={`relative flex h-12 items-center justify-center rounded-2xl text-base font-black transition active:scale-95 ${
+                    className={`relative flex h-12 items-center justify-center rounded-2xl text-base font-bold transition active:scale-95 ${
                       selected
                         ? 'bg-violet-500 text-white shadow-md shadow-violet-100'
                         : 'bg-zinc-50 text-zinc-500'
@@ -1101,7 +871,7 @@ function Perfil({
 
                     {goal ===
                       4 && (
-                      <span className="absolute -top-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-[8px] font-black text-amber-700">
+                      <span className="absolute -top-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-bold text-amber-700">
                         ★
                       </span>
                     )}
@@ -1123,18 +893,6 @@ function Perfil({
               por semana
             </p>
 
-            <p className="mt-1 text-sm leading-relaxed text-violet-500">
-              {weeklyGoal <=
-              3
-                ? 'Un objetivo tranqui para mantener constancia.'
-                : weeklyGoal ===
-                    4
-                  ? 'Un buen equilibrio para mantener el ritmo.'
-                  : weeklyGoal <=
-                      6
-                    ? 'Vas por una semana bastante activa.'
-                    : 'Modo todos los días. Sin descanso para la banda 😅'}
-            </p>
           </div>
 
           {goalChanged ? (
@@ -1146,7 +904,7 @@ function Perfil({
               disabled={
                 weeklyGoalSaving
               }
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-3.5 font-black text-white shadow-lg shadow-violet-100 transition active:scale-[0.98] disabled:opacity-60"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-3.5 font-bold text-white shadow-lg shadow-violet-100 transition active:scale-[0.98] disabled:opacity-60"
             >
               {weeklyGoalSaving ? (
                 <>
@@ -1172,7 +930,7 @@ function Perfil({
               )}
             </button>
           ) : (
-            <div className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-green-50 py-3 text-sm font-black text-green-600">
+            <div className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-green-50 py-3 text-sm font-bold text-green-600">
               <Check
                 size={
                   16
@@ -1186,15 +944,6 @@ function Perfil({
           )}
         </div>
 
-        <div className="border-t border-zinc-100 bg-zinc-50 px-5 py-4">
-          <p className="text-xs font-semibold leading-relaxed text-zinc-500">
-            Este objetivo es solo
-            para este grupo. Si
-            tenés otro grupo,
-            podés elegir una meta
-            distinta.
-          </p>
-        </div>
       </section>
 
       {/* ================================= */}
@@ -1209,8 +958,11 @@ function Perfil({
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-black tracking-wider text-amber-600">
+              <p className="flex items-center gap-1 text-xs font-bold tracking-wider text-amber-600">
                 COMODINES
+                <InfoTip
+                  text="Si entrenaste y te olvidaste de cargarlo, recuperás un día de la última semana. Se suman 2 por mes (hasta 3), y hasta 6 con premios."
+                />
               </p>
 
               <div className="mt-1 flex items-end gap-2">
@@ -1229,38 +981,6 @@ function Perfil({
             </div>
           </div>
 
-          <p className="mt-4 text-sm font-semibold leading-relaxed text-zinc-600">
-            Si entrenaste pero te
-            olvidaste de cargarlo,
-            podés recuperar una
-            actividad de los
-            últimos 7 días.
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between gap-3 border-t border-amber-100 px-5 py-4">
-          <div>
-            <p className="text-xs font-black text-zinc-600">
-              +2 por mes
-            </p>
-
-            <p className="mt-0.5 text-[11px] font-semibold text-zinc-400">
-              Se renuevan
-              automáticamente
-            </p>
-          </div>
-
-          <div className="h-8 w-px bg-zinc-100" />
-
-          <div className="text-right">
-            <p className="text-xs font-black text-zinc-600">
-              Máximo 3 por mes
-            </p>
-
-            <p className="mt-0.5 text-[11px] font-semibold text-zinc-400">
-              Hasta 6 con premios
-            </p>
-          </div>
         </div>
 
         <ConsistencyProgress
@@ -1271,159 +991,8 @@ function Perfil({
         />
       </section>
 
-      <WrappedBanner
-        today={new Date()}
-        place="profile"
-      />
 
-      <YearHeatmap
-        activities={activities}
-        userId={currentUser.id}
-        today={new Date()}
-      />
 
-      <WeeklyProgressChart
-        activities={activities}
-        user={currentUser}
-        today={progressToday}
-      />
-
-      {/* ================================= */}
-      {/* ESTADÍSTICAS */}
-      {/* ================================= */}
-
-      <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
-        <div className="flex items-start justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-black tracking-wider text-zinc-400">
-              TUS NÚMEROS
-            </p>
-
-            <h2 className="mt-1 truncate text-lg font-black text-zinc-800">
-              En{' '}
-              {
-                group.name
-              }
-            </h2>
-          </div>
-
-          <div className="ml-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-50 text-xl">
-            📊
-          </div>
-        </div>
-
-        <div className="mt-5 grid grid-cols-3 rounded-2xl bg-zinc-100 p-1">
-          <button
-            type="button"
-            onClick={() =>
-              setStatsRange(
-                'week',
-              )
-            }
-            className={`rounded-xl px-2 py-2.5 text-xs font-black transition ${
-              statsRange ===
-              'week'
-                ? 'bg-white text-violet-600 shadow-sm'
-                : 'text-zinc-400'
-            }`}
-          >
-            Semana
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              setStatsRange(
-                'month',
-              )
-            }
-            className={`rounded-xl px-2 py-2.5 text-xs font-black transition ${
-              statsRange ===
-              'month'
-                ? 'bg-white text-violet-600 shadow-sm'
-                : 'text-zinc-400'
-            }`}
-          >
-            Mes
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              setStatsRange(
-                'total',
-              )
-            }
-            className={`rounded-xl px-2 py-2.5 text-xs font-black transition ${
-              statsRange ===
-              'total'
-                ? 'bg-white text-violet-600 shadow-sm'
-                : 'text-zinc-400'
-            }`}
-          >
-            Total
-          </button>
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-violet-50 p-4">
-            <p className="text-2xl font-black text-violet-600">
-              {
-                activeDays
-              }
-            </p>
-
-            <p className="mt-1 text-xs font-bold text-zinc-500">
-              Días activos
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-zinc-50 p-4">
-            <p className="text-2xl font-black text-zinc-800">
-              {
-                totalActivities
-              }
-            </p>
-
-            <p className="mt-1 text-xs font-bold text-zinc-500">
-              Actividades
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-zinc-50 p-4">
-            <p className="text-2xl font-black text-zinc-800">
-              {
-                formattedMinutes
-              }
-            </p>
-
-            <p className="mt-1 text-xs font-bold text-zinc-500">
-              Tiempo activo
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-orange-50 p-4">
-            <p className="truncate text-lg font-black text-orange-600">
-              {
-                favoriteActivity
-              }
-            </p>
-
-            <p className="mt-1 text-xs font-bold text-zinc-500">
-              Más frecuente
-            </p>
-          </div>
-        </div>
-
-        {totalActivities ===
-          0 && (
-          <p className="mt-4 text-center text-xs font-semibold leading-relaxed text-zinc-400">
-            No tenés actividades
-            registradas en este
-            período.
-          </p>
-        )}
-      </section>
 
       {/* ================================= */}
       {/* AVATAR */}
@@ -1431,7 +1000,7 @@ function Perfil({
 
       {editing && (
         <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
-          <p className="text-xs font-black tracking-wider text-zinc-400">
+          <p className="text-xs font-bold tracking-wider text-zinc-500">
             ELEGÍ TU DIBU
           </p>
 
@@ -1517,7 +1086,7 @@ function Perfil({
                       />
                     </div>
 
-                    <p className="mt-2 text-xs font-black text-zinc-600">
+                    <p className="mt-2 text-xs font-bold text-zinc-600">
                       {
                         option.label
                       }
@@ -1531,14 +1100,14 @@ function Perfil({
           <div className="my-5 flex items-center gap-3">
             <div className="h-px flex-1 bg-zinc-100" />
 
-            <span className="text-xs font-bold text-zinc-400">
+            <span className="text-xs font-bold text-zinc-500">
               O
             </span>
 
             <div className="h-px flex-1 bg-zinc-100" />
           </div>
 
-          <label className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-violet-200 bg-violet-50 py-4 font-black text-violet-600 transition hover:bg-violet-100">
+          <label className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-violet-200 bg-violet-50 py-4 font-bold text-violet-600 transition hover:bg-violet-100">
             <Camera
               size={
                 20
@@ -1567,7 +1136,7 @@ function Perfil({
               />
 
               <div className="min-w-0 flex-1 text-left">
-                <p className="truncate text-sm font-black text-green-700">
+                <p className="truncate text-sm font-bold text-green-700">
                   {
                     avatarFile.name
                   }
@@ -1604,7 +1173,7 @@ function Perfil({
               saving ||
               !name.trim()
             }
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-50"
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-50"
           >
             {saving ? (
               <>
@@ -1636,11 +1205,11 @@ function Perfil({
 
       <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-black tracking-wider text-zinc-400">
+          <p className="text-xs font-bold tracking-wider text-zinc-500">
             GRUPO ACTIVO
           </p>
 
-          <span className="rounded-full bg-green-50 px-3 py-1 text-[10px] font-black text-green-600">
+          <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-bold text-green-600">
             ACTIVO
           </span>
         </div>
@@ -1655,7 +1224,7 @@ function Perfil({
           </div>
 
           <div className="min-w-0 flex-1">
-            <h3 className="truncate font-black text-zinc-800">
+            <h3 className="truncate font-bold text-zinc-800">
               {
                 group.name
               }
@@ -1680,7 +1249,7 @@ function Perfil({
         </div>
 
         <div className="mt-5 rounded-2xl bg-zinc-50 p-4">
-          <p className="text-xs font-bold text-zinc-400">
+          <p className="text-xs font-bold text-zinc-500">
             CÓDIGO DE INVITACIÓN
           </p>
 
@@ -1707,7 +1276,7 @@ function Perfil({
             </button>
           </div>
 
-          <p className="mt-2 text-xs text-zinc-400">
+          <p className="mt-2 text-xs text-zinc-500">
             Compartilo con alguien
             para sumarlo a este
             grupo.
@@ -1721,7 +1290,7 @@ function Perfil({
               true,
             )
           }
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-100 py-3.5 font-black text-violet-600 transition active:scale-[0.98]"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-100 py-3.5 font-bold text-violet-600 transition active:scale-[0.98]"
         >
           <Plus
             size={
@@ -1740,7 +1309,7 @@ function Perfil({
               true,
             )
           }
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-zinc-100 py-3.5 font-black text-zinc-600 transition active:scale-[0.98]"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-zinc-100 py-3.5 font-bold text-zinc-600 transition active:scale-[0.98]"
         >
           <Settings
             size={
@@ -1751,7 +1320,7 @@ function Perfil({
           Administrar grupo
         </button>
 
-        <p className="mt-3 text-center text-xs font-medium text-zinc-400">
+        <p className="mt-3 text-center text-xs font-semibold text-zinc-500">
           Podés cambiar entre tus
           grupos desde arriba
         </p>
@@ -1762,7 +1331,7 @@ function Perfil({
       {/* ================================= */}
 
       <section className="rounded-[28px] bg-white p-5 shadow-sm">
-        <p className="mb-4 text-xs font-black tracking-wider text-zinc-400">
+        <p className="mb-4 text-xs font-bold tracking-wider text-zinc-500">
           CUENTA
         </p>
 
@@ -1777,7 +1346,7 @@ function Perfil({
           onClick={() =>
             setFeedbackOpen(true)
           }
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-50 py-3.5 font-black text-violet-600 transition active:scale-[0.98]"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-50 py-3.5 font-bold text-violet-600 transition active:scale-[0.98]"
         >
           <MessageCircleHeart
             size={18}
@@ -1791,13 +1360,13 @@ function Perfil({
             onClick={() =>
               setAdminOpen(true)
             }
-            className="relative mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-zinc-900 py-3.5 font-black text-white transition active:scale-[0.98]"
+            className="relative mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-zinc-900 py-3.5 font-bold text-white transition active:scale-[0.98]"
           >
             <BarChart3 size={18} />
             Panel de admin
 
             {adminUnread > 0 && (
-              <span className="absolute right-3 top-1/2 flex h-5 min-w-5 -translate-y-1/2 items-center justify-center rounded-full bg-orange-500 px-1.5 text-[10px] font-black">
+              <span className="absolute right-3 top-1/2 flex h-5 min-w-5 -translate-y-1/2 items-center justify-center rounded-full bg-orange-500 px-1.5 text-xs font-bold">
                 {adminUnread}
               </span>
             )}
@@ -1842,11 +1411,11 @@ function Perfil({
         </Suspense>
       )}
 
-      <p className="mt-6 text-center text-xs font-medium text-zinc-300">
+      <p className="mt-6 text-center text-xs font-semibold text-zinc-400">
         Racha · Un día más cuenta 🏋️‍♀️
       </p>
 
-      <p className="mt-1 text-center text-[11px] font-semibold text-zinc-300">
+      <p className="mt-1 text-center text-xs font-semibold text-zinc-400">
         Versión {__APP_VERSION__}
       </p>
 
