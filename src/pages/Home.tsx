@@ -22,6 +22,7 @@ import UserAvatar from '../components/UserAvatar'
 import WrappedBanner from '../components/WrappedBanner'
 import StreakDangerBanner from '../components/StreakDangerBanner'
 import InstallBanner from '../components/InstallBanner'
+import ShowMoreButton from '../components/ShowMoreButton'
 
 import {
   getStreakDanger,
@@ -105,6 +106,12 @@ type Props = {
     () => void | Promise<void>
 }
 
+/*
+ * Movimientos que se ven antes de
+ * "Ver más".
+ */
+const FEED_COLLAPSED = 3
+
 function Home({
   groupId,
   wildcardBalance,
@@ -170,6 +177,16 @@ function Home({
 
   const [noticeTick, setNoticeTick] =
     useState(0)
+
+  /*
+   * Listas plegadas de entrada (para que el
+   * inicio no sea tan largo).
+   */
+  const [todayOpen, setTodayOpen] =
+    useState(false)
+
+  const [feedLimit, setFeedLimit] =
+    useState(FEED_COLLAPSED)
 
   useEffect(() => {
     const timer = window.setInterval(
@@ -657,24 +674,40 @@ streakEligibleFrom:
       {/* ================================= */}
 
       <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
+        <button
+          type="button"
+          aria-expanded={todayOpen}
+          onClick={() =>
+            setTodayOpen(
+              (current) => !current,
+            )
+          }
+          className="flex w-full items-center justify-between gap-3 text-left"
+        >
           <div>
             <p className="text-xs font-bold tracking-wider text-zinc-500">
               HOY
             </p>
 
             <h2 className="mt-1 text-lg font-black text-zinc-800">
-              La banda hoy
+              {todayOtherUsers.length === 0
+                ? 'Nadie más se movió todavía'
+                : todayOtherUsers.length === 1
+                  ? '1 más se movió hoy'
+                  : `${todayOtherUsers.length} más se movieron hoy`}
             </h2>
           </div>
 
-          <p className="text-xs font-bold text-violet-500">
-            {
-              todayOtherUsers.length
-            }{' '}
-            activos
-          </p>
-        </div>
+          <ChevronDown
+            size={20}
+            className={`shrink-0 text-zinc-500 transition ${
+              todayOpen ? 'rotate-180' : ''
+            }`}
+          />
+        </button>
+
+        {todayOpen && (
+        <div className="mt-4">
 
         {/* ================================= */}
         {/* OTROS USUARIOS */}
@@ -875,6 +908,8 @@ streakEligibleFrom:
           >
             Sumar mi actividad
           </button>
+        )}
+        </div>
         )}
       </section>
 
@@ -1268,7 +1303,9 @@ streakEligibleFrom:
         {recentActivities.length >
         0 ? (
           <div className="space-y-4">
-            {recentActivities.map(
+            {recentActivities
+              .slice(0, feedLimit)
+              .map(
               (
                 item,
               ) => {
@@ -1447,6 +1484,29 @@ streakEligibleFrom:
                 )
               },
             )}
+
+            {recentActivities.length >
+              FEED_COLLAPSED && (
+              <ShowMoreButton
+                expanded={
+                  feedLimit >=
+                  recentActivities.length
+                }
+                hiddenCount={
+                  recentActivities.length -
+                  feedLimit
+                }
+                noun="movimientos"
+                onToggle={() =>
+                  setFeedLimit((current) =>
+                    current >=
+                    recentActivities.length
+                      ? FEED_COLLAPSED
+                      : recentActivities.length,
+                  )
+                }
+              />
+            )}
           </div>
         ) : (
           <div className="rounded-2xl bg-zinc-50 px-4 py-6 text-center">
@@ -1455,12 +1515,6 @@ streakEligibleFrom:
               tranquilo por acá
             </p>
 
-            <p className="mt-1 text-sm text-zinc-500">
-              Cuando alguien del
-              grupo registre una
-              actividad va a
-              aparecer acá.
-            </p>
           </div>
         )}
       </section>

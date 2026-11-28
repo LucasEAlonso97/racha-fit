@@ -10,9 +10,9 @@
 
 export const WHATS_NEW = [
   {
-    emoji: '✨',
-    title: 'Racha más simple',
-    text: 'Abajo ahora tenés Inicio, Grupo, Progreso y Perfil. Y cargar una actividad es tocar + y listo.',
+    emoji: '📋',
+    title: 'Inicio más corto',
+    text: 'Las secciones del inicio ahora se abren al tocarlas. Y cada uno va por su meta: chau racha del grupo.',
   },
 ]
 

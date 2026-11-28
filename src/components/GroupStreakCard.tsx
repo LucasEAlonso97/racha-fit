@@ -1,12 +1,14 @@
 import {
+  useState,
+} from 'react'
+
+import {
   Check,
-  Flame,
+  ChevronDown,
   LoaderCircle,
   Send,
-  Target,
 } from 'lucide-react'
 
-import InfoTip from './InfoTip'
 
 import {
   useGroupNudges,
@@ -50,6 +52,13 @@ function GroupStreakCard({
   currentUserId,
   today,
 }: Props) {
+  /*
+   * Plegada de entrada: se ve el resumen y
+   * se abre para ver a cada uno.
+   */
+  const [expanded, setExpanded] =
+    useState(false)
+
   /*
    * ========================================
    * EMPUJONES
@@ -262,56 +271,6 @@ function GroupStreakCard({
 
   /*
    * ========================================
-   * PROGRESO GENERAL
-   * ========================================
-   */
-
-  const totalGoal =
-    eligibleMemberProgress.reduce(
-      (
-        total,
-        member,
-      ) =>
-        total +
-        member.goal,
-      0,
-    )
-
-  /*
-   * Una persona no puede compensar
-   * lo que le falta a otra.
-   *
-   * Si alguien hace 6/4,
-   * aporta máximo 4 al objetivo grupal.
-   */
-
-  const totalCompleted =
-    eligibleMemberProgress.reduce(
-      (
-        total,
-        member,
-      ) =>
-        total +
-        Math.min(
-          member.completedDays,
-          member.goal,
-        ),
-      0,
-    )
-
-  const totalRemaining =
-    eligibleMemberProgress.reduce(
-      (
-        total,
-        member,
-      ) =>
-        total +
-        member.remaining,
-      0,
-    )
-
-  /*
-   * ========================================
    * QUIÉNES CUMPLIERON
    * ========================================
    */
@@ -320,82 +279,6 @@ function GroupStreakCard({
     eligibleMemberProgress.filter(
       member =>
         member.completed,
-    ).length
-
-  /*
-   * ========================================
-   * QUIÉNES FALTAN
-   * ========================================
-   */
-
-  const pendingMembers =
-    eligibleMemberProgress.filter(
-      member =>
-        !member.completed,
-    )
-
-  /*
-   * ========================================
-   * ÚLTIMO PENDIENTE
-   * ========================================
-   */
-
-  const lastPendingMember =
-    pendingMembers.length ===
-    1
-      ? pendingMembers[
-          0
-        ]
-      : null
-
-  /*
-   * ========================================
-   * ¿TODOS CUMPLIERON?
-   * ========================================
-   */
-
-  const everybodyCompleted =
-    eligibleMemberProgress.length >
-      0 &&
-    completedMembers ===
-      eligibleMemberProgress.length
-
-  /*
-   * ========================================
-   * PORCENTAJE GRUPAL
-   * ========================================
-   */
-
-  const groupProgress =
-    totalGoal >
-    0
-      ? Math.min(
-          (
-            totalCompleted /
-            totalGoal
-          ) *
-            100,
-          100,
-        )
-      : 0
-
-  /*
-   * ========================================
-   * LA BANDA HOY
-   * ========================================
-   *
-   * Acá SÍ contamos a todos.
-   *
-   * Aunque alguien todavía no cuente
-   * para la racha semanal, sigue siendo
-   * parte del grupo y puede entrenar.
-   * ========================================
-   */
-
-  const activeToday =
-    memberProgress.filter(
-      member =>
-        member.activeToday,
     ).length
 
   /*
@@ -440,241 +323,57 @@ function GroupStreakCard({
    */
 
   return (
-    <section
-      className={`mb-5 overflow-hidden rounded-[30px] shadow-sm ${
-        everybodyCompleted
-          ? 'bg-gradient-to-br from-orange-50 via-amber-50 to-violet-50'
-          : lastPendingMember
-            ? 'bg-gradient-to-br from-pink-50 via-violet-50 to-orange-50'
-            : 'bg-gradient-to-br from-violet-100 via-violet-50 to-pink-50'
-      }`}
-    >
-      <div className="p-5">
-        {/* ================================= */}
-        {/* HEADER */}
-        {/* ================================= */}
+    <section className="mb-5 overflow-hidden rounded-[28px] bg-white shadow-sm">
+      <button
+        type="button"
+        aria-expanded={expanded}
+        onClick={() =>
+          setExpanded((current) => !current)
+        }
+        className="flex w-full items-center gap-3 p-5 text-left"
+      >
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-bold tracking-wider text-violet-500">
+            ESTA SEMANA
+          </p>
 
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold tracking-[0.14em] text-violet-500">
-              RACHA DEL GRUPO
-            </p>
+          <h2 className="mt-1 text-xl font-black text-zinc-800">
+            {completedMembers} de{' '}
+            {eligibleMemberProgress.length}{' '}
+            llegaron a su meta
+          </h2>
+        </div>
 
-            <div className="mt-2 flex items-center gap-2">
-              <div
-                className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
-                  everybodyCompleted
-                    ? 'bg-orange-100 text-orange-500'
-                    : 'bg-white/80 text-violet-500'
+        <div className="flex shrink-0 -space-x-2">
+          {memberProgress
+            .slice(0, 4)
+            .map((member) => (
+              <span
+                key={member.user.id}
+                className={`rounded-full ring-2 ${
+                  member.remaining === 0
+                    ? 'ring-green-400'
+                    : 'ring-white'
                 }`}
               >
-                <Flame
-                  size={
-                    24
-                  }
-                  className={
-                    everybodyCompleted
-                      ? 'fill-orange-400'
-                      : ''
-                  }
+                <UserAvatar
+                  user={member.user}
+                  size="sm"
                 />
-              </div>
-
-              <div>
-                <h2 className="flex items-center gap-1 text-xl font-black text-zinc-800">
-                  {everybodyCompleted
-                    ? 'Semana salvada 🔥'
-                    : 'Semana en juego'}
-                  <InfoTip text="La racha del grupo sigue si todos llegan a su meta de la semana." />
-                </h2>
-              </div>
-            </div>
-          </div>
-
-          {/* ================================= */}
-          {/* CUMPLIERON */}
-          {/* ================================= */}
-
-          <div className="shrink-0 rounded-2xl bg-white/80 px-3 py-2 text-center shadow-sm">
-            <p className="text-xl font-black text-violet-600">
-              {
-                completedMembers
-              }
-              /
-              {
-                eligibleMemberProgress.length
-              }
-            </p>
-
-            <p className="text-xs font-bold text-zinc-500">
-              CUMPLIERON
-            </p>
-          </div>
+              </span>
+            ))}
         </div>
 
-        {/* ================================= */}
-        {/* PROGRESO GENERAL */}
-        {/* ================================= */}
-
-        <div className="mt-5">
-          <div className="mb-2 flex items-end justify-between">
-            <div>
-              <p className="text-xs font-bold text-zinc-500">
-                Progreso de la
-                banda
-              </p>
-
-              <p className="mt-0.5 text-sm font-bold text-zinc-700">
-                {
-                  totalCompleted
-                }{' '}
-                de{' '}
-                {
-                  totalGoal
-                }{' '}
-                días
-              </p>
-            </div>
-
-            <p className="text-lg font-black text-violet-600">
-              {Math.round(
-                groupProgress,
-              )}
-              %
-            </p>
-          </div>
-
-          <div className="h-3 overflow-hidden rounded-full bg-white/80">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                everybodyCompleted
-                  ? 'bg-orange-400'
-                  : lastPendingMember
-                    ? 'bg-pink-400'
-                    : 'bg-violet-500'
-              }`}
-              style={{
-                width:
-                  `${groupProgress}%`,
-              }}
-            />
-          </div>
-        </div>
-
-        {/* ================================= */}
-        {/* MENSAJE PRINCIPAL */}
-        {/* ================================= */}
-
-        <div
-          className={`mt-4 rounded-2xl px-4 py-3 ${
-            everybodyCompleted
-              ? 'bg-orange-100/70'
-              : lastPendingMember
-                ? 'bg-pink-100/80'
-                : 'bg-white/70'
+        <ChevronDown
+          size={20}
+          className={`shrink-0 text-zinc-500 transition ${
+            expanded ? 'rotate-180' : ''
           }`}
-        >
-          {everybodyCompleted ? (
-            /*
-             * ========================================
-             * TODOS CUMPLIERON
-             * ========================================
-             */
+        />
+      </button>
 
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-400 text-white">
-                <Check
-                  size={
-                    18
-                  }
-                  strokeWidth={
-                    3
-                  }
-                />
-              </div>
-
-              <div>
-                <p className="text-sm font-bold text-orange-700">
-                  Todos llegaron.
-                </p>
-
-                <p className="mt-0.5 text-xs font-semibold text-orange-600">
-                  Esta semana ya está
-                  salvada.
-                </p>
-              </div>
-            </div>
-          ) : lastPendingMember ? (
-            /*
-             * ========================================
-             * QUEDA UNO SOLO
-             * ========================================
-             */
-
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pink-500 text-lg text-white">
-                👀
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-pink-700">
-                  {lastPendingMember
-                    .user
-                    .id ===
-                  currentUserId
-                    ? 'Todo depende de vos 👀'
-                    : `Todo depende de ${lastPendingMember.user.name} 👀`}
-                </p>
-
-                <p className="mt-0.5 text-xs font-semibold text-pink-600">
-                  {lastPendingMember
-                    .user
-                    .id ===
-                  currentUserId
-                    ? lastPendingMember.remaining ===
-                      1
-                      ? 'Te falta 1 día para salvar la semana.'
-                      : `Te faltan ${lastPendingMember.remaining} días para salvar la semana.`
-                    : lastPendingMember.remaining ===
-                        1
-                      ? 'Le falta 1 día para salvar la semana.'
-                      : `Le faltan ${lastPendingMember.remaining} días para salvar la semana.`}
-                </p>
-              </div>
-            </div>
-          ) : (
-            /*
-             * ========================================
-             * FALTAN VARIOS
-             * ========================================
-             */
-
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-600">
-                <Target
-                  size={
-                    18
-                  }
-                />
-              </div>
-
-              <div>
-                <p className="text-sm font-bold text-zinc-700">
-                  {totalRemaining ===
-                  1
-                    ? 'Falta 1 día entre todos.'
-                    : `Faltan ${totalRemaining} días entre todos.`}
-                </p>
-
-                <p className="mt-0.5 text-xs font-semibold text-zinc-500">
-                  Que nadie quede
-                  atrás.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
+      {expanded && (
+        <div className="px-5 pb-5">
         {/* ================================= */}
         {/* PERSONAS DEL GRUPO */}
         {/* ================================= */}
@@ -716,11 +415,11 @@ function GroupStreakCard({
                * ========================================
                */
 
-              const isLastPending =
-                member.eligibleThisWeek &&
-                lastPendingMember
-                  ?.user.id ===
-                  member.user.id
+              /*
+               * Sin objetivo en común: nadie es
+               * "el último que falta".
+               */
+              const isLastPending = false
 
               return (
                 <div
@@ -948,78 +647,8 @@ function GroupStreakCard({
             },
           )}
         </div>
-      </div>
-
-      {/* ================================= */}
-      {/* LA BANDA HOY */}
-      {/* ================================= */}
-
-      <div className="border-t border-white/70 bg-white/40 px-5 py-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-bold text-zinc-700">
-              LA BANDA HOY
-            </p>
-
-            <p className="mt-1 text-xs font-semibold text-zinc-500">
-              {users.length ===
-              0
-                ? 'Todavía no hay integrantes.'
-                : activeToday ===
-                    users.length
-                  ? 'Todos ya se movieron 💪'
-                  : activeToday ===
-                      0
-                    ? 'Todavía nadie sumó hoy.'
-                    : `${activeToday} de ${users.length} ya se movieron.`}
-            </p>
-          </div>
-
-          {/* ================================= */}
-          {/* AVATARES DINÁMICOS */}
-          {/* ================================= */}
-
-          <div className="flex -space-x-2">
-            {memberProgress
-              .slice(
-                0,
-                6,
-              )
-              .map(
-                member => (
-                  <div
-                    key={
-                      member.user.id
-                    }
-                    className={`rounded-full ${
-                      member.activeToday
-                        ? 'opacity-100'
-                        : 'opacity-30 grayscale'
-                    }`}
-                  >
-                    <UserAvatar
-                      user={
-                        member.user
-                      }
-                      size="sm"
-                    />
-                  </div>
-                ),
-              )}
-
-            {memberProgress.length >
-              6 && (
-              <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-violet-100 text-xs font-bold text-violet-600">
-                +
-                {
-                  memberProgress.length -
-                  6
-                }
-              </div>
-            )}
-          </div>
         </div>
-      </div>
+      )}
     </section>
   )
 }
