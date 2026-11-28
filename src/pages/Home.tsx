@@ -55,6 +55,7 @@ import {
 
 import {
   formatDateKey,
+  parseDateKey,
   monthNames,
   weekDayNames,
 } from '../utils/date'
@@ -512,6 +513,43 @@ streakEligibleFrom:
   null,
     }
   }
+
+  /*
+   * ========================================
+   * FOTO DEL DÍA
+   * ========================================
+   *
+   * La foto con más reacciones de hoy (o de
+   * ayer, si hoy todavía no hay ninguna).
+   * Empate: gana la más nueva.
+   */
+
+  const yesterdayKey = (() => {
+    const date = parseDateKey(todayKey)
+    date.setDate(date.getDate() - 1)
+    return formatDateKey(date)
+  })()
+
+  const photoOfTheDay =
+    [todayKey, yesterdayKey]
+      .map((dateKey) =>
+        recentActivities
+          .filter(
+            (item) =>
+              item.dateKey === dateKey &&
+              Boolean(
+                item.activity.photo_url,
+              ),
+          )
+          .sort(
+            (a, b) =>
+              (b.activity.reactions
+                ?.length ?? 0) -
+              (a.activity.reactions
+                ?.length ?? 0),
+          )[0],
+      )
+      .find(Boolean) ?? null
 
   /*
    * ========================================
@@ -1301,6 +1339,61 @@ streakEligibleFrom:
 
       {homeTab === 'feed' && (
       <>
+      {photoOfTheDay?.activity.photo_url && (
+        <section className="mb-5 overflow-hidden rounded-[28px] bg-white p-5 shadow-sm">
+          <p className="text-xs font-bold tracking-wider text-pink-500">
+            📸 FOTO DEL{' '}
+            {photoOfTheDay.dateKey ===
+            todayKey
+              ? 'DÍA'
+              : 'DÍA DE AYER'}
+          </p>
+
+          <button
+            type="button"
+            onClick={() =>
+              openMemberProfile(
+                photoOfTheDay.user.id,
+              )
+            }
+            className="mt-2 flex items-center gap-2 text-left"
+          >
+            <UserAvatar
+              user={photoOfTheDay.user}
+              size="sm"
+            />
+            <span className="font-bold text-zinc-800">
+              {photoOfTheDay.user.name}
+            </span>
+            <span className="text-sm text-zinc-500">
+              ·{' '}
+              {photoOfTheDay.activity.type}
+            </span>
+          </button>
+
+          <ActivityPhoto
+            url={
+              photoOfTheDay.activity.photo_url
+            }
+            alt={`${photoOfTheDay.activity.type} de ${photoOfTheDay.user.name}`}
+          />
+
+          {(photoOfTheDay.activity.reactions
+            ?.length ?? 0) > 0 && (
+            <p className="mt-1 text-sm font-semibold text-zinc-500">
+              {
+                photoOfTheDay.activity.reactions
+                  ?.length
+              }{' '}
+              {photoOfTheDay.activity.reactions
+                ?.length === 1
+                ? 'reacción'
+                : 'reacciones'}
+            </p>
+          )}
+        </section>
+      )}
+
       {/* ================================= */}
       {/* ACTIVIDAD RECIENTE */}
       {/* ================================= */}

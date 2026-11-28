@@ -10,9 +10,9 @@
 
 export const WHATS_NEW = [
   {
-    emoji: '🗂️',
-    title: 'Todo con pestañas',
-    text: 'Inicio y Perfil ahora tienen un menú arriba, como Progreso: tocás una pestaña y ves solo eso.',
+    emoji: '📸',
+    title: 'Foto del día',
+    text: 'En Movimientos se destaca la foto con más reacciones del día. Y tocando un avatar en "Esta semana" ves el perfil de cada uno.',
   },
 ]
 

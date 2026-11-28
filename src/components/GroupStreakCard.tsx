@@ -19,6 +19,7 @@ import {
 } from '../lib/feedback'
 
 import UserAvatar from './UserAvatar'
+import { openMemberProfile } from '../lib/socialPanels'
 
 import {
   getWeekActivityCount,
@@ -441,7 +442,16 @@ function GroupStreakCard({
                   {/* ================================= */}
 
                   <div className="flex items-center gap-3">
-                    <div className="relative">
+                    <button
+                      type="button"
+                      aria-label={`Ver perfil de ${member.user.name}`}
+                      onClick={() =>
+                        openMemberProfile(
+                          member.user.id,
+                        )
+                      }
+                      className="relative shrink-0 transition active:scale-95"
+                    >
                       <UserAvatar
                         user={
                           member.user
@@ -454,7 +464,7 @@ function GroupStreakCard({
                           👀
                         </div>
                       )}
-                    </div>
+                    </button>
 
                     <div className="min-w-0 flex-1">
                       {/* ================================= */}

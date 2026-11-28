@@ -2,6 +2,11 @@
 
 Todas las versiones de Racha. La más nueva arriba.
 
+## 3.3.0 — Noviembre 2026
+
+- 📸 **Foto del día:** arriba de Movimientos, la foto con más reacciones de hoy (o de ayer si hoy no hay).
+- 👤 En "Esta semana", tocar un avatar abre el perfil de esa persona.
+
 ## 3.2.0 — Noviembre 2026
 
 - 🗂️ **Inicio con pestañas:** Semana · Hoy · Movimientos · Novedades. Cada sección se ve sola y abierta.
