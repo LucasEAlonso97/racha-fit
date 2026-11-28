@@ -23,6 +23,7 @@ import WrappedBanner from '../components/WrappedBanner'
 import StreakDangerBanner from '../components/StreakDangerBanner'
 import InstallBanner from '../components/InstallBanner'
 import ShowMoreButton from '../components/ShowMoreButton'
+import SegmentedTabs from '../components/SegmentedTabs'
 
 import {
   getStreakDanger,
@@ -110,7 +111,13 @@ type Props = {
  * Movimientos que se ven antes de
  * "Ver más".
  */
-const FEED_COLLAPSED = 3
+const FEED_COLLAPSED = 1
+
+type HomeTab =
+  | 'week'
+  | 'today'
+  | 'feed'
+  | 'news'
 
 function Home({
   groupId,
@@ -182,8 +189,17 @@ function Home({
    * Listas plegadas de entrada (para que el
    * inicio no sea tan largo).
    */
-  const [todayOpen, setTodayOpen] =
-    useState(false)
+  /*
+   * Pestaña elegida en el inicio. Cada
+   * sección vive en su pestaña, abierta.
+   */
+  const [homeTab, setHomeTab] =
+    useState<HomeTab>('week')
+
+  function changeHomeTab(tab: HomeTab) {
+    setHomeTab(tab)
+    setNotificationsOpen(tab === 'news')
+  }
 
   const [feedLimit, setFeedLimit] =
     useState(FEED_COLLAPSED)
@@ -584,6 +600,25 @@ streakEligibleFrom:
         <InstallBanner />
       )}
 
+      <div className="mb-5">
+        <SegmentedTabs
+          tabs={[
+            { id: 'week', label: 'Semana' },
+            { id: 'today', label: 'Hoy' },
+            { id: 'feed', label: 'Movimientos' },
+            {
+              id: 'news',
+              label: 'Novedades',
+              badge: socialUnreadCount,
+            },
+          ]}
+          active={homeTab}
+          onChange={changeHomeTab}
+        />
+      </div>
+
+      {homeTab === 'week' && (
+      <>
       {/* ================================= */}
       {/* RACHA DEL GRUPO */}
       {/* ================================= */}
@@ -604,6 +639,7 @@ streakEligibleFrom:
         today={
           today
         }
+        defaultExpanded
       />
 
       {/* ================================= */}
@@ -669,44 +705,31 @@ streakEligibleFrom:
         </div>
       </section>
 
+      </>
+      )}
+
+      {homeTab === 'today' && (
+      <>
       {/* ================================= */}
       {/* HOY */}
       {/* ================================= */}
 
       <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
-        <button
-          type="button"
-          aria-expanded={todayOpen}
-          onClick={() =>
-            setTodayOpen(
-              (current) => !current,
-            )
-          }
-          className="flex w-full items-center justify-between gap-3 text-left"
-        >
-          <div>
-            <p className="text-xs font-bold tracking-wider text-zinc-500">
-              HOY
-            </p>
+        <div>
+          <p className="text-xs font-bold tracking-wider text-zinc-500">
+            HOY
+          </p>
 
-            <h2 className="mt-1 text-lg font-black text-zinc-800">
-              {todayOtherUsers.length === 0
-                ? 'Nadie más se movió todavía'
-                : todayOtherUsers.length === 1
-                  ? '1 más se movió hoy'
-                  : `${todayOtherUsers.length} más se movieron hoy`}
-            </h2>
-          </div>
+          <h2 className="mt-1 text-lg font-black text-zinc-800">
+            {todayOtherUsers.length === 0
+              ? 'Nadie más se movió todavía'
+              : todayOtherUsers.length === 1
+                ? '1 más se movió hoy'
+                : `${todayOtherUsers.length} más se movieron hoy`}
+          </h2>
+        </div>
 
-          <ChevronDown
-            size={20}
-            className={`shrink-0 text-zinc-500 transition ${
-              todayOpen ? 'rotate-180' : ''
-            }`}
-          />
-        </button>
-
-        {todayOpen && (
+        {(
         <div className="mt-4">
 
         {/* ================================= */}
@@ -913,6 +936,11 @@ streakEligibleFrom:
         )}
       </section>
 
+      </>
+      )}
+
+      {homeTab === 'news' && (
+      <>
       {/* ================================= */}
       {/* NOVEDADES */}
       {/* ================================= */}
@@ -1268,6 +1296,11 @@ streakEligibleFrom:
         )}
       </section>
 
+      </>
+      )}
+
+      {homeTab === 'feed' && (
+      <>
       {/* ================================= */}
       {/* ACTIVIDAD RECIENTE */}
       {/* ================================= */}
@@ -1519,6 +1552,11 @@ streakEligibleFrom:
         )}
       </section>
 
+      </>
+      )}
+
+      {homeTab === 'week' && (
+      <>
       {/* ================================= */}
       {/* MENSAJE FINAL */}
       {/* ================================= */}
@@ -1544,6 +1582,8 @@ streakEligibleFrom:
               : 'Todavía nadie arrancó hoy. Podés ser el primero.'}
         </p>
       </section>
+      </>
+      )}
     </div>
   )
 }

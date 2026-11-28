@@ -2,6 +2,13 @@
 
 Todas las versiones de Racha. La más nueva arriba.
 
+## 3.2.0 — Noviembre 2026
+
+- 🗂️ **Inicio con pestañas:** Semana · Hoy · Movimientos · Novedades. Cada sección se ve sola y abierta.
+- 🗂️ **Perfil con pestañas:** Perfil · Meta · Comodines · Grupos · Cuenta.
+- "Últimos movimientos" muestra 1 y "Ver más" despliega el resto.
+- El menú de pestañas se desliza de costado cuando son más de 3.
+
 ## 3.1.0 — Noviembre 2026
 
 - 🚫 **Sin racha del grupo:** se saca el objetivo en común ("Semana en juego", semanas salvadas/cortadas). Cada uno tiene su meta y su racha.

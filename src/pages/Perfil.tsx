@@ -30,6 +30,14 @@ import UserAvatar from '../components/UserAvatar'
 import ConsistencyProgress from '../components/ConsistencyProgress'
 import FeedbackModal from '../components/FeedbackModal'
 import InfoTip from '../components/InfoTip'
+import SegmentedTabs from '../components/SegmentedTabs'
+
+type ProfileTab =
+  | 'me'
+  | 'goal'
+  | 'wild'
+  | 'groups'
+  | 'account'
 
 import {
   useIsAdmin,
@@ -156,6 +164,9 @@ function Perfil({
    */
   const [feedbackOpen, setFeedbackOpen] =
     useState(false)
+
+  const [profileTab, setProfileTab] =
+    useState<ProfileTab>('me')
 
   const [adminOpen, setAdminOpen] =
     useState(false)
@@ -689,6 +700,10 @@ function Perfil({
    * ========================================
    */
 
+  /*
+   * Pestaña elegida: cada sección del
+   * perfil vive en la suya.
+   */
   return (
     <div className="mx-auto w-full max-w-md px-5 pt-8">
       {/* ================================= */}
@@ -737,6 +752,22 @@ function Perfil({
         </div>
       </header>
 
+      <div className="mb-5">
+        <SegmentedTabs
+          tabs={[
+            { id: 'me', label: 'Perfil' },
+            { id: 'goal', label: 'Meta' },
+            { id: 'wild', label: 'Comodines' },
+            { id: 'groups', label: 'Grupos' },
+            { id: 'account', label: 'Cuenta' },
+          ]}
+          active={profileTab}
+          onChange={setProfileTab}
+        />
+      </div>
+
+      {profileTab === 'me' && (
+      <>
       {/* ================================= */}
       {/* PERFIL */}
       {/* ================================= */}
@@ -806,6 +837,11 @@ function Perfil({
         </div>
       </section>
 
+      </>
+      )}
+
+      {profileTab === 'goal' && (
+      <>
       {/* ================================= */}
       {/* OBJETIVO SEMANAL */}
       {/* ================================= */}
@@ -946,6 +982,11 @@ function Perfil({
 
       </section>
 
+      </>
+      )}
+
+      {profileTab === 'wild' && (
+      <>
       {/* ================================= */}
       {/* COMODINES */}
       {/* ================================= */}
@@ -994,6 +1035,11 @@ function Perfil({
 
 
 
+      </>
+      )}
+
+      {profileTab === 'me' && (
+      <>
       {/* ================================= */}
       {/* AVATAR */}
       {/* ================================= */}
@@ -1199,6 +1245,11 @@ function Perfil({
         </div>
       )}
 
+      </>
+      )}
+
+      {profileTab === 'groups' && (
+      <>
       {/* ================================= */}
       {/* GRUPO ACTIVO */}
       {/* ================================= */}
@@ -1326,6 +1377,11 @@ function Perfil({
         </p>
       </section>
 
+      </>
+      )}
+
+      {profileTab === 'account' && (
+      <>
       {/* ================================= */}
       {/* CUENTA */}
       {/* ================================= */}
@@ -1418,6 +1474,9 @@ function Perfil({
       <p className="mt-1 text-center text-xs font-semibold text-zinc-400">
         Versión {__APP_VERSION__}
       </p>
+
+      </>
+      )}
 
       {/* ================================= */}
       {/* MODALES */}
