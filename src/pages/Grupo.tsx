@@ -2,7 +2,6 @@ import type {
   ReactNode,
 } from 'react'
 
-import GroupHistoryPanel from '../components/GroupHistoryPanel'
 import RankingPanel from '../components/RankingPanel'
 import SegmentedTabs from '../components/SegmentedTabs'
 
@@ -17,7 +16,6 @@ import type {
 export type GroupTab =
   | 'ranking'
   | 'tournament'
-  | 'history'
 
 type Props = {
   group: Group
@@ -41,8 +39,7 @@ type Props = {
  * ========================================
  *
  * Todo lo que es "yo contra mis amigos":
- * ranking (con los desafíos), torneo e
- * historial del grupo.
+ * ranking (con los desafíos) y torneo.
  */
 function Grupo({
   group,
@@ -70,10 +67,6 @@ function Grupo({
             {
               id: 'tournament',
               label: 'Torneo',
-            },
-            {
-              id: 'history',
-              label: 'Historial',
             },
           ]}
           active={tab}
@@ -105,11 +98,6 @@ function Grupo({
             </>
           )}
 
-          {tab === 'history' && (
-            <GroupHistoryPanel
-              groupId={group.id}
-            />
-          )}
         </div>
       )}
     </>

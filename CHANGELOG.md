@@ -2,6 +2,17 @@
 
 Todas las versiones de Racha. La más nueva arriba.
 
+## 3.1.0 — Noviembre 2026
+
+- 🚫 **Sin racha del grupo:** se saca el objetivo en común ("Semana en juego", semanas salvadas/cortadas). Cada uno tiene su meta y su racha.
+- 📋 **Inicio más corto, todo plegable:**
+  - "Esta semana": cuántos llegaron a su meta y sus avatares; se abre para ver a cada uno (y mandar empujones).
+  - "Hoy": quién se movió; se abre para ver el detalle.
+  - "Últimos movimientos": se ven 3 y "Ver más".
+- Grupo queda con Ranking y Torneo (se saca el historial de semanas salvadas).
+
+No hay que correr nada en la base.
+
 ## 3.0.0 — Noviembre 2026
 
 Rediseño a partir del feedback de un usuario: menos información a la vista, más simple.
