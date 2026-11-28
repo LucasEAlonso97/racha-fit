@@ -43,6 +43,7 @@ type Props = {
 
   today:
     Date
+  defaultExpanded?: boolean
 }
 
 function GroupStreakCard({
@@ -51,13 +52,14 @@ function GroupStreakCard({
   users,
   currentUserId,
   today,
+  defaultExpanded = false,
 }: Props) {
   /*
    * Plegada de entrada: se ve el resumen y
    * se abre para ver a cada uno.
    */
   const [expanded, setExpanded] =
-    useState(false)
+    useState(defaultExpanded)
 
   /*
    * ========================================

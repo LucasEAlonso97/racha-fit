@@ -10,9 +10,9 @@
 
 export const WHATS_NEW = [
   {
-    emoji: '📋',
-    title: 'Inicio más corto',
-    text: 'Las secciones del inicio ahora se abren al tocarlas. Y cada uno va por su meta: chau racha del grupo.',
+    emoji: '🗂️',
+    title: 'Todo con pestañas',
+    text: 'Inicio y Perfil ahora tienen un menú arriba, como Progreso: tocás una pestaña y ves solo eso.',
   },
 ]
 
