@@ -267,7 +267,7 @@ function Achievements({
       <div className="mb-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-black tracking-wider text-violet-500">
+            <p className="text-xs font-bold tracking-wider text-violet-500">
               TUS LOGROS
             </p>
 
@@ -292,7 +292,7 @@ function Achievements({
         {/* NAVEGACIÓN */}
 
         <div className="mt-4 flex items-center justify-between">
-          <p className="text-xs font-bold text-zinc-400">
+          <p className="text-xs font-bold text-zinc-500">
             Página{' '}
             {currentPage + 1} de{' '}
             {totalPages}
@@ -344,13 +344,13 @@ function Achievements({
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-black leading-tight">
+            <p className="text-sm font-bold leading-tight">
               {claimable.length === 1
                 ? 'Tenés 1 regalo para reclamar'
                 : `Tenés ${claimable.length} regalos para reclamar`}
             </p>
 
-            <p className="mt-0.5 text-[11px] font-semibold text-white/85">
+            <p className="mt-0.5 text-xs font-semibold text-white/85">
               Comodines y coronas por tus logros
             </p>
           </div>
@@ -365,7 +365,7 @@ function Achievements({
                 claimingAll ||
                 Boolean(claiming)
               }
-              className="flex shrink-0 items-center gap-1 rounded-xl bg-white px-3 py-2 text-xs font-black text-orange-600 transition active:scale-95 disabled:opacity-70"
+              className="flex shrink-0 items-center gap-1 rounded-xl bg-white px-3 py-2 text-xs font-bold text-orange-600 transition active:scale-95 disabled:opacity-70"
             >
               {claimingAll && (
                 <LoaderCircle
@@ -432,7 +432,7 @@ function Achievements({
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
                     unlocked
                       ? 'bg-violet-500 text-white'
-                      : 'bg-zinc-200 text-zinc-400'
+                      : 'bg-zinc-200 text-zinc-500'
                   }`}
                 >
                   <Icon
@@ -443,7 +443,7 @@ function Achievements({
                 {/* TEXTO */}
 
                 <h3
-                  className={`mt-3 text-sm font-black ${
+                  className={`mt-3 text-sm font-bold ${
                     unlocked
                       ? 'text-zinc-800'
                       : 'text-zinc-500'
@@ -454,7 +454,7 @@ function Achievements({
                   }
                 </h3>
 
-                <p className="mt-1 flex-1 text-xs leading-relaxed text-zinc-400">
+                <p className="mt-1 flex-1 text-xs leading-relaxed text-zinc-500">
                   {
                     achievement.description
                   }
@@ -474,7 +474,7 @@ function Achievements({
                       Boolean(claiming) ||
                       claimingAll
                     }
-                    className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-2 text-[11px] font-black text-white shadow-sm shadow-orange-200 transition active:scale-95 disabled:opacity-70"
+                    className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-2 py-2 text-xs font-bold text-white shadow-sm shadow-orange-200 transition active:scale-95 disabled:opacity-70"
                   >
                     {claiming ===
                     achievement.id ? (
@@ -488,7 +488,7 @@ function Achievements({
                     Reclamar
                   </button>
                 ) : unlocked ? (
-                  <p className="mt-3 text-[11px] font-black text-violet-600">
+                  <p className="mt-3 text-xs font-bold text-violet-600">
                     {hasGift && isClaimed
                       ? 'Desbloqueado · 🎁 ✓'
                       : 'Desbloqueado'}
@@ -505,7 +505,7 @@ function Achievements({
                       />
                     </div>
 
-                    <p className="mt-1.5 text-[10px] font-bold text-zinc-400">
+                    <p className="mt-1.5 text-xs font-bold text-zinc-500">
                       {Math.min(
                         achievement.current,
                         achievement.goal,
@@ -521,7 +521,7 @@ function Achievements({
                 {hasGift &&
                   !isClaimed && (
                     <p
-                      className={`mt-1.5 text-[10px] font-black ${
+                      className={`mt-1.5 text-xs font-bold ${
                         canClaim
                           ? 'text-orange-500'
                           : 'text-amber-500/80'

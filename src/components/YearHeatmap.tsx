@@ -286,7 +286,7 @@ function YearHeatmap({
     <section className="mb-5 rounded-[28px] bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-black tracking-wider text-violet-500">
+          <p className="text-xs font-bold tracking-wider text-violet-500">
             TU AÑO DÍA POR DÍA
           </p>
 
@@ -334,7 +334,7 @@ function YearHeatmap({
 
       <div className="mt-4 flex gap-1.5">
         {/* Días de la semana */}
-        <div className="flex shrink-0 flex-col gap-[3px] pt-4 text-[9px] font-bold leading-[11px] text-zinc-400">
+        <div className="flex shrink-0 flex-col gap-[3px] pt-4 text-xs font-bold leading-[11px] text-zinc-500">
           {['L', '', 'M', '', 'V', '', 'D'].map(
             (label, index) => (
               <span
@@ -358,7 +358,7 @@ function YearHeatmap({
                 key={week[0].dateKey}
                 className="flex w-[11px] flex-col gap-[3px]"
               >
-                <span className="h-[13px] w-[11px] overflow-visible whitespace-nowrap text-[9px] font-bold capitalize leading-none text-zinc-400">
+                <span className="h-[13px] w-[11px] overflow-visible whitespace-nowrap text-xs font-bold capitalize leading-none text-zinc-500">
                   {monthLabels[weekIndex]}
                 </span>
 
@@ -400,12 +400,11 @@ function YearHeatmap({
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-3">
-        <p className="min-h-[16px] text-[11px] font-semibold text-zinc-500">
-          {selectedInfo ??
-            'Tocá un día para ver qué hiciste.'}
+        <p className="min-h-[16px] text-xs font-semibold text-zinc-500">
+          {selectedInfo ?? ''}
         </p>
 
-        <div className="flex shrink-0 items-center gap-1 text-[9px] font-bold text-zinc-400">
+        <div className="flex shrink-0 items-center gap-1 text-xs font-bold text-zinc-500">
           Menos
           <span className="h-[9px] w-[9px] rounded-[2px] bg-zinc-100" />
           <span className="h-[9px] w-[9px] rounded-[2px] bg-violet-200" />

@@ -47,7 +47,7 @@ function WrappedBanner({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-black tracking-wider text-white/80">
+        <p className="text-xs font-bold tracking-wider text-white/80">
           RACHA WRAPPED {year}
         </p>
 

@@ -135,7 +135,7 @@ function ResetPassword({
             onClick={
               onComplete
             }
-            className="mt-6 w-full rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98]"
+            className="mt-6 w-full rounded-2xl bg-violet-500 py-4 font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98]"
           >
             Entrar a Racha 🔥
           </button>
@@ -171,14 +171,14 @@ function ResetPassword({
           }
           className="rounded-[30px] bg-white p-6 shadow-sm"
         >
-          <label className="text-xs font-black tracking-wider text-zinc-400">
+          <label className="text-xs font-bold tracking-wider text-zinc-500">
             NUEVA CONTRASEÑA
           </label>
 
           <div className="mt-2 flex items-center rounded-2xl bg-zinc-50 px-4">
             <LockKeyhole
               size={19}
-              className="shrink-0 text-zinc-400"
+              className="shrink-0 text-zinc-500"
             />
 
             <input
@@ -213,7 +213,7 @@ function ResetPassword({
                     !current,
                 )
               }
-              className="text-zinc-400"
+              className="text-zinc-500"
             >
               {showPassword ? (
                 <EyeOff
@@ -227,14 +227,14 @@ function ResetPassword({
             </button>
           </div>
 
-          <label className="mt-5 block text-xs font-black tracking-wider text-zinc-400">
+          <label className="mt-5 block text-xs font-bold tracking-wider text-zinc-500">
             REPETIR CONTRASEÑA
           </label>
 
           <div className="mt-2 flex items-center rounded-2xl bg-zinc-50 px-4">
             <LockKeyhole
               size={19}
-              className="shrink-0 text-zinc-400"
+              className="shrink-0 text-zinc-500"
             />
 
             <input
@@ -271,7 +271,7 @@ function ResetPassword({
             disabled={
               loading
             }
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-50"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-50"
           >
             {loading ? (
               <>

@@ -119,7 +119,7 @@ function InviteQrModal({
           </button>
         </div>
 
-        <p className="text-xs font-black tracking-wider text-violet-500">
+        <p className="text-xs font-bold tracking-wider text-violet-500">
           INVITAR CON QR
         </p>
 
@@ -152,7 +152,7 @@ function InviteQrModal({
           )}
         </div>
 
-        <p className="mt-5 text-xs font-bold text-zinc-400">
+        <p className="mt-5 text-xs font-bold text-zinc-500">
           O con el código
         </p>
 
@@ -160,7 +160,7 @@ function InviteQrModal({
           {inviteCode}
         </p>
 
-        <p className="mt-4 text-[11px] font-semibold text-zinc-400">
+        <p className="mt-4 text-xs font-semibold text-zinc-500">
           🃏 Si es nuevo en Racha y registra
           su primera actividad, ganás un
           comodín.

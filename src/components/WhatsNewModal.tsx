@@ -31,7 +31,7 @@ function WhatsNewModal({
         aria-modal="true"
         className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-[32px] bg-white px-6 pb-8 pt-7 sm:rounded-[32px]"
       >
-        <p className="text-sm font-black text-violet-500">
+        <p className="text-sm font-bold text-violet-500">
           Racha {__APP_VERSION__}
         </p>
 
@@ -50,7 +50,7 @@ function WhatsNewModal({
               </div>
 
               <div>
-                <p className="font-black text-zinc-800">
+                <p className="font-bold text-zinc-800">
                   {item.title}
                 </p>
 
@@ -65,7 +65,7 @@ function WhatsNewModal({
         <button
           type="button"
           onClick={onClose}
-          className="mt-8 w-full rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98]"
+          className="mt-8 w-full rounded-2xl bg-violet-500 py-4 font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98]"
         >
           ¡Dale!
         </button>

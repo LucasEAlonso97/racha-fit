@@ -681,7 +681,7 @@ const shareInviteLink =
 
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-black tracking-wider text-violet-500">
+            <p className="text-xs font-bold tracking-wider text-violet-500">
               TU RACHA
             </p>
 
@@ -715,7 +715,7 @@ const shareInviteLink =
         <section className="mb-4 rounded-[26px] bg-white p-5 shadow-sm">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-black tracking-wider text-zinc-400">
+              <p className="text-xs font-bold tracking-wider text-zinc-500">
                 GRUPO
               </p>
 
@@ -739,7 +739,7 @@ const shareInviteLink =
                         .value,
                     )
                   }
-                  className="mt-2 w-full rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 font-black text-zinc-800 outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                  className="mt-2 w-full rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 font-bold text-zinc-800 outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
                 />
               )}
             </div>
@@ -772,7 +772,7 @@ const shareInviteLink =
                 disabled={
                   saving
                 }
-                className="flex-1 rounded-2xl bg-zinc-100 py-3 text-sm font-black text-zinc-500"
+                className="flex-1 rounded-2xl bg-zinc-100 py-3 text-sm font-bold text-zinc-500"
               >
                 Cancelar
               </button>
@@ -786,7 +786,7 @@ const shareInviteLink =
                   saving ||
                   !groupName.trim()
                 }
-                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-violet-500 py-3 text-sm font-black text-white disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-violet-500 py-3 text-sm font-bold text-white disabled:opacity-50"
               >
                 {saving ? (
                   <LoaderCircle
@@ -806,7 +806,7 @@ const shareInviteLink =
 
           <div className="mt-4">
             {isOwner ? (
-              <div className="flex w-fit items-center gap-1.5 rounded-full bg-yellow-50 px-3 py-1.5 text-xs font-black text-yellow-600">
+              <div className="flex w-fit items-center gap-1.5 rounded-full bg-yellow-50 px-3 py-1.5 text-xs font-bold text-yellow-600">
                 <Crown
                   size={14}
                 />
@@ -814,7 +814,7 @@ const shareInviteLink =
                 Administrás este grupo
               </div>
             ) : (
-              <div className="w-fit rounded-full bg-zinc-100 px-3 py-1.5 text-xs font-black text-zinc-500">
+              <div className="w-fit rounded-full bg-zinc-100 px-3 py-1.5 text-xs font-bold text-zinc-500">
                 Miembro
               </div>
             )}
@@ -834,16 +834,16 @@ const shareInviteLink =
         <section className="mb-4 rounded-[26px] bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-black tracking-wider text-zinc-400">
+              <p className="text-xs font-bold tracking-wider text-zinc-500">
                 INTEGRANTES
               </p>
 
-              <h3 className="mt-1 font-black text-zinc-800">
+              <h3 className="mt-1 font-bold text-zinc-800">
                 La banda
               </h3>
             </div>
 
-            <div className="flex items-center gap-1 rounded-full bg-violet-50 px-3 py-1.5 text-xs font-black text-violet-600">
+            <div className="flex items-center gap-1 rounded-full bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-600">
               <Users
                 size={14}
               />
@@ -882,13 +882,13 @@ const shareInviteLink =
                     />
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-black text-zinc-800">
+                      <p className="truncate font-bold text-zinc-800">
                         {isMe
                           ? 'Vos'
                           : member.name}
                       </p>
 
-                      <p className="mt-0.5 text-xs font-semibold text-zinc-400">
+                      <p className="mt-0.5 text-xs font-semibold text-zinc-500">
                         {memberIsOwner
                           ? 'Administrador'
                           : 'Miembro'}
@@ -942,11 +942,11 @@ const shareInviteLink =
         {/* ================================= */}
 
         <section className="mb-4 rounded-[26px] bg-white p-5 shadow-sm">
-          <p className="text-xs font-black tracking-wider text-zinc-400">
+          <p className="text-xs font-bold tracking-wider text-zinc-500">
             INVITACIÓN
           </p>
 
-          <h3 className="mt-1 font-black text-zinc-800">
+          <h3 className="mt-1 font-bold text-zinc-800">
             Sumá gente 🔥
           </h3>
 
@@ -967,7 +967,7 @@ const shareInviteLink =
                 onClick={
                   copyInviteCode
                 }
-                className="flex h-10 shrink-0 items-center gap-2 rounded-xl bg-white px-3 text-xs font-black text-violet-600 shadow-sm"
+                className="flex h-10 shrink-0 items-center gap-2 rounded-xl bg-white px-3 text-xs font-bold text-violet-600 shadow-sm"
               >
                 {copied ? (
                   <>
@@ -995,7 +995,7 @@ const shareInviteLink =
   onClick={
     shareInviteLink
   }
-  className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-3.5 text-sm font-black text-white shadow-lg shadow-violet-100 transition active:scale-[0.98]"
+  className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-100 transition active:scale-[0.98]"
 >
   {linkCopied ? (
     <>
@@ -1021,7 +1021,7 @@ const shareInviteLink =
             onClick={() =>
               setShowQr(true)
             }
-            className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-50 py-3 text-sm font-black text-violet-600 transition active:scale-[0.98]"
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-50 py-3 text-sm font-bold text-violet-600 transition active:scale-[0.98]"
           >
             <QrCode size={18} />
             Mostrar QR
@@ -1043,7 +1043,7 @@ const shareInviteLink =
             />
           )}
 
-          <p className="mt-2 text-center text-xs font-semibold text-zinc-400">
+          <p className="mt-2 text-center text-xs font-semibold text-zinc-500">
             🃏 Si alguien nuevo se suma con
             tu link y registra su primera
             actividad, ganás un comodín.
@@ -1061,7 +1061,7 @@ const shareInviteLink =
                 disabled={
                   regeneratingCode
                 }
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-zinc-100 py-3.5 text-sm font-black text-zinc-600 transition active:scale-[0.98] disabled:opacity-50"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-zinc-100 py-3.5 text-sm font-bold text-zinc-600 transition active:scale-[0.98] disabled:opacity-50"
               >
                 {regeneratingCode ? (
                   <LoaderCircle
@@ -1079,7 +1079,7 @@ const shareInviteLink =
                   : 'Regenerar código'}
               </button>
 
-              <p className="mt-2 text-center text-xs font-medium text-zinc-400">
+              <p className="mt-2 text-center text-xs font-semibold text-zinc-500">
                 El código anterior
                 dejará de funcionar.
               </p>
@@ -1093,7 +1093,7 @@ const shareInviteLink =
 
         {!isOwner && (
           <section className="rounded-[26px] bg-white p-5 shadow-sm">
-            <p className="text-xs font-black tracking-wider text-red-400">
+            <p className="text-xs font-bold tracking-wider text-red-400">
               SALIR DEL GRUPO
             </p>
 
@@ -1110,7 +1110,7 @@ const shareInviteLink =
               onClick={
                 leaveGroup
               }
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 py-3.5 font-black text-red-500 disabled:opacity-50"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 py-3.5 font-bold text-red-500 disabled:opacity-50"
             >
               {leaving ? (
                 <LoaderCircle
@@ -1145,11 +1145,11 @@ const shareInviteLink =
 
         {isOwner && (
           <section className="mt-4 rounded-[26px] border border-red-100 bg-white p-5 shadow-sm">
-            <p className="text-xs font-black tracking-wider text-red-400">
+            <p className="text-xs font-bold tracking-wider text-red-400">
               ZONA DELICADA
             </p>
 
-            <h3 className="mt-1 font-black text-zinc-800">
+            <h3 className="mt-1 font-bold text-zinc-800">
               Eliminar esta Racha
             </h3>
 
@@ -1169,7 +1169,7 @@ const shareInviteLink =
               disabled={
                 deletingGroup
               }
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 py-3.5 font-black text-red-500 transition active:scale-[0.98] disabled:opacity-50"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 py-3.5 font-bold text-red-500 transition active:scale-[0.98] disabled:opacity-50"
             >
               {deletingGroup ? (
                 <>

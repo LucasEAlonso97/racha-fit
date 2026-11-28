@@ -21,13 +21,13 @@ type Props = {
  * del avatar, según el tamaño.
  */
 const crownSizes = {
-  sm: '-top-2.5 text-[11px]',
+  sm: '-top-2.5 text-xs',
   md: '-top-3 text-sm',
   lg: '-top-4 text-xl',
 }
 
 const sizes = {
-  sm: 'h-7 w-7 text-[9px]',
+  sm: 'h-7 w-7 text-xs',
   md: 'h-9 w-9 text-xs',
   lg: 'h-14 w-14 text-base',
 }
@@ -65,7 +65,7 @@ function AvatarImage({
   return (
     <div
       title={user.name}
-      className={`${sizes[size]} ${user.avatarColor} flex items-center justify-center rounded-full border-2 border-white font-black text-white shadow-sm`}
+      className={`${sizes[size]} ${user.avatarColor} flex items-center justify-center rounded-full border-2 border-white font-bold text-white shadow-sm`}
     >
       {user.fallback}
     </div>

@@ -43,7 +43,7 @@ function ConsistencyRewardModal({
         <div className="px-6 pb-6 pt-5">
           <p className="text-sm font-semibold leading-relaxed text-zinc-500">
             Cumpliste tu meta{' '}
-            <span className="font-black text-orange-500">
+            <span className="font-bold text-orange-500">
               {CONSISTENCY_WEEKS} semanas
               seguidas
             </span>
@@ -56,7 +56,7 @@ function ConsistencyRewardModal({
           <button
             type="button"
             onClick={onClose}
-            className="mt-5 w-full rounded-2xl bg-orange-500 py-4 font-black text-white shadow-lg shadow-orange-200 transition active:scale-[0.98]"
+            className="mt-5 w-full rounded-2xl bg-orange-500 py-4 font-bold text-white shadow-lg shadow-orange-200 transition active:scale-[0.98]"
           >
             ¡Vamos! 💪
           </button>

@@ -8,7 +8,7 @@ import {
  */
 function PendingBadge() {
   return (
-    <div className="mt-2 flex w-fit items-center gap-1 rounded-full bg-sky-100 px-2.5 py-1 text-[10px] font-black text-sky-700">
+    <div className="mt-2 flex w-fit items-center gap-1 rounded-full bg-sky-100 px-2.5 py-1 text-xs font-bold text-sky-700">
       <CloudOff
         size={11}
         strokeWidth={3}

@@ -148,7 +148,7 @@ function InviteJoin({
             className="mx-auto h-16 w-16 rounded-[22px] object-cover shadow-sm"
           />
 
-          <p className="mt-5 text-sm font-black text-violet-500">
+          <p className="mt-5 text-sm font-bold text-violet-500">
             INVITACIÓN
           </p>
 
@@ -172,7 +172,7 @@ function InviteJoin({
           <div className="mt-5 text-center">
             {existingGroup ? (
               <>
-                <p className="text-xs font-black tracking-wider text-zinc-400">
+                <p className="text-xs font-bold tracking-wider text-zinc-500">
                   GRUPO
                 </p>
 
@@ -182,7 +182,7 @@ function InviteJoin({
                   }
                 </h2>
 
-                <div className="mx-auto mt-3 flex w-fit items-center gap-2 rounded-full bg-green-50 px-3 py-2 text-xs font-black text-green-600">
+                <div className="mx-auto mt-3 flex w-fit items-center gap-2 rounded-full bg-green-50 px-3 py-2 text-xs font-bold text-green-600">
                   <CheckCircle2
                     size={15}
                   />
@@ -192,7 +192,7 @@ function InviteJoin({
               </>
             ) : (
               <>
-                <p className="text-xs font-black tracking-wider text-zinc-400">
+                <p className="text-xs font-bold tracking-wider text-zinc-500">
                   CÓDIGO DE INVITACIÓN
                 </p>
 
@@ -215,7 +215,7 @@ function InviteJoin({
             onClick={() =>
               void joinGroup()
             }
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-60"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-60"
           >
             {loading ? (
               <>
@@ -251,7 +251,7 @@ function InviteJoin({
             onClick={
               onCancel
             }
-            className="mt-4 w-full text-sm font-bold text-zinc-400"
+            className="mt-4 w-full text-sm font-bold text-zinc-500"
           >
             Ahora no
           </button>

@@ -173,7 +173,7 @@ function PrizeClaim({
       type="button"
       disabled={claiming}
       onClick={onClaimClick}
-      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 py-3.5 text-sm font-black text-white shadow-lg shadow-fuchsia-200 transition active:scale-[0.98] disabled:opacity-60"
+      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-fuchsia-200 transition active:scale-[0.98] disabled:opacity-60"
     >
       {claiming ? (
         <LoaderCircle
@@ -186,7 +186,7 @@ function PrizeClaim({
       {PRIZE_COPY[prizeType!].claimLabel}
     </button>
   ) : iWon && iClaimed ? (
-    <p className="flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-50 py-3 text-sm font-black text-emerald-600">
+    <p className="flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-50 py-3 text-sm font-bold text-emerald-600">
       <Check
         size={16}
         strokeWidth={3}
@@ -198,7 +198,7 @@ function PrizeClaim({
       {winnerNames.map((user) => (
         <span
           key={user.id}
-          className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-black ${
+          className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
             claims.includes(user.id)
               ? 'bg-emerald-50 text-emerald-600'
               : 'bg-zinc-100 text-zinc-500'
@@ -218,7 +218,7 @@ function PrizeClaim({
       {variant === 'card' ? (
         <section className="mt-5 rounded-[28px] bg-gradient-to-br from-violet-200 via-fuchsia-200 to-orange-200 p-[2px] shadow-sm">
           <div className="rounded-[26px] bg-white p-5 text-center">
-            <p className="text-[10px] font-black tracking-[0.16em] text-fuchsia-500">
+            <p className="text-xs font-bold tracking-[0.16em] text-fuchsia-500">
               PREMIO
             </p>
 
@@ -249,11 +249,11 @@ function PrizeClaim({
             </span>
 
             <div className="min-w-0 flex-1">
-              <p className="text-[9px] font-black uppercase tracking-wider text-amber-600">
+              <p className="text-xs font-bold uppercase tracking-wider text-amber-600">
                 Premio
               </p>
 
-              <p className="mt-0.5 text-xs font-black text-zinc-700">
+              <p className="mt-0.5 text-xs font-bold text-zinc-700">
                 {prize.title}
               </p>
             </div>
@@ -371,7 +371,7 @@ function ChoiceSheet({
 
         {isNickname && (
           <>
-            <p className="mb-2 mt-6 text-xs font-black tracking-wide text-zinc-400">
+            <p className="mb-2 mt-6 text-xs font-bold tracking-wide text-zinc-500">
               A QUIÉN
             </p>
 
@@ -383,7 +383,7 @@ function ChoiceSheet({
                   onClick={() =>
                     setTargetUserId(user.id)
                   }
-                  className={`flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3 text-sm font-black transition ${
+                  className={`flex items-center gap-2 rounded-full py-1.5 pl-1.5 pr-3 text-sm font-bold transition ${
                     targetUserId === user.id
                       ? 'bg-violet-500 text-white'
                       : 'bg-zinc-100 text-zinc-600'
@@ -400,7 +400,7 @@ function ChoiceSheet({
           </>
         )}
 
-        <p className="mb-2 mt-6 text-xs font-black tracking-wide text-zinc-400">
+        <p className="mb-2 mt-6 text-xs font-bold tracking-wide text-zinc-500">
           {isNickname ? 'APODO' : 'MENSAJE'}
         </p>
 
@@ -431,7 +431,7 @@ function ChoiceSheet({
               choice: choice ?? undefined,
             })
           }
-          className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 py-4 font-black text-white transition active:scale-[0.98] disabled:opacity-40"
+          className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 py-4 font-bold text-white transition active:scale-[0.98] disabled:opacity-40"
         >
           {claiming && (
             <LoaderCircle

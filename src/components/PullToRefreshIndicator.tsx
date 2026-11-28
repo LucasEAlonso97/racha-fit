@@ -41,7 +41,7 @@ function PullToRefreshIndicator({
         className={`flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg ${
           ready || refreshing
             ? 'text-violet-600'
-            : 'text-zinc-400'
+            : 'text-zinc-500'
         }`}
         style={{
           opacity: Math.min(

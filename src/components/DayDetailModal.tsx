@@ -242,7 +242,7 @@ function DayDetailModal({
 
             {totalActivities >
               0 && (
-              <p className="mt-1 text-sm text-zinc-400">
+              <p className="mt-1 text-sm text-zinc-500">
                 {
                   activeUserCount
                 }{' '}
@@ -281,14 +281,12 @@ function DayDetailModal({
 
         {dayAlreadyRecovered && (
           <div className="mb-5 rounded-2xl bg-amber-50 px-4 py-3">
-            <p className="text-sm font-black text-amber-700">
+            <p className="text-sm font-bold text-amber-700">
               🃏 Día recuperado
             </p>
 
             <p className="mt-1 text-xs font-semibold leading-relaxed text-amber-600">
-              Usaste un comodín
-              para recuperar este
-              día.
+              Recuperado con comodín.
             </p>
           </div>
         )}
@@ -306,13 +304,13 @@ function DayDetailModal({
                 : '👀'}
             </div>
 
-            <p className="mt-3 font-black text-zinc-700">
+            <p className="mt-3 font-bold text-zinc-700">
               {isRecoverablePastDay
                 ? 'Este día quedó vacío'
                 : 'Nadie se movió todavía'}
             </p>
 
-            <p className="mt-1 text-sm text-zinc-400">
+            <p className="mt-1 text-sm text-zinc-500">
               {isRecoverablePastDay
                 ? 'Si entrenaste y te olvidaste de cargarlo, todavía podés recuperarlo.'
                 : 'La cadena puede empezar acá.'}
@@ -374,7 +372,7 @@ function DayDetailModal({
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="truncate font-black text-zinc-800">
+                        <p className="truncate font-bold text-zinc-800">
                           {isCurrentUser
                             ? 'Vos'
                             : user.name}
@@ -387,7 +385,7 @@ function DayDetailModal({
                         )}
                       </div>
 
-                      <p className="mt-1 text-xs font-semibold text-zinc-400">
+                      <p className="mt-1 text-xs font-semibold text-zinc-500">
                         {hasActivities
                           ? `${
                               userActivities.length
@@ -442,7 +440,7 @@ function DayDetailModal({
                                 {/* INFO */}
 
                                 <div className="min-w-0 flex-1">
-                                  <p className="font-black text-zinc-800">
+                                  <p className="font-bold text-zinc-800">
                                     {
                                       activity.type
                                     }
@@ -461,7 +459,7 @@ function DayDetailModal({
                                   />
 
                                   {activity.recovered_with_wildcard && (
-                                    <p className="mt-1 text-[11px] font-black text-amber-600">
+                                    <p className="mt-1 text-xs font-bold text-amber-600">
                                       🃏 Día
                                       recuperado
                                     </p>
@@ -485,7 +483,7 @@ function DayDetailModal({
                                             null,
                                         )
                                       }
-                                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-400 transition active:scale-95"
+                                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 transition active:scale-95"
                                     >
                                       <Pencil
                                         size={
@@ -585,7 +583,7 @@ function DayDetailModal({
                   null,
                 )
               }
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98]"
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98]"
             >
               <Plus
                 size={20}
@@ -634,7 +632,7 @@ function DayDetailModal({
                   wildcardsLoading
                 )
               }
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:bg-zinc-200 disabled:text-zinc-400 disabled:shadow-none"
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:bg-zinc-200 disabled:text-zinc-400 disabled:shadow-none"
             >
               <Plus
                 size={20}
@@ -678,12 +676,8 @@ function DayDetailModal({
             {needsWildcard &&
               !hasWildcard &&
               !wildcardsLoading && (
-                <p className="mt-3 text-center text-xs font-semibold leading-relaxed text-zinc-400">
-                  Este día todavía
-                  está dentro de los
-                  últimos 7 días,
-                  pero no te quedan
-                  comodines.
+                <p className="mt-3 text-center text-xs font-semibold leading-relaxed text-zinc-500">
+                  No te quedan comodines.
                 </p>
               )}
 
@@ -693,10 +687,7 @@ function DayDetailModal({
               currentUserActivities.length >
                 0 && (
                 <p className="mt-3 text-center text-xs font-bold leading-relaxed text-amber-600">
-                  🃏 Podés agregar
-                  otra actividad.
-                  No consume otro
-                  comodín.
+                  🃏 Sumar otra no gasta otro comodín.
                 </p>
               )}
           </>
@@ -708,15 +699,13 @@ function DayDetailModal({
 
         {isTooOld && (
           <div className="mt-6 rounded-2xl bg-zinc-100 px-4 py-3 text-center">
-            <p className="text-sm font-black text-zinc-500">
+            <p className="text-sm font-bold text-zinc-500">
               Este día ya no se
               puede recuperar
             </p>
 
-            <p className="mt-1 text-xs font-semibold leading-relaxed text-zinc-400">
-              Los comodines sirven
-              solamente para los
-              últimos 7 días.
+            <p className="mt-1 text-xs font-semibold leading-relaxed text-zinc-500">
+              Solo se recuperan los últimos 7 días.
             </p>
           </div>
         )}
@@ -727,12 +716,12 @@ function DayDetailModal({
 
         {isFuture && (
           <div className="mt-6 rounded-2xl bg-zinc-100 px-4 py-3 text-center">
-            <p className="text-sm font-black text-zinc-500">
+            <p className="text-sm font-bold text-zinc-500">
               Todavía no llegamos
               acá 😅
             </p>
 
-            <p className="mt-1 text-xs font-semibold text-zinc-400">
+            <p className="mt-1 text-xs font-semibold text-zinc-500">
               No se pueden cargar
               actividades futuras.
             </p>
@@ -747,7 +736,7 @@ function DayDetailModal({
           isRecoverablePastDay &&
           currentUserActivities.length >
             1 && (
-            <p className="mt-3 text-center text-xs font-semibold text-zinc-400">
+            <p className="mt-3 text-center text-xs font-semibold text-zinc-500">
               Tenés{' '}
               {
                 currentUserActivities.length

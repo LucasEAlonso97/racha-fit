@@ -177,7 +177,7 @@ function FeedbackHost() {
                     dismissToast(toast.id)
                     toast.action?.onClick()
                   }}
-                  className="shrink-0 rounded-xl bg-white/20 px-3 py-1.5 text-xs font-black uppercase tracking-wide transition active:scale-95"
+                  className="shrink-0 rounded-xl bg-white/20 px-3 py-1.5 text-xs font-bold uppercase tracking-wide transition active:scale-95"
                 >
                   {toast.action.label}
                 </button>

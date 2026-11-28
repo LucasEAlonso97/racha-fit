@@ -115,7 +115,7 @@ function Onboarding({
             />
           </div>
 
-          <p className="mt-8 text-xs font-black tracking-[0.18em] text-violet-500">
+          <p className="mt-8 text-xs font-bold tracking-[0.18em] text-violet-500">
             {currentSlide + 1} DE{' '}
             {slides.length}
           </p>
@@ -124,7 +124,7 @@ function Onboarding({
             {slide.title}
           </h1>
 
-          <p className="mx-auto mt-4 max-w-xs text-base font-medium leading-relaxed text-zinc-500">
+          <p className="mx-auto mt-4 max-w-xs text-base font-semibold leading-relaxed text-zinc-500">
             {slide.description}
           </p>
         </section>
@@ -155,7 +155,7 @@ function Onboarding({
           onClick={() =>
             void next()
           }
-          className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-60"
+          className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-60"
         >
           {loading
             ? 'Preparando Racha...'
@@ -182,7 +182,7 @@ function Onboarding({
                   current - 1,
               )
             }
-            className="mt-4 w-full text-sm font-bold text-zinc-400"
+            className="mt-4 w-full text-sm font-bold text-zinc-500"
           >
             Volver
           </button>

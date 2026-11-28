@@ -26,7 +26,7 @@ function Nickname({
   return (
     <span
       title="Apodo puesto por quien ganó un torneo"
-      className={`inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-700 ${className}`}
+      className={`inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700 ${className}`}
     >
       🏷️ {nickname}
     </span>

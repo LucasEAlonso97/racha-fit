@@ -10,9 +10,9 @@
 
 export const WHATS_NEW = [
   {
-    emoji: '💬',
-    title: 'Contanos qué pensás',
-    text: 'En tu perfil hay un botón nuevo para sugerir ideas o avisar si algo no anda. Lo leemos todo.',
+    emoji: '✨',
+    title: 'Racha más simple',
+    text: 'Abajo ahora tenés Inicio, Grupo, Progreso y Perfil. Y cargar una actividad es tocar + y listo.',
   },
 ]
 

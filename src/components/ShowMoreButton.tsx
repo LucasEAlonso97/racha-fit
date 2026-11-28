@@ -37,7 +37,7 @@ function ShowMoreButton({
       type="button"
       onClick={onToggle}
       aria-expanded={expanded}
-      className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-zinc-50 py-3 text-xs font-black text-violet-600 transition hover:bg-violet-50 active:scale-[0.99]"
+      className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-zinc-50 py-3 text-xs font-bold text-violet-600 transition hover:bg-violet-50 active:scale-[0.99]"
     >
       {expanded
         ? 'Ver menos'

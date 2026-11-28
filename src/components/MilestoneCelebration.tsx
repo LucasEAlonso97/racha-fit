@@ -228,7 +228,7 @@ function MilestoneCelebration({
           🔥
         </div>
 
-        <p className="mt-6 text-9xl font-black leading-none tracking-tight">
+        <p className="mt-6 text-9xl font-bold leading-none tracking-tight">
           {pending.milestone}
         </p>
 
@@ -244,7 +244,7 @@ function MilestoneCelebration({
           type="button"
           disabled={sharing}
           onClick={() => void share()}
-          className="mt-10 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 font-black text-violet-600 shadow-xl transition active:scale-[0.98] disabled:opacity-70"
+          className="mt-10 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 font-bold text-violet-600 shadow-xl transition active:scale-[0.98] disabled:opacity-70"
         >
           {sharing ? (
             <LoaderCircle

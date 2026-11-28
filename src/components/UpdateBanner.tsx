@@ -50,7 +50,7 @@ function UpdateBanner() {
           onClick={() =>
             window.location.reload()
           }
-          className="flex shrink-0 items-center gap-1.5 rounded-xl bg-violet-500 px-3 py-2 text-xs font-black transition active:scale-95"
+          className="flex shrink-0 items-center gap-1.5 rounded-xl bg-violet-500 px-3 py-2 text-xs font-bold transition active:scale-95"
         >
           <RefreshCw size={14} />
           Actualizar

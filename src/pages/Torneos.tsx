@@ -47,6 +47,12 @@ type Props = {
   group: Group
   users: User[]
   currentUserId: string
+
+  /*
+   * Dentro de Grupo → Torneo: sin título
+   * propio (ya están las pestañas arriba).
+   */
+  embedded?: boolean
 }
 
 type HistoryParticipant = {
@@ -322,11 +328,11 @@ function ParticipantAvatar({
   const sizeClass =
     size === 'lg'
       ? 'h-14 w-14 text-base'
-      : 'h-7 w-7 text-[9px]'
+      : 'h-7 w-7 text-xs'
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-full bg-zinc-200 font-black text-zinc-600 ${sizeClass}`}
+      className={`flex shrink-0 items-center justify-center rounded-full bg-zinc-200 font-bold text-zinc-600 ${sizeClass}`}
     >
       {getInitials(
         participant.name,
@@ -553,7 +559,7 @@ function TournamentHistory({
         </div>
 
         <div className="flex-1">
-          <p className="text-[10px] font-black tracking-wider text-violet-500">
+          <p className="text-xs font-bold tracking-wider text-violet-500">
             HISTORIAL
           </p>
 
@@ -563,7 +569,7 @@ function TournamentHistory({
         </div>
 
         {history.length > 0 && (
-          <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-black text-zinc-500">
+          <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-bold text-zinc-500">
             {history.length}
           </span>
         )}
@@ -571,7 +577,7 @@ function TournamentHistory({
 
       {loading ? (
         <div className="mt-5 rounded-2xl bg-zinc-50 px-4 py-5 text-center">
-          <p className="text-xs font-bold text-zinc-400">
+          <p className="text-xs font-bold text-zinc-500">
             Cargando historial...
           </p>
         </div>
@@ -582,11 +588,11 @@ function TournamentHistory({
             🏆
           </p>
 
-          <p className="mt-2 text-sm font-black text-zinc-600">
+          <p className="mt-2 text-sm font-bold text-zinc-600">
             Todavía no hay torneos terminados
           </p>
 
-          <p className="mt-1 text-xs font-semibold text-zinc-400">
+          <p className="mt-1 text-xs font-semibold text-zinc-500">
             Cuando termine el
             primero, va a aparecer
             acá.
@@ -625,13 +631,13 @@ function TournamentHistory({
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-black text-zinc-800">
+                      <p className="truncate text-sm font-bold text-zinc-800">
                         {item.challenge
                           ?.name ??
                           'Torneo'}
                       </p>
 
-                      <p className="truncate text-xs font-semibold text-zinc-400">
+                      <p className="truncate text-xs font-semibold text-zinc-500">
                         {formatShortRange(
                           item.starts_on,
                           item.ends_on,
@@ -640,12 +646,12 @@ function TournamentHistory({
                     </div>
 
                     <div className="min-w-0 max-w-[40%] text-right">
-                      <p className="truncate text-xs font-black text-zinc-700">
+                      <p className="truncate text-xs font-bold text-zinc-700">
                         {resultEmoji}{' '}
                         {resultTitle}
                       </p>
 
-                      <p className="text-[11px] font-bold text-zinc-400">
+                      <p className="text-xs font-bold text-zinc-500">
                         {resultSubtitle}
                       </p>
                     </div>
@@ -668,7 +674,7 @@ function TournamentHistory({
 
                     <ChevronDown
                       size={16}
-                      className={`shrink-0 text-zinc-300 transition-transform ${
+                      className={`shrink-0 text-zinc-400 transition-transform ${
                         open
                           ? 'rotate-180'
                           : ''
@@ -679,7 +685,7 @@ function TournamentHistory({
                   {open && (
                     <div className="mb-3 space-y-2 rounded-2xl bg-zinc-50 p-3">
                       <div className="flex flex-wrap gap-2">
-                        <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black text-zinc-500">
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-zinc-500">
                           {item.mode ===
                           'two_vs_two'
                             ? '2 VS 2'
@@ -687,7 +693,7 @@ function TournamentHistory({
                         </span>
 
                         {item.selected_card && (
-                          <span className="rounded-full bg-violet-100 px-3 py-1 text-[10px] font-black text-violet-600">
+                          <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-bold text-violet-600">
                             Carta #
                             {
                               item.selected_card
@@ -827,11 +833,11 @@ function Podium({
                 }
               />
 
-              <p className="mt-1.5 w-full truncate text-center text-xs font-black text-zinc-700">
+              <p className="mt-1.5 w-full truncate text-center text-xs font-bold text-zinc-700">
                 {participant.name}
               </p>
 
-              <p className="text-[11px] font-bold text-zinc-400">
+              <p className="text-xs font-bold text-zinc-500">
                 {participant.score} pts
               </p>
 
@@ -873,7 +879,7 @@ function DeadlineNote({
   }
 
   return (
-    <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-black text-violet-600">
+    <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 text-xs font-bold text-violet-600">
       ⏳{' '}
       {timeLeft === 0
         ? 'Se elige solo en cualquier momento'
@@ -923,6 +929,7 @@ function Torneos({
   group,
   users,
   currentUserId,
+  embedded = false,
 }: Props) {
   const {
     tournament,
@@ -1079,7 +1086,7 @@ function Torneos({
 
   if (loading) {
     return (
-      <div className="mx-auto w-full max-w-md px-5 pb-8 pt-6">
+      <div className={`mx-auto w-full max-w-md px-5 pb-8 ${embedded ? 'pt-4' : 'pt-6'}`}>
         <div className="rounded-[28px] bg-white p-6 text-center shadow-sm">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-violet-600">
             <Trophy
@@ -1087,11 +1094,11 @@ function Torneos({
             />
           </div>
 
-          <p className="mt-4 text-sm font-black text-zinc-700">
+          <p className="mt-4 text-sm font-bold text-zinc-700">
             Preparando el torneo...
           </p>
 
-          <p className="mt-1 text-xs font-semibold text-zinc-400">
+          <p className="mt-1 text-xs font-semibold text-zinc-500">
             Barajando las cartas 👀
           </p>
         </div>
@@ -1111,9 +1118,10 @@ function Torneos({
     !hasEnoughMembers
   ) {
     return (
-      <div className="mx-auto w-full max-w-md px-5 pb-8 pt-6">
+      <div className={`mx-auto w-full max-w-md px-5 pb-8 ${embedded ? 'pt-4' : 'pt-6'}`}>
+        {!embedded && (
         <header className="mb-6">
-          <p className="text-xs font-black tracking-[0.15em] text-violet-500">
+          <p className="text-xs font-bold tracking-[0.15em] text-violet-500">
             COMPETÍ CON TU BANDA
           </p>
 
@@ -1121,6 +1129,7 @@ function Torneos({
             Torneos
           </h1>
         </header>
+        )}
 
         <MinimumMembersCard />
 
@@ -1152,7 +1161,7 @@ function Torneos({
     !tournament
   ) {
     return (
-      <div className="mx-auto w-full max-w-md px-5 pb-8 pt-6">
+      <div className={`mx-auto w-full max-w-md px-5 pb-8 ${embedded ? 'pt-4' : 'pt-6'}`}>
         <div className="rounded-[28px] bg-white p-6 text-center shadow-sm">
           <p className="text-4xl">
             😵
@@ -1171,7 +1180,7 @@ function Torneos({
             onClick={() =>
               void refresh()
             }
-            className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-violet-500 px-5 py-3 text-sm font-black text-white"
+            className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-violet-500 px-5 py-3 text-sm font-bold text-white"
           >
             <RefreshCw
               size={16}
@@ -1186,7 +1195,7 @@ function Torneos({
 
   if (!tournament) {
     return (
-      <div className="mx-auto w-full max-w-md px-5 pb-8 pt-6">
+      <div className={`mx-auto w-full max-w-md px-5 pb-8 ${embedded ? 'pt-4' : 'pt-6'}`}>
         <TournamentHistory
           history={history}
           loading={
@@ -1341,9 +1350,10 @@ function Torneos({
           : []
 
     return (
-      <div className="mx-auto w-full max-w-md px-5 pb-8 pt-6">
+      <div className={`mx-auto w-full max-w-md px-5 pb-8 ${embedded ? 'pt-4' : 'pt-6'}`}>
+        {!embedded && (
         <header className="mb-6">
-          <p className="text-xs font-black tracking-[0.15em] text-amber-500">
+          <p className="text-xs font-bold tracking-[0.15em] text-amber-500">
             RESULTADO FINAL
           </p>
 
@@ -1365,6 +1375,7 @@ function Torneos({
             </div>
           </div>
         </header>
+        )}
 
         <section className="relative overflow-hidden rounded-[30px] bg-gradient-to-br from-violet-500 via-fuchsia-500 to-orange-400 p-6 text-center shadow-lg shadow-fuchsia-200">
           {/* Confeti */}
@@ -1382,7 +1393,7 @@ function Torneos({
                 🤝
               </div>
 
-              <p className="mt-4 text-xs font-black tracking-[0.16em] text-white/80">
+              <p className="mt-4 text-xs font-bold tracking-[0.16em] text-white/80">
                 EMPATE
               </p>
 
@@ -1402,7 +1413,7 @@ function Torneos({
                       ' · ',
                     )}{' '}
                   terminaron con{' '}
-                  <span className="font-black text-white">
+                  <span className="font-bold text-white">
                     {topScore}{' '}
                     pts
                   </span>
@@ -1411,7 +1422,7 @@ function Torneos({
                 <p className="mt-2 text-sm font-semibold text-white/85">
                   Los dos equipos
                   terminaron con{' '}
-                  <span className="font-black text-white">
+                  <span className="font-bold text-white">
                     {
                       teamOneScore
                     }{' '}
@@ -1427,7 +1438,7 @@ function Torneos({
                 🏆
               </div>
 
-              <p className="mt-4 text-xs font-black tracking-[0.16em] text-white/80">
+              <p className="mt-4 text-xs font-bold tracking-[0.16em] text-white/80">
                 CAMPEONES
               </p>
 
@@ -1462,7 +1473,7 @@ function Torneos({
                           user={user}
                         />
 
-                        <span className="text-xs font-black text-white">
+                        <span className="text-xs font-bold text-white">
                           {
                             participant.name
                           }
@@ -1487,7 +1498,7 @@ function Torneos({
                 🏆
               </div>
 
-              <p className="mt-4 text-xs font-black tracking-[0.16em] text-white/80">
+              <p className="mt-4 text-xs font-bold tracking-[0.16em] text-white/80">
                 CAMPEÓN
               </p>
 
@@ -1522,11 +1533,11 @@ function Torneos({
 
           {tournament.challenge && (
             <div className="mt-6 rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-sm">
-              <p className="text-[10px] font-black uppercase tracking-wider text-white/70">
+              <p className="text-xs font-bold uppercase tracking-wider text-white/70">
                 TORNEO
               </p>
 
-              <p className="mt-1 text-sm font-black text-white">
+              <p className="mt-1 text-sm font-bold text-white">
                 {
                   tournament
                     .challenge
@@ -1571,7 +1582,7 @@ function Torneos({
             />
 
             <div>
-              <p className="text-[10px] font-black tracking-wider text-zinc-400">
+              <p className="text-xs font-bold tracking-wider text-zinc-500">
                 RESULTADOS
               </p>
 
@@ -1616,7 +1627,7 @@ function Torneos({
                     className={`rounded-2xl p-4 ${team.classes}`}
                   >
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-black">
+                      <p className="text-sm font-bold">
                         {winningTeamNumber ===
                           team.number &&
                           '🏆 '}
@@ -1657,7 +1668,7 @@ function Torneos({
                             </span>
 
                             <span
-                              className={`font-black ${
+                              className={`font-bold ${
                                 winningTeamNumber ===
                                 team.number
                                   ? 'text-white'
@@ -1709,7 +1720,7 @@ function Torneos({
                       className="flex items-center justify-between rounded-2xl bg-zinc-50 px-3 py-3"
                     >
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex w-7 shrink-0 justify-center text-base font-black">
+                        <div className="flex w-7 shrink-0 justify-center text-base font-bold">
                           {getPositionLabel(
                             position,
                           )}
@@ -1723,21 +1734,21 @@ function Torneos({
                         />
 
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-black text-zinc-700">
+                          <p className="truncate text-sm font-bold text-zinc-700">
                             {
                               participant.name
                             }
                           </p>
 
                           {!user && (
-                            <p className="text-[9px] font-bold text-zinc-400">
+                            <p className="text-xs font-bold text-zinc-500">
                               Ya no está en el grupo
                             </p>
                           )}
                         </div>
                       </div>
 
-                      <p className="ml-3 text-sm font-black text-zinc-800">
+                      <p className="ml-3 text-sm font-bold text-zinc-800">
                         {
                           participant.score
                         }{' '}
@@ -1753,7 +1764,7 @@ function Torneos({
 
         {nextSelector && (
           <section className="mt-5 rounded-[28px] bg-gradient-to-br from-violet-100 via-violet-50 to-pink-50 p-5 shadow-sm">
-            <p className="text-xs font-black tracking-wider text-violet-500">
+            <p className="text-xs font-bold tracking-wider text-violet-500">
               PRÓXIMO TORNEO
             </p>
 
@@ -1766,7 +1777,7 @@ function Torneos({
               />
 
               <div>
-                <p className="text-base font-black text-zinc-800">
+                <p className="text-base font-bold text-zinc-800">
                   {isMyNextTurn
                     ? 'Ahora te toca a vos 😈'
                     : `Le toca a ${nextSelector.name}`}
@@ -1807,7 +1818,7 @@ function Torneos({
                 onClick={() =>
                   void continueTournament()
                 }
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 px-4 py-3 text-sm font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-60"
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-60"
               >
                 {continuing
                   ? 'Preparando...'
@@ -1823,7 +1834,7 @@ function Torneos({
               <div className="mt-4 rounded-2xl bg-white/70 px-4 py-3 text-center">
                 <p className="text-xs font-bold text-zinc-500">
                   Esperando a{' '}
-                  <span className="font-black text-zinc-700">
+                  <span className="font-bold text-zinc-700">
                     {
                       nextSelector.name
                     }
@@ -1887,9 +1898,10 @@ function Torneos({
       0
 
     return (
-      <div className="mx-auto w-full max-w-md px-5 pb-8 pt-6">
+      <div className={`mx-auto w-full max-w-md px-5 pb-8 ${embedded ? 'pt-4' : 'pt-6'}`}>
+        {!embedded && (
         <header className="mb-6">
-          <p className="text-xs font-black tracking-[0.15em] text-violet-500">
+          <p className="text-xs font-bold tracking-[0.15em] text-violet-500">
             TORNEO EN JUEGO
           </p>
 
@@ -1911,12 +1923,13 @@ function Torneos({
             </div>
           </div>
         </header>
+        )}
 
         <section className="relative overflow-hidden rounded-[30px] bg-gradient-to-br from-violet-500 via-fuchsia-500 to-orange-400 shadow-lg shadow-fuchsia-200">
           <div className="p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-black tracking-[0.16em] text-white/80">
+                <p className="text-xs font-bold tracking-[0.16em] text-white/80">
                   DESAFÍO REVELADO
                 </p>
 
@@ -1929,7 +1942,7 @@ function Torneos({
                 </div>
               </div>
 
-              <div className="rounded-full bg-white/20 px-3 py-2 text-[10px] font-black text-white">
+              <div className="rounded-full bg-white/20 px-3 py-2 text-xs font-bold text-white">
                 {tournament.mode ===
                 'two_vs_two'
                   ? '2 VS 2'
@@ -1946,7 +1959,7 @@ function Torneos({
             </h2>
 
             {tournament.auto_selected && (
-              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-[11px] font-black text-white">
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white">
                 ⏳ La carta se eligió sola
                 (pasaron 48 h)
               </p>
@@ -1962,11 +1975,11 @@ function Torneos({
 
             <div className="mt-5 flex items-center justify-between rounded-2xl bg-white/20 px-4 py-3">
               <div>
-                <p className="text-[10px] font-black uppercase text-white/70">
+                <p className="text-xs font-bold uppercase text-white/70">
                   Empieza
                 </p>
 
-                <p className="mt-1 text-xs font-black text-white">
+                <p className="mt-1 text-xs font-bold text-white">
                   {formatDate(
                     tournament.starts_on,
                   )}
@@ -1976,11 +1989,11 @@ function Torneos({
               <div className="h-8 w-px bg-white/20" />
 
               <div className="text-right">
-                <p className="text-[10px] font-black uppercase text-white/70">
+                <p className="text-xs font-bold uppercase text-white/70">
                   Termina
                 </p>
 
-                <p className="mt-1 text-xs font-black text-white">
+                <p className="mt-1 text-xs font-bold text-white">
                   {formatDate(
                     tournament.ends_on,
                   )}
@@ -1997,7 +2010,7 @@ function Torneos({
             </div>
 
             <div>
-              <p className="text-[10px] font-black tracking-wider text-violet-500">
+              <p className="text-xs font-bold tracking-wider text-violet-500">
                 CÓMO SUMÁS PUNTOS
               </p>
 
@@ -2052,7 +2065,7 @@ function Torneos({
                   className="text-amber-600"
                 />
 
-                <p className="text-[10px] font-black text-amber-600">
+                <p className="text-xs font-bold text-amber-600">
                   PREMIO
                 </p>
               </div>
@@ -2132,7 +2145,7 @@ function Torneos({
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-black text-zinc-800">
+                        <p className="text-sm font-bold text-zinc-800">
                           {team.winning
                             ? '👑 '
                             : ''}
@@ -2142,7 +2155,7 @@ function Torneos({
                           }
                         </p>
 
-                        <p className="mt-1 text-[10px] font-black text-zinc-400">
+                        <p className="mt-1 text-xs font-bold text-zinc-500">
                           {team.winning
                             ? 'VA GANANDO'
                             : teamsTied
@@ -2186,7 +2199,7 @@ function Torneos({
                                 />
 
                                 <div>
-                                  <p className="text-sm font-black text-zinc-700">
+                                  <p className="text-sm font-bold text-zinc-700">
                                     {
                                       participant.name
                                     }
@@ -2194,20 +2207,20 @@ function Torneos({
 
                                   {participant.user_id ===
                                     currentUserId && (
-                                    <p className="text-[9px] font-black text-violet-500">
+                                    <p className="text-xs font-bold text-violet-500">
                                       VOS
                                     </p>
                                   )}
 
                                   {!user && (
-                                    <p className="text-[9px] font-bold text-zinc-400">
+                                    <p className="text-xs font-bold text-zinc-500">
                                       Ya no está en el grupo
                                     </p>
                                   )}
                                 </div>
                               </div>
 
-                              <p className="text-sm font-black text-zinc-800">
+                              <p className="text-sm font-bold text-zinc-800">
                                 {
                                   participant.score
                                 }{' '}
@@ -2287,7 +2300,7 @@ function Torneos({
                         />
 
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-black text-zinc-700">
+                          <p className="truncate text-sm font-bold text-zinc-700">
                             {
                               participant.name
                             }
@@ -2295,13 +2308,13 @@ function Torneos({
 
                           {participant.user_id ===
                             currentUserId && (
-                            <p className="text-[9px] font-black text-violet-500">
+                            <p className="text-xs font-bold text-violet-500">
                               VOS
                             </p>
                           )}
 
                           {!user && (
-                            <p className="text-[9px] font-bold text-zinc-400">
+                            <p className="text-xs font-bold text-zinc-500">
                               Ya no está en el grupo
                             </p>
                           )}
@@ -2331,9 +2344,9 @@ function Torneos({
           </p>
         </section>
 
-        <p className="mt-5 text-center text-xs font-semibold text-zinc-400">
+        <p className="mt-5 text-center text-xs font-semibold text-zinc-500">
           Carta elegida{' '}
-          <span className="font-black text-violet-500">
+          <span className="font-bold text-violet-500">
             #
             {
               tournament.selected_card
@@ -2369,9 +2382,10 @@ function Torneos({
     isMyTurn
 
   return (
-    <div className="mx-auto w-full max-w-md px-5 pb-8 pt-6">
+    <div className={`mx-auto w-full max-w-md px-5 pb-8 ${embedded ? 'pt-4' : 'pt-6'}`}>
+      {!embedded && (
       <header className="mb-6">
-        <p className="text-xs font-black tracking-[0.15em] text-violet-500">
+        <p className="text-xs font-bold tracking-[0.15em] text-violet-500">
           COMPETÍ CON TU BANDA
         </p>
 
@@ -2394,6 +2408,7 @@ function Torneos({
           </div>
         </div>
       </header>
+      )}
 
       {!hasEnoughMembers && (
         <div className="mb-5">
@@ -2402,7 +2417,7 @@ function Torneos({
       )}
 
       <section className="mb-5 rounded-[28px] bg-gradient-to-br from-violet-100 via-violet-50 to-pink-50 p-5 shadow-sm">
-        <p className="text-xs font-black tracking-wider text-violet-500">
+        <p className="text-xs font-bold tracking-wider text-violet-500">
           ¿QUIÉN ELIGE?
         </p>
 
@@ -2416,7 +2431,7 @@ function Torneos({
             />
 
             <div>
-              <p className="text-base font-black text-zinc-800">
+              <p className="text-base font-bold text-zinc-800">
                 {isMyTurn
                   ? 'Te toca a vos 😈'
                   : `Le toca a ${selector.name}`}
@@ -2446,7 +2461,7 @@ function Torneos({
       <section className="rounded-[28px] bg-white p-5 shadow-sm">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-black tracking-wider text-zinc-400">
+            <p className="text-xs font-bold tracking-wider text-zinc-500">
               ELEGÍ UNA CARTA
             </p>
 
@@ -2532,7 +2547,7 @@ function Torneos({
                           size={27}
                         />
 
-                        <span className="mt-3 text-[9px] font-black">
+                        <span className="mt-3 text-xs font-bold">
                           RACHA
                         </span>
 
@@ -2558,7 +2573,7 @@ function Torneos({
                           className="mx-auto text-yellow-300"
                         />
 
-                        <p className="mt-3 text-[10px] font-black">
+                        <p className="mt-3 text-xs font-bold">
                           REVELANDO...
                         </p>
                       </div>
@@ -2583,7 +2598,7 @@ function Torneos({
           <div className="mt-5 rounded-2xl bg-zinc-50 px-4 py-3 text-center">
             <p className="text-xs font-bold text-zinc-500">
               Esperando a{' '}
-              <span className="font-black text-zinc-700">
+              <span className="font-bold text-zinc-700">
                 {
                   selector.name
                 }
@@ -2594,7 +2609,7 @@ function Torneos({
         ) : choosingCard ===
           null ? (
           <div className="mt-5 rounded-2xl bg-violet-50 px-4 py-3 text-center">
-            <p className="text-xs font-black text-violet-600">
+            <p className="text-xs font-bold text-violet-600">
               Elegí una. No hay
               vuelta atrás 😈
             </p>
@@ -2609,7 +2624,7 @@ function Torneos({
       </section>
 
       <section className="mt-5 rounded-[28px] bg-zinc-900 p-5 text-white shadow-sm">
-        <p className="text-xs font-black tracking-wider text-violet-300">
+        <p className="text-xs font-bold tracking-wider text-violet-300">
           ¿QUÉ SE SORTEA?
         </p>
 
@@ -2620,11 +2635,11 @@ function Torneos({
             </span>
 
             <div>
-              <p className="text-sm font-black">
+              <p className="text-sm font-bold">
                 Desafío
               </p>
 
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-zinc-500">
                 Define cómo se ganan
                 los puntos.
               </p>
@@ -2637,11 +2652,11 @@ function Torneos({
             </span>
 
             <div>
-              <p className="text-sm font-black">
+              <p className="text-sm font-bold">
                 Modalidad
               </p>
 
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-zinc-500">
                 Todos contra todos o
                 2 vs 2 si son cuatro.
               </p>
@@ -2654,11 +2669,11 @@ function Torneos({
             </span>
 
             <div>
-              <p className="text-sm font-black">
+              <p className="text-sm font-bold">
                 Premio
               </p>
 
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-zinc-500">
                 El campeón se lleva
                 algo de verdad.
               </p>

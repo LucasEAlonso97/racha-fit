@@ -170,7 +170,7 @@ function ChallengesSection({
           </div>
 
           <div className="flex-1">
-            <p className="font-black text-zinc-800">
+            <p className="font-bold text-zinc-800">
               Armá un desafío
             </p>
 
@@ -211,7 +211,7 @@ function ChallengesSection({
             onClick={() =>
               setCreating(true)
             }
-            className="flex w-full items-center justify-center gap-1 py-1 text-xs font-black text-violet-500"
+            className="flex w-full items-center justify-center gap-1 py-1 text-xs font-bold text-violet-500"
           >
             <Plus size={14} />
             Nuevo desafío
@@ -348,7 +348,7 @@ function ChallengeCard({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate font-black text-zinc-800">
+          <p className="truncate font-bold text-zinc-800">
             {challenge.title}
           </p>
 
@@ -359,7 +359,7 @@ function ChallengeCard({
         </div>
 
         {completedCount > 0 && (
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-xs font-black text-amber-600">
+          <span className="flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-xs font-bold text-amber-600">
             <Trophy size={12} />
             {completedCount}
           </span>
@@ -512,7 +512,7 @@ function ChallengeDetail({
                     : 'bg-zinc-50'
                 }`}
               >
-                <span className="w-6 text-center text-sm font-black text-zinc-400">
+                <span className="w-6 text-center text-sm font-bold text-zinc-500">
                   {item.completed
                     ? '🏆'
                     : index + 1}
@@ -525,7 +525,7 @@ function ChallengeDetail({
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-black text-zinc-800">
+                    <p className="truncate text-sm font-bold text-zinc-800">
                       {item.user.id ===
                       currentUserId
                         ? 'Vos'
@@ -560,7 +560,7 @@ function ChallengeDetail({
           <button
             type="button"
             onClick={onDelete}
-            className="mt-6 flex w-full items-center justify-center gap-2 py-2 text-sm font-bold text-zinc-400 hover:text-red-500"
+            className="mt-6 flex w-full items-center justify-center gap-2 py-2 text-sm font-bold text-zinc-500 hover:text-red-500"
           >
             <Trash2 size={16} />
             Borrar desafío

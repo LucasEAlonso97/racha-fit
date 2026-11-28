@@ -53,19 +53,19 @@ function GroupSwitcher({
         }
         className="min-w-0 text-left"
       >
-        <p className="text-[10px] font-black tracking-wider text-zinc-400">
+        <p className="text-xs font-bold tracking-wider text-zinc-500">
           TU RACHA
         </p>
 
         <div className="mt-0.5 flex items-center gap-1">
-          <p className="truncate font-black text-zinc-800">
+          <p className="truncate font-bold text-zinc-800">
   {activeGroup.name}
 </p>
 
           {groups.length > 1 && (
             <ChevronDown
               size={16}
-              className="shrink-0 text-zinc-400"
+              className="shrink-0 text-zinc-500"
             />
           )}
         </div>
@@ -85,7 +85,7 @@ function GroupSwitcher({
           <section ref={sheetRef} className="relative z-10 w-full max-w-md rounded-[30px] bg-white p-5 shadow-2xl">
             <div className="mb-5 flex items-start justify-between">
               <div>
-                <p className="text-xs font-black tracking-wider text-violet-500">
+                <p className="text-xs font-bold tracking-wider text-violet-500">
                   MIS GRUPOS
                 </p>
 
@@ -146,11 +146,11 @@ function GroupSwitcher({
 </div>
 
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-black text-zinc-800">
+                        <p className="truncate font-bold text-zinc-800">
                           {group.name}
                         </p>
 
-                        <p className="mt-1 text-xs font-semibold text-zinc-400">
+                        <p className="mt-1 text-xs font-semibold text-zinc-500">
                           {group.created_by ===
                           activeGroup.created_by
                             ? 'Grupo de Racha'

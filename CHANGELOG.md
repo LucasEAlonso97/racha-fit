@@ -2,6 +2,22 @@
 
 Todas las versiones de Racha. La más nueva arriba.
 
+## 3.0.0 — Noviembre 2026
+
+Rediseño a partir del feedback de un usuario: menos información a la vista, más simple.
+
+- 🧭 **Navegación nueva:** Inicio · Grupo · ➕ · Progreso · Perfil.
+  - **Grupo:** ranking (con los desafíos), torneo e historial del grupo.
+  - **Progreso:** calendario, logros y números (tus estadísticas, gráfico, mapa del año, resumen).
+  - **Perfil:** vos, tu meta, comodines, grupos y cuenta.
+  - Los comodines se ven siempre arriba (🃏 3).
+- ➕ **Cargar en 2 toques:** viene elegido lo de la última vez; 6 deportes a mano y "Más deportes"; duración en atajos; foto, ánimo y nota en "Agregar detalles".
+- 🔠 **Escala de texto:** 5 tamaños (12/14/16/20/32), nada por debajo de 12 px, negrita fuerte solo en títulos y números, grises con más contraste.
+- ✂️ **Menos explicaciones:** las reglas quedan detrás de una ⓘ; textos de ayuda fijos eliminados o acortados.
+- 🔔 **Un aviso a la vez en Inicio:** racha en peligro > Wrapped > instalar la app.
+
+No hay que correr nada en la base.
+
 ## 2.10.0 — Noviembre 2026
 
 ### Sugerir o reportar algo

@@ -293,7 +293,7 @@ function AddGroupModal({
               />
             </div>
 
-            <p className="text-xs font-black tracking-wider text-violet-500">
+            <p className="text-xs font-bold tracking-wider text-violet-500">
               MIS GRUPOS
             </p>
 
@@ -328,11 +328,11 @@ function AddGroupModal({
                 'create',
               )
             }
-            className={`rounded-xl py-3 text-sm font-black transition ${
+            className={`rounded-xl py-3 text-sm font-bold transition ${
               mode ===
               'create'
                 ? 'bg-white text-violet-600 shadow-sm'
-                : 'text-zinc-400'
+                : 'text-zinc-500'
             }`}
           >
             Crear grupo
@@ -345,11 +345,11 @@ function AddGroupModal({
                 'join',
               )
             }
-            className={`rounded-xl py-3 text-sm font-black transition ${
+            className={`rounded-xl py-3 text-sm font-bold transition ${
               mode ===
               'join'
                 ? 'bg-white text-violet-600 shadow-sm'
-                : 'text-zinc-400'
+                : 'text-zinc-500'
             }`}
           >
             Tengo código
@@ -369,7 +369,7 @@ function AddGroupModal({
               </div>
 
               <div>
-                <p className="font-black text-zinc-800">
+                <p className="font-bold text-zinc-800">
                   Crear otro grupo
                 </p>
 
@@ -380,7 +380,7 @@ function AddGroupModal({
               </div>
             </div>
 
-            <label className="mb-2 block text-xs font-black tracking-wider text-zinc-500">
+            <label className="mb-2 block text-xs font-bold tracking-wider text-zinc-500">
               NOMBRE DEL GRUPO
             </label>
 
@@ -411,7 +411,7 @@ function AddGroupModal({
               disabled={
                 loading
               }
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-60"
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-60"
             >
               {loading ? (
                 <LoaderCircle
@@ -442,7 +442,7 @@ function AddGroupModal({
               </div>
 
               <div>
-                <p className="font-black text-zinc-800">
+                <p className="font-bold text-zinc-800">
                   Unirme a un grupo
                 </p>
 
@@ -453,7 +453,7 @@ function AddGroupModal({
               </div>
             </div>
 
-            <label className="mb-2 block text-xs font-black tracking-wider text-zinc-500">
+            <label className="mb-2 block text-xs font-bold tracking-wider text-zinc-500">
               CÓDIGO
             </label>
 
@@ -485,7 +485,7 @@ function AddGroupModal({
               disabled={
                 loading
               }
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-black text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-60"
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-500 py-4 font-bold text-white shadow-lg shadow-violet-200 transition active:scale-[0.98] disabled:opacity-60"
             >
               {loading && (
                 <LoaderCircle

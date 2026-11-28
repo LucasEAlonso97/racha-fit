@@ -155,7 +155,7 @@ function Card({
   return (
     <section className="mb-4 rounded-[24px] bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="text-xs font-black tracking-wider text-violet-500">
+        <h3 className="text-xs font-bold tracking-wider text-violet-500">
           {title}
         </h3>
         {right}
@@ -179,11 +179,11 @@ function Kpi({
       <p className="text-2xl font-black text-zinc-800">
         {value}
       </p>
-      <p className="text-[11px] font-black text-zinc-500">
+      <p className="text-xs font-bold text-zinc-500">
         {label}
       </p>
       {detail && (
-        <p className="mt-0.5 text-[10px] font-semibold text-zinc-400">
+        <p className="mt-0.5 text-xs font-semibold text-zinc-500">
           {detail}
         </p>
       )}
@@ -237,7 +237,7 @@ function DailyChart({
     <Card
       title="30 DÍAS"
       right={
-        <div className="flex rounded-xl bg-zinc-100 p-1 text-[10px] font-black">
+        <div className="flex rounded-xl bg-zinc-100 p-1 text-xs font-bold">
           {(
             Object.keys(
               DAILY_LABELS,
@@ -253,7 +253,7 @@ function DailyChart({
               className={`rounded-lg px-2 py-1 ${
                 metric === key
                   ? 'bg-white text-violet-600 shadow-sm'
-                  : 'text-zinc-400'
+                  : 'text-zinc-500'
               }`}
             >
               {DAILY_LABELS[key]}
@@ -308,7 +308,7 @@ function DailyChart({
         ))}
       </div>
 
-      <div className="mt-1 flex justify-between text-[9px] font-bold text-zinc-400">
+      <div className="mt-1 flex justify-between text-xs font-bold text-zinc-500">
         <span>
           {days[0] && shortDay(days[0].day)}
         </span>
@@ -486,7 +486,7 @@ function AdminPanel({
 
         <div className="sticky top-0 z-10 -mx-4 mb-4 flex items-center justify-between gap-3 bg-[#f6f3ff]/95 px-4 py-3 backdrop-blur">
           <div>
-            <p className="text-xs font-black tracking-wider text-violet-500">
+            <p className="text-xs font-bold tracking-wider text-violet-500">
               SOLO VOS
             </p>
             <h2 className="text-2xl font-black text-zinc-800">
@@ -570,7 +570,7 @@ function AdminPanel({
                 />
               </div>
 
-              <p className="mt-2 text-[11px] font-semibold text-zinc-400">
+              <p className="mt-2 text-xs font-semibold text-zinc-500">
                 Personas que abrieron la
                 app
                 {overview.usage_since
@@ -613,7 +613,7 @@ function AdminPanel({
             {/* Retención */}
 
             <Card title="¿VUELVEN?">
-              <p className="mb-3 text-[11px] font-semibold text-zinc-500">
+              <p className="mb-3 text-xs font-semibold text-zinc-500">
                 De los que se registraron
                 cada semana, cuántos
                 volvieron a usarla 1, 2 y 4
@@ -622,14 +622,14 @@ function AdminPanel({
 
               {data.retention.length ===
               0 ? (
-                <p className="text-sm font-semibold text-zinc-400">
+                <p className="text-sm font-semibold text-zinc-500">
                   Sin registros en las
                   últimas 12 semanas.
                 </p>
               ) : (
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="text-[10px] font-black uppercase tracking-wide text-zinc-400">
+                    <tr className="text-xs font-bold uppercase tracking-wide text-zinc-500">
                       <th className="pb-2">
                         Semana
                       </th>
@@ -720,7 +720,7 @@ function AdminPanel({
               right={
                 overview.feedback_unread >
                 0 ? (
-                  <span className="rounded-full bg-orange-500 px-2 py-0.5 text-[10px] font-black text-white">
+                  <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs font-bold text-white">
                     {
                       overview.feedback_unread
                     }{' '}
@@ -730,7 +730,7 @@ function AdminPanel({
               }
             >
               {data.feedback.length === 0 ? (
-                <p className="text-sm font-semibold text-zinc-400">
+                <p className="text-sm font-semibold text-zinc-500">
                   Todavía nadie mandó
                   nada.
                 </p>
@@ -746,7 +746,7 @@ function AdminPanel({
                             : 'bg-amber-50 ring-1 ring-amber-200'
                         }`}
                       >
-                        <div className="flex items-center gap-2 text-[11px] font-black text-zinc-500">
+                        <div className="flex items-center gap-2 text-xs font-bold text-zinc-500">
                           {item.kind ===
                           'idea' ? (
                             <Lightbulb
@@ -760,7 +760,7 @@ function AdminPanel({
                             />
                           )}
                           {item.user_name}
-                          <span className="font-semibold text-zinc-400">
+                          <span className="font-semibold text-zinc-500">
                             ·{' '}
                             {timeAgo(
                               item.created_at,
@@ -770,7 +770,7 @@ function AdminPanel({
                           </span>
                         </div>
 
-                        <p className="mt-1.5 whitespace-pre-wrap break-words text-sm font-medium leading-relaxed text-zinc-700">
+                        <p className="mt-1.5 whitespace-pre-wrap break-words text-sm font-semibold leading-relaxed text-zinc-700">
                           {item.message}
                         </p>
 
@@ -782,7 +782,7 @@ function AdminPanel({
                                 item.id,
                               )
                             }
-                            className="mt-2 flex items-center gap-1 rounded-xl bg-white px-2.5 py-1.5 text-[11px] font-black text-violet-600 shadow-sm"
+                            className="mt-2 flex items-center gap-1 rounded-xl bg-white px-2.5 py-1.5 text-xs font-bold text-violet-600 shadow-sm"
                           >
                             <Check
                               size={13}
@@ -805,7 +805,7 @@ function AdminPanel({
               <div className="relative">
                 <Search
                   size={15}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
                 />
                 <input
                   type="search"
@@ -820,7 +820,7 @@ function AdminPanel({
                 />
               </div>
 
-              <div className="mt-2 flex gap-1.5 text-[11px] font-black">
+              <div className="mt-2 flex gap-1.5 text-xs font-bold">
                 {(
                   [
                     ['all', 'Todos'],
@@ -864,7 +864,7 @@ function AdminPanel({
                         className="h-10 w-10 shrink-0 rounded-full object-cover"
                       />
                     ) : (
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-100 font-black text-violet-600">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-100 font-bold text-violet-600">
                         {(user.name ?? '?')
                           .charAt(0)
                           .toUpperCase()}
@@ -872,11 +872,11 @@ function AdminPanel({
                     )}
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-black text-zinc-800">
+                      <p className="truncate text-sm font-bold text-zinc-800">
                         {user.name ??
                           'Sin nombre'}
                       </p>
-                      <p className="truncate text-[11px] font-semibold text-zinc-500">
+                      <p className="truncate text-xs font-semibold text-zinc-500">
                         {user.last_seen_at
                           ? `abrió ${timeAgo(user.last_seen_at)}`
                           : 'no abrió desde que se mide'}{' '}
@@ -888,10 +888,10 @@ function AdminPanel({
                     </div>
 
                     <div className="shrink-0 text-right">
-                      <p className="text-sm font-black text-zinc-700">
+                      <p className="text-sm font-bold text-zinc-700">
                         {user.activities_30d}
                       </p>
-                      <p className="text-[9px] font-bold uppercase text-zinc-400">
+                      <p className="text-xs font-bold uppercase text-zinc-500">
                         en 30 d
                       </p>
                     </div>
@@ -900,7 +900,7 @@ function AdminPanel({
               </ul>
 
               {users.length === 0 && (
-                <p className="py-4 text-center text-sm font-semibold text-zinc-400">
+                <p className="py-4 text-center text-sm font-semibold text-zinc-500">
                   Nadie con ese filtro.
                 </p>
               )}

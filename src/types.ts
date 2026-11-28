@@ -115,9 +115,8 @@ export type ActivitiesByDate = Record<
 
 export type View =
   | 'home'
-  | 'calendar'
-  | 'rachas'
-  | 'tournaments'
+  | 'group'
+  | 'progress'
   | 'profile'
 
 export type Profile = {

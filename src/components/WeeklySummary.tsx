@@ -146,7 +146,7 @@ function WeeklySummary({
       {/* ================================= */}
 
       <div>
-        <p className="text-xs font-black tracking-wider text-violet-500">
+        <p className="text-xs font-bold tracking-wider text-violet-500">
           TU SEMANA
         </p>
 
